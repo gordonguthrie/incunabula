@@ -1,0 +1,10 @@
+<div class="jumbotron">
+  <h2><%= gettext "Welcome to %{name}", name: "Incunabula!" %></h2>
+  <p class="lead">A workflow for building and editing books for Amazon KDP</p>
+</div>
+
+
+<ul>
+  <li><a href="/books">Books</a></li>
+  <li><a href="/promos">Promos</a></li>
+</ul>
