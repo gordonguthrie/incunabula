@@ -13,15 +13,20 @@
 
   <body>
     <div class="container">
-      <header class="header">
+      <header class="ui header">
         <nav role="navigation">
-          <ul class="nav nav-pills pull-right">
-            <li><a href="/books">Books</a></li>
-            <li><a href="/promos">Promos</a></li>
-            <li><a href="http://github.com/gordonguthrie/incunabula">Open Source - download me</a></li>
-          </ul>
+          <div class="ui five item menu">
+            <a href="/" class="item logo">
+              <img src="/images/white-female-baby-head.svg" alt="logo">
+            </a>
+            <a href="/books" class="item">Books</a>
+            <a href="/promos" class="item">Promos</a>
+            <a href="/admin" class="item">Admin</a>
+            <a href="http://github.com/gordonguthrie/incunabula" class="item">
+              on GitHub
+            </a>
+            </div>
         </nav>
-        <a href="/"><span class="logo"></span></a>
       </header>
 
       <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>

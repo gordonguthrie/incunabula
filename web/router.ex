@@ -19,6 +19,7 @@ defmodule Incunabula.Router do
     get "/",       PageController,  :index
     get "/books",  BookController,  :index
     get "/promos", PromoController, :index
+    get "/admin",  AdminController, :index
   end
 
     scope "/auth", Monkey do

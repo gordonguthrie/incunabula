@@ -1,0 +1,40 @@
+<h2 class="ui header">Admin</h2>
+
+<table class="ui collapsing striped table">
+  <tr>
+    <td>
+      <div> The books are in:</div>
+    </td>
+    <td>
+      <%= @books_directory %>
+    </td>
+  </tr>
+  <tr>
+    <td>Books</td>
+    <td>
+      <a href='<%= "/books/" <> hd(@books) %>'><%= hd(@books) %></a>
+    </td>
+  </tr>
+  <%= for b <- tl(@books) do %>
+      <tr>
+        <td></td>
+        <td>
+          <a href='<%= "/books/" <> b %>'><%= b %></a>
+        </td>
+      </tr>
+      <% end %>
+  <tr>
+    <td>Users</td>
+    <td>
+      <%= hd(@users) %>
+    </td>
+  </tr>
+  <%= for u <- tl(@users) do %>
+      <tr>
+        <td></td>
+        <td>
+          <%= u %>
+        </td>
+      </tr>
+      <% end %>
+</table>
