@@ -20,3 +20,12 @@ import $ from "jquery"
 // paths "./socket" or full ones "web/static/js/socket".
 
 // import socket from "./socket"
+
+var incunabula = {};
+
+incunabula.show_modal = function () {
+    console.log("show modal");
+    $(".ui.modal").modal("show");
+};
+
+$(".incunabula-show").on('click', incunabula.show_modal);

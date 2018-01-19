@@ -24,6 +24,10 @@
       </tr>
       <% end %>
   <tr>
+  <tr>
+    <td></td>
+    <td><button class="incunabula-show ui primary button">New Book</button></td>
+    </tr>
     <td>Users</td>
     <td>
       <%= hd(@users) %>
@@ -38,3 +42,7 @@
       </tr>
       <% end %>
 </table>
+
+<div class="ui modal">
+  yando
+</div>
