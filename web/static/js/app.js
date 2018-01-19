@@ -24,8 +24,14 @@ import $ from "jquery"
 var incunabula = {};
 
 incunabula.show_modal = function () {
-    console.log("show modal");
     $(".ui.modal").modal("show");
 };
 
+incunabula.edit_link = function (event) {
+    console.log($(event.target.value());
+    $(".incunabula-new-book").attr('href', '/books/bingo');
+}
+
 $(".incunabula-show").on('click', incunabula.show_modal);
+
+$(".incunabula-book-title").on('change', incunabula.edit_link);

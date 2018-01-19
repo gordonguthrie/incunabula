@@ -1,6 +1,6 @@
 <h2 class="ui header">Admin</h2>
 
-<table class="ui collapsing striped table">
+<table class="ui striped table">
   <tr>
     <td>
       <div> The books are in:</div>
@@ -43,6 +43,14 @@
       <% end %>
 </table>
 
-<div class="ui modal">
-  yando
+<div class="ui small modal">
+  <div class="content">
+    <div class="ui form">
+      <div class="field">
+        <label>Create a new book</label>
+        <input class="incunabula-book-title"></input>
+        <a href="/" class="incunabula-new-book"><button class="ui primary right button">Create</button></a>
+      </div>
+    </div>
+  </div>
 </div>
