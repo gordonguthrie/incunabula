@@ -1,5 +1,5 @@
 <div class="jumbotron">
-  <h2><%= gettext "Welcome to %{name}", name: "Incunabula!" %></h2>
+  <h1 class="incunabula-logo">Incunabula!</h1>
   <p class="lead">A workflow for building and editing books for Amazon KDP</p>
 </div>
 

@@ -16,7 +16,7 @@
       <header class="ui header">
         <nav role="navigation">
           <div class="ui five item menu">
-            <a href="/" class="item logo">
+              <a href="/" class="item logo">
               <img src="/images/female-baby-head.svg" alt="logo">
             </a>
             <a href="/books" class="item">Books</a>

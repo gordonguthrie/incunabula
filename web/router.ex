@@ -7,6 +7,7 @@ defmodule Incunabula.Router do
     plug :fetch_flash
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug Incunabula.Auth
   end
 
   pipeline :api do
@@ -21,11 +22,6 @@ defmodule Incunabula.Router do
     get "/books/:title", BookController,  :show
     get "/promos",       PromoController, :index
     get "/admin",        AdminController, :index
-  end
-
-    scope "/auth", Monkey do
-    pipe_through :browser
-    get "/login/:username", AuthController, :fake
   end
 
   # Other scopes may use custom stacks.
