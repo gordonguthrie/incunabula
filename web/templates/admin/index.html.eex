@@ -46,11 +46,16 @@
 <div class="ui small modal">
   <div class="content">
     <div class="ui form">
-      <div class="field">
-        <label>Create a new book</label>
-        <input class="incunabula-book-title"></input>
-        <a href="/" class="incunabula-new-book"><button class="ui primary right button">Create</button></a>
-      </div>
+      <%= form_for @changeset, "/books/new", fn f -> %>
+        <div class="field">
+        <label>Create a new book
+        <%= text_input(f, :book_title,
+            [class: :field,
+            placeholse: "Book title"]) %>
+        </label>
+        </div>
+        <%= submit("Create New Book", [class: "ui button"]) %>
+        <% end %>
     </div>
   </div>
 </div>

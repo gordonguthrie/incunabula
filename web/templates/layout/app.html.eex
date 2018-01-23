@@ -25,8 +25,12 @@
             <a href="http://github.com/gordonguthrie/incunabula" class="item">
               download from GitHub
             </a>
+            <%= if @current_user do %>
+            <a href="/logout" class="item">Logout</a>
+            <% else %>
             <a href="/login" class="item">Login</a>
-            </div>
+            <% end %>
+          </div>
         </nav>
       </header>
       <div>

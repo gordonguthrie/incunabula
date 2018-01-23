@@ -24,4 +24,10 @@ defmodule Incunabula.LoginController do
     end
   end
 
+  def logout(conn, _params) do
+    conn
+    |> configure_session(drop: true)
+    |> redirect(to: "/")
+  end
+
 end

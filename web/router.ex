@@ -19,11 +19,13 @@ defmodule Incunabula.Router do
 
     get  "/",             PageController,  :index
     get  "/books",        BookController,  :index
+    post "/books/new",    BookController,  :create
     get  "/books/:title", BookController,  :show
     get  "/promos",       PromoController, :index
     get  "/admin",        AdminController, :index
     get  "/login",        LoginController, :index
     post "/login",        LoginController, :login
+    get  "/logout",       LoginController, :logout
   end
 
   # Other scopes may use custom stacks.
