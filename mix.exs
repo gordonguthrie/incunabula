@@ -44,8 +44,17 @@ defmodule Incunabula.Mixfile do
      {:gettext,             "~> 0.11"},
      {:cowboy,              "~> 1.0"},
      # {:diff,                git: "https://github.com/gordonguthrie/diff.git"},
-     {:comeonin,            "~> 4.0"},
+     # add_users is messy because it builds an escript as well as providing
+     # functionality - so the app has the escripts name
+     {:add_users,           git: "https://github.com/gordonguthrie/incunabula_utilities.git"},
      {:pbkdf2_elixir,       "~> 0.12.3"}
     ]
   end
+
+  defp package do
+    [maintainers: ["Gordon Guthrie"],
+     licenses: ["GLP V.30"],
+     links: %{"GitHub" => "https://github.com/gordonguthrie/incunabula"}]
+  end
+
 end

@@ -3,11 +3,11 @@ defmodule Incunabula.Auth do
   import Phoenix.Controller
 
   def init([]) do
-    users = Incunabula.Users.get_users()
+    users = IncunabulaUtilities.Users.get_users()
     users
   end
 
-  def call(conn, opts) do
+  def call(conn, _opts) do
     user_id = get_session(conn, :user_id)
     assign(conn, :current_user, user_id)
   end

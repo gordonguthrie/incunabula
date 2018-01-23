@@ -7,7 +7,7 @@ defmodule Incunabula.AdminController do
     dir = get_env(:books_directory)
     IO.inspect dir
     books = Incunabula.Git.get_books(dir)
-    users = Incunabula.Users.get_users()
+    users = IncunabulaUtilities.Users.get_users()
     render conn, "index.html",
       books_directory: dir,
       books:           books,

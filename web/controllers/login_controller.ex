@@ -10,11 +10,12 @@ defmodule Incunabula.LoginController do
   def login(conn, %{"login" => login}) do
     %{"username" => username,
       "password" => password} = login
-    IO.inspect username
-    IO.inspect password
-    case Incunabula.Users.is_login_valid(username, password) do
+    case IncunabulaUtilities.Users.is_login_valid(username, password) do
       true ->
         conn
+        |> put_session(:user_id, username)
+        |> assign(:current_user, username)
+        |> configure_session(renew: true)
         |> redirect(to: "/")
       false ->
         conn
