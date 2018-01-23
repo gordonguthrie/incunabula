@@ -23,7 +23,8 @@ defmodule Incunabula.Mixfile do
        :phoenix_html,
        :cowboy,
        :logger,
-       :gettext
+       :gettext,
+       :phoenix_ecto
      ]]
   end
 
@@ -37,10 +38,14 @@ defmodule Incunabula.Mixfile do
   defp deps do
     [{:phoenix,             "~> 1.2.1"},
      {:phoenix_pubsub,      "~> 1.0"},
+     {:phoenix_ecto,        "~> 3.0"},
      {:phoenix_html,        "~> 2.6"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:gettext,             "~> 0.11"},
-     {:cowboy,              "~> 1.0"}
+     {:cowboy,              "~> 1.0"},
+     # {:diff,                git: "https://github.com/gordonguthrie/diff.git"},
+     {:comeonin,            "~> 4.0"},
+     {:pbkdf2_elixir,       "~> 0.12.3"}
     ]
   end
 end
