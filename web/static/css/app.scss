@@ -14,9 +14,32 @@ html, body {
 }
 
 
-main {
+.incunabula-body {
     max-width: 700px;
-    padding: 1.5em;
+    margin:    auto;
+}
+
+main {
+    padding:   20px;
+}
+
+.grid ul {
+    padding-left: 15px;
+}
+
+// keep the alerts padded left the same as main
+// keep their height fixed so the main body doens't flash on error
+.alert-info, .alert-danger {
+    height:       2em;
+    padding-left: 20px;
+}
+
+.alert-info {
+    color: orange;
+}
+
+.alert-danger {
+    color: red
 }
 
 /*              */
@@ -27,6 +50,10 @@ body.pushable {
   background-color: white !important;
 }
 
+.incunabula-logo {
+    font-size:   3em;
+    text-shadow: 1px 1px 0px rgb(255, 255, 255), 2px 2px 0px rgb(120, 120, 120);
+}
 
 /*                         */
 /* Media queries and stuff */

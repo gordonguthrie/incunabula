@@ -1,11 +1,48 @@
-<div class="jumbotron">
-  <h1 class="incunabula-logo">Incunabula!</h1>
-  <p class="lead">A workflow for building and editing books for Amazon KDP</p>
+<div class="container">
+  <h1><span class="incunabula-logo">Incunabula!</span><br/>(pre-alpha)</h1>
 </div>
-
-
-<ul>
-  <li><a href="/books">Books</a></li>
-  <li><a href="/promos">Promos</a></li>
-  <li><a href="/admin">Admin</a></li>
-</ul>
+<div class="ui divider"></div>
+  <div class="container">
+    <div class="ui grid">
+      <div class="eight wide column">
+        <div class="ui header">
+          What is Incunabula?
+        </div>
+        <p>Incunabula is a an open source application for writing publications to be published on Amazon KDP self-publishing. It is enables:</p>
+        <ul>
+          <li> detailed revision control</li>
+          <li> workflow for both content and line editing</li>
+          <li> the ability to create extracts for social media/pre-publicity</li>
+          <li> the application of house styles</li>
+        </ul>
+      </div>
+      <div class="eight wide column">
+        <div class="ui header">
+          Who should use it?
+        </div>
+        <p>Incunabula is aimed at small organisations which include at least one technical member.</p>
+        <p>The authorial, editorial, content and design roles are clearly seperated from the technical role, but there is a degree of underlying setup required - usually at the start of a new book.</p>
+      </div>
+    </div>
+    <div class="ui grid">
+      <div class="eight wide column">
+        <div class="ui header">
+          Why should I use it?
+        </div>
+        <p>Incunabula is designed to eliminate the pain of emailing version of documents around and manually maintaining versions.</p>
+        <p>Every save creates a new version, and all versions and version histories are maintained and backed up.</p>
+        <p>Editors make changes directly to a copy of the text and changes can be accepted or rejected on a per-paragraph basis.</p>
+        <p>Hand-over and control is explicit - the author controls a version until they hand it to an editor, who has exlclusive control until they return it. This locking is at a chapter level - so work on the book can continue.</p>
+      </div>
+      <div class="eight wide column">
+        <div class="ui header">
+          How does it work?
+        </div>
+        <p>Incunabula uses a simplified mark up system that enables the author and editor to focus on the text</p>
+        <p>Version control uses Git to keep every save version and edit separate and safe - full history of the document.</p>
+        <p>The manuscript is backed up to <a src="http://github.com">GitHub</a> and GitHub is the <em>administrator console</em> for the techie of the team to use.</p>
+        <p>Git can also be used locally on the command line by a qualified person (not recommended).</p>
+        <p>Saved versions are implemented as git branches - and auto-saves as git tags - structured naming is used to manage roles.</p>
+      </div>
+    </div>
+  </div>

@@ -15,7 +15,7 @@
     <div class="container">
       <header class="ui header">
         <nav role="navigation">
-          <div class="ui five item menu">
+          <div class="ui six item menu">
               <a href="/" class="item logo">
               <img src="/images/female-baby-head.svg" alt="logo">
             </a>
@@ -23,16 +23,19 @@
             <a href="/promos" class="item">Promos</a>
             <a href="/admin" class="item">Admin</a>
             <a href="http://github.com/gordonguthrie/incunabula" class="item">
-              on GitHub
+              download from GitHub
             </a>
+            <a href="/login" class="item">Login</a>
             </div>
         </nav>
       </header>
+      <div>
+        <div class="incunabula-body ">
+          <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
+          <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
+          </div>
 
-      <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
-      <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
-
-      <main role="main">
+      <main role="main" class="incunabula-body">
         <%= render @view_module, @view_template, assigns %>
       </main>
 
