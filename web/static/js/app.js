@@ -28,7 +28,7 @@ incunabula.show_modal = function () {
 };
 
 incunabula.edit_link = function (event) {
-    console.log($(event.target.value());
+    console.log($(event.target.value()));
     $(".incunabula-new-book").attr('href', '/books/bingo');
 }
 
