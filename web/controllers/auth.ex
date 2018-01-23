@@ -8,10 +8,7 @@ defmodule Incunabula.Auth do
   end
 
   def call(conn, opts) do
-    IO.inspect "in auth plug call"
-    IO.inspect opts
     user_id = get_session(conn, :user_id)
-    IO.inspect user_id
     assign(conn, :current_user, user_id)
   end
 
