@@ -35,7 +35,7 @@ Once you are then select `Personal access token` and create a token with **only*
 
 You can test that your config is working by starting the application with a shell and then typing this command in the shell:
 
-`Incunabula.Git.check_github()`
+`Incunabula.Git.check_github_SHELL_ONLY()`
 
 It will run a curl on the github api with the personal access token and you should see it working...
 

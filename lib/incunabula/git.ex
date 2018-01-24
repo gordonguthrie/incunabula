@@ -28,7 +28,8 @@ defmodule Incunabula.Git do
     _dir = Path.join(get_env(:root_directory), "books")
   end
 
-  def check_github() do
+  @doc "a shell command to check that the github token and stuff is correct"
+  def check_github_SHELL_ONLY() do
     githubPAT = get_env(:personal_access_token)
     args = [
       "-i",
