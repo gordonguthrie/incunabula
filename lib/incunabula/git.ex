@@ -4,7 +4,9 @@ defmodule Incunabula.Git do
 
   require Logger
 
-  # api
+  #
+  # API
+  #
 
   def start_link() do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
@@ -23,10 +25,23 @@ defmodule Incunabula.Git do
   end
 
   def get_books_dir() do
-    dir = get_env(:books_directory)
+    _dir = Path.join(get_env(:root_directory), "books")
   end
 
+  def check_github() do
+    githubPAT = get_env(:personal_access_token)
+    args = [
+      "-i",
+      "-H",
+      "\"Authorization: token "  <> githubPAT <> "\"",
+      'https://api.github.com/user/repos'
+    ]
+    _ret = System.cmd("curl", args)
+  end
+
+  #
   # call backs
+  #
 
   def handle_call(:get_books, _from, state) do
     {:reply, do_get_books(), state}
@@ -55,6 +70,7 @@ defmodule Incunabula.Git do
 
   defp do_get_books() do
     dir = get_books_dir()
+    IO.inspect dir
     case File.ls(dir) do
       {:ok, files} ->
         get_books(dir, files)
@@ -71,7 +87,7 @@ defmodule Incunabula.Git do
   end
 
   defp get_env(key) do
-    configs = Application.get_env(:incunabula, :books_settings)
+    configs = Application.get_env(:incunabula, :configuration)
     configs[key]
   end
 
@@ -87,9 +103,9 @@ defmodule Incunabula.Git do
   end
 
   defp do_git_init(dir) do
-    IO.inspect dir
-    ret2 = System.cmd("git", ["init"], cd: dir)
-    IO.inspect ret2
+    return = System.cmd("git", ["init"], cd: dir)
+    # force a crash if this failed
+    {<<"Initialised empty Git repository in">> <> _rest, _} = return
     dir
   end
 

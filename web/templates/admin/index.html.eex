@@ -9,6 +9,7 @@
       <%= @books_directory %>
     </td>
   </tr>
+    <%= if @books != [] do %>
   <tr>
     <td>Books</td>
     <td>
@@ -24,6 +25,11 @@
       </tr>
       <% end %>
   <tr>
+    <% else %>
+  <tr>
+    <td>There are no books</td><td></td>
+  </tr>
+  <% end %>
   <tr>
     <td></td>
     <td><button class="incunabula-show ui primary button">New Book</button></td>

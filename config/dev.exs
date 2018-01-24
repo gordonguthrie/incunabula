@@ -34,5 +34,9 @@ config :logger, :console, format: "[$level] $message\n"
 config :phoenix, :stacktrace_depth, 20
 
 # can't use the '~' full path only
-config :incunabula, :books_settings,
-  books_directory: "/home/vagrant/books"
+config :incunabula, :configuration,
+  root_directory: "/home/vagrant/books"
+
+# the GitHub Personal Access Token created on the GitHub account
+config :incunabula, :configuration,
+  personal_access_token: "7ba8dd29d9e61838ce3019e3e8695438b9fcc80a"
