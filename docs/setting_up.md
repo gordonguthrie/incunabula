@@ -41,7 +41,7 @@ You can test that your config is working by starting the application with a shel
 
 `Incunabula.Git.check_github_SHELL_ONLY()`
 
-It will run a curl on the github api with the personal access token and you should see it working...
+It will run a curl on the github api with the personal access token and you should see it working. It writes its output to a file in the `/tmp` directory which you can inspect in a browser"
 
 !["working github"](./images/connectivity_working.png "working github")
 
