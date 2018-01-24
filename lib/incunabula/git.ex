@@ -108,16 +108,18 @@ defmodule Incunabula.Git do
 
   defp create_repo_on_github(reponame) do
     githubPAT = get_env(:personal_access_token)
+    {_status, json} = Poison.encode(%{"name" => reponame})
     args = [
       "-i",
       "-H",
-      "\"Authorization: token "  <> githubPAT <> "\"",
-      'https://api.github.com/user/repos',
+      "Authorization: token "  <> githubPAT,
+      "https://api.github.com/user/repos",
       "-d",
-      "'{\"name\":" <> reponame <> "}'"
+      json
     ]
-    ret = System.cmd("curl", args)
-    IO.inspect ret
+    # Bit shit check of return values
+    # Rly should be an http request but hey
+    {_, 0} = System.cmd("curl", args)
     :ok
   end
 
