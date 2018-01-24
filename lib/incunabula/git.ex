@@ -34,10 +34,15 @@ defmodule Incunabula.Git do
     args = [
       "-i",
       "-H",
-      "\"Authorization: token "  <> githubPAT <> "\"",
-      'https://api.github.com/user/repos'
+      "Authorization: token " <> githubPAT,
+      "https://api.github.com/user/repos"
     ]
-    _ret = System.cmd("curl", args)
+    {page, _} = System.cmd("curl", args, [])
+    outputfile = "/tmp/incunabula.check_github.html"
+    :ok = File.write(outputfile, page)
+    IO.inspect ""
+    IO.inspect "Output written to " <> outputfile
+    :ok
   end
 
   #
@@ -58,11 +63,14 @@ defmodule Incunabula.Git do
     bookdir = Path.join(dir, slug)
     case File.exists?(bookdir) do
       false ->
+        :ok = create_repo_on_github(slug)
         bookdir
         |> make_dir
         |> do_git_init
         |> write_to_book("title", book_title)
         |> write_to_book(".gitignore", standard_gitignore())
+        |> commit_to_git
+        |> push_to_github
         :ok
       true ->
         {:error, "The book " <> slug <> " exists already"}
@@ -98,8 +106,31 @@ defmodule Incunabula.Git do
 		|> String.replace(~r/[^\w-]+/u, "-")
   end
 
+  defp create_repo_on_github(reponame) do
+    githubPAT = get_env(:personal_access_token)
+    args = [
+      "-i",
+      "-H",
+      "\"Authorization: token "  <> githubPAT <> "\"",
+      'https://api.github.com/user/repos',
+      "-d",
+      "'{\"name\":" <> reponame <> "}'"
+    ]
+    ret = System.cmd("curl", args)
+    IO.inspect ret
+    :ok
+  end
+
   defp make_dir(dir) do
     :ok = File.mkdir(dir)
+    dir
+  end
+
+  defp commit_to_git(dir) do
+    dir
+  end
+
+  defp push_to_github(dir) do
     dir
   end
 

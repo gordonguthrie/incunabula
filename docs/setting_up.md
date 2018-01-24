@@ -39,6 +39,8 @@ You can test that your config is working by starting the application with a shel
 
 It will run a curl on the github api with the personal access token and you should see it working...
 
+!["working github"](./images/connectivity_working.png "working github")
+
 ## Creating users from the command line
 
 The dependency `incunabula_utilities` handles two things:
