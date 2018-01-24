@@ -31,7 +31,13 @@ Once you have created an account you need to go to 'Settings' and select the `De
 
 !["Creating the Personal Access Token](./images/settings.png "Creating the Personal Access Token")
 
-Once you are then select `Personal access token` and create a token with **only** the `repo` scope granted. This will then disply a token **which you can only see once**. You need to copy that and store it. It goes into the configuration of your server.
+Once you are then select `Personal access token` and create a token with **only** the `repo` scope granted. This will then disply a token **which you can only see once**. You need to copy that and store it. It goes into the configuration of your server. It goes in your config file as part of the `incunabula` `configuration` under the key `personal_access_token`.
+
+You can test that your config is working by starting the application with a shell and then typing this command in the shell:
+
+`Incunabula.Git.check_github()`
+
+It will run a curl on the github api with the personal access token and you should see it working...
 
 ## Creating users from the command line
 
