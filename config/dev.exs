@@ -37,6 +37,13 @@ config :phoenix, :stacktrace_depth, 20
 config :incunabula, :configuration,
   root_directory: "/home/vagrant/books"
 
+#
+# Don't @ me bro
+#
+# There is a Git Personal Access Token stored in here for a repo
+# called Incunabula which is the test user that this app uses as
+# a backend - and that is just ok for now - it is a segregated user
+#
 # the GitHub Personal Access Token created on the GitHub account
 config :incunabula, :configuration,
   personal_access_token: "7ba8dd29d9e61838ce3019e3e8695438b9fcc80a"
