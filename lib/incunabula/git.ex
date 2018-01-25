@@ -134,7 +134,7 @@ defmodule Incunabula.Git do
       "add",
       "--all"
     ]
-    {return, 0} = System.cmd(cmd, args, [cd: dir])
+    {"", 0} = System.cmd(cmd, args, [cd: dir])
     dir
   end
 
