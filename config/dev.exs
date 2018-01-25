@@ -39,4 +39,5 @@ config :incunabula, :configuration,
 
 # the GitHub Personal Access Token created on the GitHub account
 config :incunabula, :configuration,
-  personal_access_token: "you will need to create a personal access token"
+  github_account:        "incunabula",
+  personal_access_token: "use a proper token here boyo"

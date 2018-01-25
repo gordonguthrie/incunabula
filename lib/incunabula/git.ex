@@ -69,8 +69,9 @@ defmodule Incunabula.Git do
         |> do_git_init
         |> write_to_book("title", book_title)
         |> write_to_book(".gitignore", standard_gitignore())
-        |> commit_to_git
-        |> push_to_github
+        |> add_to_git(:all)
+        |> commit_to_git("basic setup of directory")
+        |> push_to_github(slug)
         :ok
       true ->
         {:error, "The book " <> slug <> " exists already"}
@@ -79,7 +80,6 @@ defmodule Incunabula.Git do
 
   defp do_get_books() do
     dir = get_books_dir()
-    IO.inspect dir
     case File.ls(dir) do
       {:ok, files} ->
         get_books(dir, files)
@@ -128,11 +128,43 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp commit_to_git(dir) do
+  defp add_to_git(dir, :all) do
+    cmd = "git"
+    args = [
+      "add",
+      "--all"
+    ]
+    {return, 0} = System.cmd(cmd, args, [cd: dir])
     dir
   end
 
-  defp push_to_github(dir) do
+  defp commit_to_git(dir, msg) do
+    cmd = "git"
+    args = [
+      "commit",
+      "-m",
+      msg
+    ]
+    {return, 0} = System.cmd(cmd, args, [cd: dir])
+    # force a crash if this failed
+    <<"[master (root-commit) ">> <> _rest = return
+    dir
+  end
+
+  defp push_to_github(dir, repo) do
+    cmd = "git"
+    github_account = get_env(:github_account)
+    githubPAT = get_env(:personal_access_token)
+    url = Path.join([
+      "https://" <> githubPAT <> "@github.com",
+      github_account,
+      repo <> ".git"
+    ])
+    args = [
+      "push",
+      "--repo=" <> url
+    ]
+    {"", 0} = System.cmd(cmd, args, [cd: dir])
     dir
   end
 

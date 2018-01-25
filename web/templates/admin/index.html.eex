@@ -52,16 +52,15 @@
 <div class="ui small modal">
   <div class="content">
     <div class="ui form">
-      <%= form_for @changeset, "/books/new", fn f -> %>
+      <%= form_for @changeset, "/book/new", fn f -> %>
         <div class="field">
         <label>Create a new book
         <%= text_input(f, :book_title,
             [class: :field,
-            placeholse: "Book title"]) %>
+            placeholder: "Book title"]) %>
         </label>
         </div>
         <%= submit("Create New Book", [class: "ui button"]) %>
-        <% end %>
+      <% end %>
     </div>
-  </div>
 </div>

@@ -19,7 +19,7 @@ defmodule Incunabula.Router do
 
     get  "/",             PageController,  :index
     get  "/books",        BookController,  :index
-    post "/books/new",    BookController,  :create
+    post "/book/new",     BookController,  :create
     get  "/books/:title", BookController,  :show
     get  "/promos",       PromoController, :index
     get  "/admin",        AdminController, :index

@@ -15,7 +15,8 @@ defmodule Incunabula.BookController do
     %{"book_title" => book_title} = book
     case Incunabula.Git.create_book(book_title) do
       :ok ->
-        render conn, "index.html"
+        conn
+        |> redirect(to: "/books/" <> book_title)
       {:error, err} ->
         conn
         |> put_flash(:error, err)
