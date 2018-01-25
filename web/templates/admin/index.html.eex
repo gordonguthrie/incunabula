@@ -13,14 +13,14 @@
   <tr>
     <td>Books</td>
     <td>
-      <a href='<%= "/books/" <> hd(@books) %>'><%= hd(@books) %></a>
+      <a href='<%= "/books/" <> elem(hd(@books), 1) %>'><%= elem(hd(@books), 0) %></a>
     </td>
   </tr>
-  <%= for b <- tl(@books) do %>
+  <%= for {t, s} <- tl(@books) do %>
       <tr>
         <td></td>
         <td>
-          <a href='<%= "/books/" <> b %>'><%= b %></a>
+          <a href='<%= "/books/" <> s %>'><%= t %></a>
         </td>
       </tr>
       <% end %>

@@ -91,8 +91,11 @@ defmodule Incunabula.Git do
   end
 
   defp get_books(rootdir, files) do
-    subs   = for f <- files, File.dir?(rootdir <> "/" <> f), do: f
-    _books = for d <- subs,  File.dir?(rootdir <> "/" <> d <> "/.git"), do: d
+    subs  = for f <- files, File.dir?(Path.join([rootdir, f])), do: f
+    slugs = for d <- subs,  File.dir?(Path.join([rootdir, d, "/.git"])), do: d
+    books = for s <- slugs, {:ok, t} = File.read(Path.join([rootdir, s, "title"])) do
+      {t, s}
+  end
   end
 
   defp get_env(key) do
