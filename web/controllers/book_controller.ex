@@ -7,16 +7,17 @@ defmodule Incunabula.BookController do
     render conn, "index.html"
   end
 
-  def show(conn, _params) do
-    render conn, "show.html"
+  def show(conn, %{"slug" => slug}) do
+    render conn, "show.html",
+      slug:  slug
   end
 
   def create(conn, %{"book" => book}) do
     %{"book_title" => book_title} = book
     case Incunabula.Git.create_book(book_title) do
-      :ok ->
+      {:ok, slug} ->
         conn
-        |> redirect(to: "/books/" <> book_title)
+        |> redirect(to: "/books/" <> slug)
       {:error, err} ->
         conn
         |> put_flash(:error, err)

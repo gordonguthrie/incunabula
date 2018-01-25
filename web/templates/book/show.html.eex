@@ -1,3 +1,2 @@
-<h1>Books</h1>
-
-My book
+<div class="incunabula-data" book-slug="slug"><%= @slug %></div>
+<div id="booktitle"></div>

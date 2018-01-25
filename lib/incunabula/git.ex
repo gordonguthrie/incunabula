@@ -59,7 +59,7 @@ defmodule Incunabula.Git do
 
   defp do_create_book(book_title) do
     dir = get_books_dir()
-    slug = sluggify(book_title)
+    slug = Incunabula.Slug.to_slug(book_title)
     bookdir = Path.join(dir, slug)
     case File.exists?(bookdir) do
       false ->
@@ -72,7 +72,7 @@ defmodule Incunabula.Git do
         |> add_to_git(:all)
         |> commit_to_git("basic setup of directory")
         |> push_to_github(slug)
-        :ok
+        {:ok, slug}
       true ->
         {:error, "The book " <> slug <> " exists already"}
     end
@@ -98,12 +98,6 @@ defmodule Incunabula.Git do
   defp get_env(key) do
     configs = Application.get_env(:incunabula, :configuration)
     configs[key]
-  end
-
-	defp sluggify(str) do
-		str
-		|> String.downcase()
-		|> String.replace(~r/[^\w-]+/u, "-")
   end
 
   defp create_repo_on_github(reponame) do

@@ -3,10 +3,11 @@ defmodule Incunabula.UserSocket do
 
   ## Channels
   # channel "room:*", Incunabula.RoomChannel
+  channel "book:*", Incunabula.BookChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
-  # transport :longpoll, Phoenix.Transports.LongPoll
+  #transport :longpoll,  Phoenix.Transports.LongPoll
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After
@@ -19,7 +20,10 @@ defmodule Incunabula.UserSocket do
   #
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
-  def connect(_params, socket) do
+  def connect(params, socket) do
+    #IO.inspect "in User.socket.connect/2"
+    #IO.inspect params
+    #IO.inspect socket
     {:ok, socket}
   end
 
@@ -33,5 +37,8 @@ defmodule Incunabula.UserSocket do
   #     Incunabula.Endpoint.broadcast("users_socket:#{user.id}", "disconnect", %{})
   #
   # Returning `nil` makes this socket anonymous.
-  def id(_socket), do: nil
+  def id(socket) do
+    IO.inspect "in UserSocket/1"
+    nil
+  end
 end
