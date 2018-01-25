@@ -1,2 +1,1 @@
-<div class="incunabula-data" book-slug="slug"><%= @slug %></div>
-<div id="booktitle"></div>
+<div id="bookslug" class="incunabula-hidden"><%= @slug %></div>
