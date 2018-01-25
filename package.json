@@ -10,7 +10,7 @@
         "jquery-mobile": "~1.4.1",
         "phoenix": "file:deps/phoenix",
         "phoenix_html": "file:deps/phoenix_html",
-        "semantic-ui": "^2.2.11"
+        "semantic-ui": "^2.2.13"
     },
     "devDependencies": {
         "babel-brunch": "~6.0.0",
