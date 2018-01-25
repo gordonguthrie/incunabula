@@ -10,4 +10,3 @@ erl_crash.dump
 .#
 /node_modules
 /web/static/vendor/*
-/priv/users/users.db
