@@ -34,7 +34,7 @@ defmodule Incunabula.UserSocket do
   #     Incunabula.Endpoint.broadcast("users_socket:#{user.id}", "disconnect", %{})
   #
   # Returning `nil` makes this socket anonymous.
-  def id(socket) do
+  def id(_socket) do
     nil
   end
 end

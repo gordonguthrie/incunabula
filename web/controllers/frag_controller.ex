@@ -1,9 +1,8 @@
 defmodule Incunabula.FragController do
   use Incunabula.Web, :controller
 
-  def get_books() do
+  def get_books(books) do
     conn = make_fresh_conn()
-    books = Incunabula.Git.get_books()
     make_html conn, "books.html",
       books: books
   end

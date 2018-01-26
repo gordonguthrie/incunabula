@@ -4,10 +4,9 @@ defmodule Incunabula.BookController do
   plug :authenticate_user when action in [:index]
 
   def index(conn, _params) do
-    books = Incunabula.Git.get_books()
-    books2 = for %{title: t, slug: s} <- books, do: {t, s}
+    changeset = Incunabula.Book.changeset()
     render conn, "index.html",
-    books: books2
+      changeset: changeset
   end
 
   def show(conn, %{"slug" => slug}) do

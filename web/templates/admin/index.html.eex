@@ -1,39 +1,5 @@
 <h2 class="ui header">Admin</h2>
 
-<table class="ui striped table">
-  <tr>
-    <td>
-      <div> The books are in:</div>
-    </td>
-    <td>
-      <%= @books_directory %>
-    </td>
-  </tr>
-    <%= if @books != [] do %>
-  <tr>
-    <td>Books</td>
-    <td>
-      <a href='<%= "/books/" <> elem(hd(@books), 1) %>'><%= elem(hd(@books), 0) %></a>
-    </td>
-  </tr>
-  <%= for {t, s} <- tl(@books) do %>
-      <tr>
-        <td></td>
-        <td>
-          <a href='<%= "/books/" <> s %>'><%= t %></a>
-        </td>
-      </tr>
-      <% end %>
-  <tr>
-    <% else %>
-  <tr>
-    <td>There are no books</td><td></td>
-  </tr>
-  <% end %>
-  <tr>
-    <td></td>
-    <td><button class="incunabula-show ui primary button">New Book</button></td>
-    </tr>
     <td>Users</td>
     <td>
       <%= hd(@users) %>
@@ -48,19 +14,3 @@
       </tr>
       <% end %>
 </table>
-
-<div class="ui small modal">
-  <div class="content">
-    <div class="ui form">
-      <%= form_for @changeset, "/book/new", fn f -> %>
-        <div class="field">
-        <label>Create a new book
-        <%= text_input(f, :book_title,
-            [class: :field,
-            placeholder: "Book title"]) %>
-        </label>
-        </div>
-        <%= submit("Create New Book", [class: "ui button"]) %>
-      <% end %>
-    </div>
-</div>

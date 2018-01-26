@@ -11,6 +11,7 @@ import {Socket} from "phoenix"
 function sanatize(html){return $("div/>").text(html).html()}
 
 function draw(id, msg) {
+    console.log("got new thing to draw", id, msg)
     $("#" + id).html(msg)
 }
 
@@ -75,15 +76,16 @@ let topics = document.getElementsByClassName("incunabula-topic")
 Array.from(topics).forEach((t) => {
     let topic = t.getAttribute("topic")
     let channel = socket.channel(topic, {})
+    let route = router.get(topic)
     channel.join()
         .receive("ok", resp => {
-            let route = router.get(topic)
             route.draw_fn(route.id, resp)
         })
         .receive("error", resp => {
             console.log("Unable to join", topic, resp)
         })
-    channel.on("ping", ({count}) => ('ok'))
+    channel.on("ping",  ({count})   => ('ok'))
+    channel.on("books", (payload) => route.draw_fn(route.id, payload.books))
 })
 
 export default socket

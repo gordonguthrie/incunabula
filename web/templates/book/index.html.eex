@@ -3,3 +3,23 @@
 <div class="incunabula-topic" topic="books:list"></div>
 
 <div id="books-list"></div>
+
+<div class="content">
+  <button class="incunabula-show ui primary button">New Book</button>
+</div>
+
+<div class="ui small modal">
+  <div class="content">
+    <div class="ui form">
+      <%= form_for @changeset, "/book/new", fn f -> %>
+        <div class="field">
+        <label>Create a new book
+        <%= text_input(f, :book_title,
+            [class: :field,
+            placeholder: "Book title"]) %>
+        </label>
+        </div>
+        <%= submit("Create New Book", [class: "ui button"]) %>
+      <% end %>
+    </div>
+</div>

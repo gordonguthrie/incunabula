@@ -1,10 +1,14 @@
 defmodule Incunabula.BooksChannel do
   use Incunabula.Web, :channel
 
-  def join("books:" <> command, _params, socket) do
+  def join("books:list", _params, socket) do
     :timer.send_interval(5_000, :ping)
-    books = Incunabula.FragController.get_books()
-    {:ok, books, assign(socket, :command, command)}
+    books = Incunabula.Git.get_books()
+    {:ok, books, socket}
+  end
+
+  def handle_in(msg, params, socket) do
+    {:noreply, socket}
   end
 
   def handle_info(:ping, socket) do

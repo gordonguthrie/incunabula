@@ -2,6 +2,18 @@ defmodule Incunabula.Git do
 
   use GenServer
 
+  @moduledoc """
+  This gen server serves two seperate roles:
+  * it is a point of serialisation which ensures that (subject to force majeur)
+    actions from the front end are atomic
+    * I write a file to disk
+    * I prepare a commit in git
+    * I execute the commit
+    * I push the commit to GitHub
+    Then, and only then does this server start working on your request
+  * it subscribes to all the channels and sends them messages when things on disk change
+  """
+
   require Logger
 
   #
@@ -57,6 +69,19 @@ defmodule Incunabula.Git do
     {:reply, do_create_book(book_title), state}
   end
 
+  # this clause handles an info message we get sent when we render HTML
+  # for the message channel via a controller/view
+  def handle_info({:plug_conn, :sent}, socket) do
+    {:noreply, socket}
+  end
+
+  # this clause handles an info message we get sent when we render HTML
+  # for the message channel via a controller/view
+  def handle_info({ref, {200, _, _}}, socket) when is_reference(ref) do
+    {:noreply, socket}
+  end
+
+
   defp do_create_book(book_title) do
     dir = get_books_dir()
     slug = Incunabula.Slug.to_slug(book_title)
@@ -72,6 +97,7 @@ defmodule Incunabula.Git do
         |> add_to_git(:all)
         |> commit_to_git("basic setup of directory")
         |> push_to_github(slug)
+        :ok = push_to_channel(:"books-list")
         {:ok, slug}
       true ->
         {:error, "The book " <> slug <> " exists already"}
@@ -96,7 +122,7 @@ defmodule Incunabula.Git do
     books = for s <- slugs, {:ok, t} = File.read(Path.join([rootdir, s, "title"])) do
       {t, s}
     end
-    Enum.sort(books)
+    Incunabula.FragController.get_books(Enum.sort(books))
   end
 
   defp get_env(key) do
@@ -164,6 +190,13 @@ defmodule Incunabula.Git do
     ]
     {"", 0} = System.cmd(cmd, args, [cd: dir])
     dir
+  end
+
+  defp push_to_channel(:"books-list") do
+    books = do_get_books()
+    ret = Incunabula.Endpoint.broadcast "books:list", "books", %{books: books}
+    IO.inspect ret
+    :ok
   end
 
   defp do_git_init(dir) do
