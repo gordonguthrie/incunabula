@@ -5,6 +5,23 @@
 // and connect at the socket path in "lib/my_app/endpoint.ex":
 import {Socket} from "phoenix"
 
+
+// Define the various draw functions
+
+function sanatize(html){return $("div/>").text(html).html()}
+
+function draw(id, msg) {
+    $("#" + id).html(msg)
+}
+
+// Create a route for channel message
+let router = new Map()
+
+// by convention the message set maps to the drawing id with a colon replace
+// by a hyphen becuz css and shit
+router.set("books:list", {id:      "books-list",
+                          draw_fn: function(id, msg) {draw(id, msg)}})
+
 let socket = new Socket("/socket", {params: {token: window.userToken}})
 
 // When you connect, you'll often need to authenticate the client.
@@ -53,15 +70,20 @@ let socket = new Socket("/socket", {params: {token: window.userToken}})
 
 socket.connect()
 
-var booktitle = document.getElementById("#bookslug")
+let topics = document.getElementsByClassName("incunabula-topic")
 
-if (bookslug != null) {
-    // Now that you are connected, you can join channels with a topic:
-    let channel = socket.channel("book:${bookslug}", {})
+Array.from(topics).forEach((t) => {
+    let topic = t.getAttribute("topic")
+    let channel = socket.channel(topic, {})
     channel.join()
-        .receive("ok", resp => { console.log("Joined successfully", resp) })
-        .receive("error", resp => { console.log("Unable to join", resp) })
-    channel.on("ping", ({count}) => console.log("pinging in socket", count))
-}
+        .receive("ok", resp => {
+            let route = router.get(topic)
+            route.draw_fn(route.id, resp)
+        })
+        .receive("error", resp => {
+            console.log("Unable to join", topic, resp)
+        })
+    channel.on("ping", ({count}) => ('ok'))
+})
 
 export default socket

@@ -95,7 +95,8 @@ defmodule Incunabula.Git do
     slugs = for d <- subs,  File.dir?(Path.join([rootdir, d, "/.git"])), do: d
     books = for s <- slugs, {:ok, t} = File.read(Path.join([rootdir, s, "title"])) do
       {t, s}
-  end
+    end
+    Enum.sort(books)
   end
 
   defp get_env(key) do

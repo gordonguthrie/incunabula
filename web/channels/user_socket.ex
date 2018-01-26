@@ -2,8 +2,8 @@ defmodule Incunabula.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "room:*", Incunabula.RoomChannel
-  channel "book:*", Incunabula.BookChannel
+  channel "book:*",  Incunabula.BookChannel
+  channel "books:*", Incunabula.BooksChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
@@ -20,10 +20,7 @@ defmodule Incunabula.UserSocket do
   #
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
-  def connect(params, socket) do
-    #IO.inspect "in User.socket.connect/2"
-    #IO.inspect params
-    #IO.inspect socket
+  def connect(_params, socket) do
     {:ok, socket}
   end
 
@@ -38,7 +35,6 @@ defmodule Incunabula.UserSocket do
   #
   # Returning `nil` makes this socket anonymous.
   def id(socket) do
-    IO.inspect "in UserSocket/1"
     nil
   end
 end

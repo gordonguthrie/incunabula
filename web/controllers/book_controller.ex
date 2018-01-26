@@ -5,8 +5,9 @@ defmodule Incunabula.BookController do
 
   def index(conn, _params) do
     books = Incunabula.Git.get_books()
+    books2 = for %{title: t, slug: s} <- books, do: {t, s}
     render conn, "index.html",
-    books: books
+    books: books2
   end
 
   def show(conn, %{"slug" => slug}) do
