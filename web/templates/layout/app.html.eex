@@ -20,7 +20,7 @@
               <img src="/images/female-baby-head.svg" alt="logo">
             </a>
             <a href="/books" class="item">Books</a>
-            <a href="/promos" class="item">Promos</a>
+            <a href="/chaff" class="item">Chaff</a>
             <a href="/admin" class="item">Admin</a>
             <a href="http://github.com/gordonguthrie/incunabula" class="item">
               download from GitHub
