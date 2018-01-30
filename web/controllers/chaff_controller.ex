@@ -1,4 +1,4 @@
-defmodule Incunabula.PromoController do
+defmodule Incunabula.ChaffController do
   use Incunabula.Web, :controller
 
   plug :authenticate_user when action in [:index]
