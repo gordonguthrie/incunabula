@@ -40,6 +40,18 @@ defmodule Incunabula.Git do
     _dir = Path.join(get_env(:root_directory), "books")
   end
 
+  def get_title(dir) do
+    GenServer.call(__MODULE__, {:read, {dir, "title.db"}})
+  end
+
+  def get_contents(dir) do
+    GenServer.call(__MODULE__, {:get_contents, dir})
+  end
+
+  def get_images(dir) do
+    GenServer.call(__MODULE__, {:get_images,dir})
+  end
+
   @doc "a shell command to check that the github token and stuff is correct"
   def check_github_SHELL_ONLY() do
     githubPAT = get_env(:personal_access_token)
@@ -61,12 +73,28 @@ defmodule Incunabula.Git do
   # call backs
   #
 
+  def handle_call({:get_contents, dir}, _from, state) do
+    contents = consult_file(dir, "contents.db")
+    html = Incunabula.FragController.get_contents(contents)
+    {:reply, html, state}
+  end
+
+  def handle_call({:get_images, dir}, _from, state) do
+    contents = consult_file(dir, "images.db")
+    html = Incunabula.FragController.get_images(contents)
+    {:reply, html, state}
+  end
+
   def handle_call(:get_books, _from, state) do
     {:reply, do_get_books(), state}
   end
 
   def handle_call({:create_book, book_title}, _from, state) do
     {:reply, do_create_book(book_title), state}
+  end
+
+  def handle_call({:read, {dir, file}}, _from, state) do
+    {:reply, read_file(dir, file), state}
   end
 
   # this clause handles an info message we get sent when we render HTML
@@ -92,8 +120,12 @@ defmodule Incunabula.Git do
         bookdir
         |> make_dir
         |> do_git_init
-        |> write_to_book("title", book_title)
+        |> write_to_book("title.db", book_title)
         |> write_to_book(".gitignore", standard_gitignore())
+        |> write_to_book("contents.db", :io_lib.format('~p.~n', [[]]))
+        |> write_to_book("images.db",   :io_lib.format('~p.~n', [[]]))
+        |> make_component_dirs("contents")
+        |> make_component_dirs("images")
         |> add_to_git(:all)
         |> commit_to_git("basic setup of directory")
         |> push_to_github(slug)
@@ -119,7 +151,7 @@ defmodule Incunabula.Git do
   defp get_books(rootdir, files) do
     subs  = for f <- files, File.dir?(Path.join([rootdir, f])), do: f
     slugs = for d <- subs,  File.dir?(Path.join([rootdir, d, "/.git"])), do: d
-    books = for s <- slugs, {:ok, t} = File.read(Path.join([rootdir, s, "title"])) do
+    books = for s <- slugs, {:ok, t} = File.read(Path.join([rootdir, s, "title.db"])) do
       {t, s}
     end
     Incunabula.FragController.get_books(Enum.sort(books))
@@ -143,7 +175,7 @@ defmodule Incunabula.Git do
     ]
     # Bit shit check of return values
     # Rly should be an http request but hey
-    {_, 0} = System.cmd("curl", args)
+    # {_, 0} = System.cmd("curl", args)
     :ok
   end
 
@@ -188,7 +220,7 @@ defmodule Incunabula.Git do
       "push",
       "--repo=" <> url
     ]
-    {"", 0} = System.cmd(cmd, args, [cd: dir])
+    # {"", 0} = System.cmd(cmd, args, [cd: dir])
     dir
   end
 
@@ -207,8 +239,25 @@ defmodule Incunabula.Git do
   end
 
   defp write_to_book(dir, file, contents) do
-    :ok = File.write(Path.join(dir, file), contents)
+    path = Path.join([dir, file])
+    :ok = File.write(path, contents)
     dir
+  end
+
+  defp make_component_dirs(dir, type) do
+    :ok = File.mkdir(Path.join([dir, type]))
+    dir
+  end
+
+  def read_file(dir, file) do
+    rootdir = get_books_dir()
+    File.read(Path.join([rootdir, dir, file]))
+  end
+
+  def consult_file(dir, file) do
+    rootdir = get_books_dir()
+    {:ok, [contents]} = :file.consult(Path.join([rootdir, dir, file]))
+    contents
   end
 
   defp standard_gitignore() do

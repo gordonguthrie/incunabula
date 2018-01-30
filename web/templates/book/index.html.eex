@@ -1,8 +1,6 @@
 <h2>Books</h2>
 
-<div class="incunabula-topic" topic="books:list"></div>
-
-<div id="books-list"></div>
+<div id="books-list" class="incunabula-topic" topic="books:list"></div>
 
 <div class="content">
   <button class="incunabula-show ui primary button">New Book</button>

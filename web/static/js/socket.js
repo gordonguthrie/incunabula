@@ -15,13 +15,25 @@ function draw(id, msg) {
     $("#" + id).html(msg)
 }
 
+function make_key(str) {
+    var components = str.split(":")
+    return components[0] + ":" + components[1]
+}
+
 // Create a route for channel message
 let router = new Map()
 
 // by convention the message set maps to the drawing id with a colon replace
 // by a hyphen becuz css and shit
-router.set("books:list", {id:      "books-list",
-                          draw_fn: function(id, msg) {draw(id, msg)}})
+router.set("book:get_contents",
+           {id:      "book-get_contents",
+            draw_fn: function(id, msg) {draw(id, msg)}})
+router.set("book:get_images",
+           {id:      "book-get_images",
+            draw_fn: function(id, msg) {draw(id, msg)}})
+router.set("books:list",
+           {id:      "books-list",
+            draw_fn: function(id, msg) {draw(id, msg)}})
 
 let socket = new Socket("/socket", {params: {token: window.userToken}})
 
@@ -76,7 +88,8 @@ let topics = document.getElementsByClassName("incunabula-topic")
 Array.from(topics).forEach((t) => {
     let topic = t.getAttribute("topic")
     let channel = socket.channel(topic, {})
-    let route = router.get(topic)
+    var key = make_key(topic)
+    let route = router.get(key)
     channel.join()
         .receive("ok", resp => {
             route.draw_fn(route.id, resp)

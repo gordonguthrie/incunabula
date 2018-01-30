@@ -9,9 +9,11 @@ defmodule Incunabula.BookController do
       changeset: changeset
   end
 
-  def show(conn, %{"slug" => slug}) do
+  def show(conn, %{"slug"  => slug}) do
+    {:ok, title} = Incunabula.Git.get_title(slug)
     render conn, "show.html",
-      slug:  slug
+      slug:  slug,
+      title: title
   end
 
   def create(conn, %{"book" => book}) do

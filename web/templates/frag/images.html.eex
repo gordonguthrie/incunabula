@@ -1,0 +1,9 @@
+<%= if @images == [] do %>
+<p>There are no images to show</p>
+<% else %>
+<table "ui striped table">
+  <%= for i <- @images do %>
+      <tr><td><div><%= i %></div></td></tr>
+      <% end %>
+</table>
+<% end %>

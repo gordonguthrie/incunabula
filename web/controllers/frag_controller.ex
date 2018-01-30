@@ -1,6 +1,19 @@
 defmodule Incunabula.FragController do
   use Incunabula.Web, :controller
 
+  def get_contents(contents) do
+    conn = make_fresh_conn()
+    make_html conn, "contents.html",
+      contents: contents
+  end
+
+  def get_images(images) do
+    conn = make_fresh_conn()
+    make_html conn, "images.html",
+      images: images
+  end
+
+
   def get_books(books) do
     conn = make_fresh_conn()
     make_html conn, "books.html",

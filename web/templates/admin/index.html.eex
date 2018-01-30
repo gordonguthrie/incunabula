@@ -1,6 +1,8 @@
 <h2 class="ui header">Admin</h2>
 
-    <td>Users</td>
+<table class="ui striped table">
+  <tr>
+    <td><strong>Users</strong></td>
     <td>
       <%= hd(@users) %>
     </td>

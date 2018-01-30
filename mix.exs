@@ -47,7 +47,8 @@ defmodule Incunabula.Mixfile do
      # add_users is messy because it builds an escript as well as providing
      # functionality - so the app has the escripts name
      {:add_users,           git: "https://github.com/gordonguthrie/incunabula_utilities.git"},
-     {:pbkdf2_elixir,       "~> 0.12.3"}
+     {:pbkdf2_elixir,       "~> 0.12.3"},
+     {:eiderdown,           git: "https://github.com/gordonguthrie/eiderdown.git"}
     ]
   end
 

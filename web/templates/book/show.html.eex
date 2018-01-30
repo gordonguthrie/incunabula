@@ -1,1 +1,14 @@
-<div id="bookslug" class="incunabula-hidden"><%= @slug %></div>
+<h1><%= @title %></h1>
+
+<div class="ui top attached tabular menu">
+  <a class="active item" data-tab="contents">Contents</a>
+  <a class="item" data-tab="images">Images</a>
+</div>
+
+<div class="ui bottom attached active tab segment" data-tab="contents">
+  <div id="book-get_contents" class="incunabula-topic" topic="book:get_contents:<%= @slug %>"></div>
+</div>
+
+<div class="ui bottom attached tab segment" data-tab="images">
+<div id="book-get_images" class="incunabula-topic" topic="book:get_images:<%= @slug %>"></div>
+</div>

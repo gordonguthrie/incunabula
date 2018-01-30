@@ -35,3 +35,8 @@ incunabula.edit_link = function (event) {
 $(".incunabula-show").on('click', incunabula.show_modal);
 
 $(".incunabula-book-title").on('change', incunabula.edit_link);
+
+//
+// Make the menus and stuff work
+//
+$(".menu .item").tab();
