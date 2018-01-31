@@ -2,7 +2,7 @@ defmodule Incunabula.FragController do
   use Incunabula.Web, :controller
 
   def get_chapters(slug, chapters) do
-    data = for {t, s} <- chapters, do: %{title: s, chapter_slug: s}
+    data = for {t, s} <- chapters, do: %{title: t, chapter_slug: s}
     conn = make_fresh_conn()
     make_html conn, "chapters.html",
       slug: slug,
