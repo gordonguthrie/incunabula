@@ -83,15 +83,11 @@ defmodule Incunabula.Git do
   end
 
   def handle_call({:get_chapters, slug}, _from, state) do
-    chapters = consult_file(get_book_dir(slug), "chapters.db")
-    html = Incunabula.FragController.get_chapters(slug, chapters)
-    {:reply, html, state}
+    {:reply, do_get_chapters(slug), state}
   end
 
   def handle_call({:get_images, slug}, _from, state) do
-    chapters = consult_file(get_book_dir(slug), "images.db")
-    html = Incunabula.FragController.get_images(slug, chapters)
-    {:reply, html, state}
+    {:reply, do_get_images(slug), state}
   end
 
   def handle_call(:get_books, _from, state) do
@@ -133,7 +129,8 @@ defmodule Incunabula.Git do
           " - "         <>
           chapter_slug)
         |> push_to_github(slug)
-        :ok
+        |> push_to_channel(slug, :"books-get_chapters")
+       :ok
       true ->
         # don't care really
         :ok
@@ -165,11 +162,21 @@ defmodule Incunabula.Git do
         |> add_to_git(:all)
         |> commit_to_git("basic setup of directory")
         |> push_to_github(slug)
-        |> push_to_channel(:"books-list")
+        |> push_to_channel(slug, :"books-list")
         {:ok, slug}
       true ->
         {:error, "The book " <> slug <> " exists already"}
     end
+  end
+
+  defp do_get_images(slug) do
+    images = consult_file(get_book_dir(slug), "images.db")
+    _html  = Incunabula.FragController.get_images(slug, images)
+  end
+
+  defp do_get_chapters(slug) do
+    chapters = consult_file(get_book_dir(slug), "chapters.db")
+    _html    = Incunabula.FragController.get_chapters(slug, chapters)
   end
 
   defp do_get_books() do
@@ -261,11 +268,28 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp push_to_channel(dir, :"books-list") do
+  defp push_to_channel(dir, _slug, :"books-list") do
     books = do_get_books()
     Incunabula.Endpoint.broadcast "books:list", "books", %{books: books}
     dir
   end
+
+  defp push_to_channel(dir, slug, :"books-get_chapters") do
+    chapters = do_get_chapters(slug)
+    # No I don't understand why the event and the message associated with it have to be called books neither
+    Incunabula.Endpoint.broadcast "book:get_chapters:" <> slug,
+      "books", %{books: chapters}
+    dir
+  end
+
+  defp push_to_channel(dir, slug, :"books-get_images") do
+    images = do_get_images(slug)
+    # No I don't understand why the event and the message associated with it have to be called books neither
+    Incunabula.Endpoint.broadcast "book:get_images:" <> slug,
+      "books", %{books: images}
+    dir
+  end
+
 
   defp do_git_init(dir) do
     return = System.cmd("git", ["init"], cd: dir)
