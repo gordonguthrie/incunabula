@@ -26,7 +26,7 @@
               download from GitHub
             </a>
             <%= if @current_user do %>
-            <a href="/logout" class="item">Logout</a>
+            <a href="/logout" class="item">Logout&nbsp;<strong><%= @current_user %></strong></a>
             <% else %>
             <a href="/login" class="item">Login</a>
             <% end %>
