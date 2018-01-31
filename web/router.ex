@@ -17,15 +17,17 @@ defmodule Incunabula.Router do
   scope "/", Incunabula do
     pipe_through :browser # Use the default browser stack
 
-    get  "/",            PageController,  :index
-    get  "/books",       BookController,  :index
-    post "/book/new",    BookController,  :create
-    get  "/books/:slug", BookController,  :show
-    get  "/chaff",       ChaffController, :index
-    get  "/admin",       AdminController, :index
-    get  "/login",       LoginController, :index
-    post "/login",       LoginController, :login
-    get  "/logout",      LoginController, :logout
+    get  "/",                       PageController,    :index
+    get  "/books",                  BookController,    :index
+    post "/book/new",               BookController,    :create
+    get  "/books/:slug",            BookController,    :show
+    post "/book/:slug/chapter/new", ChapterController, :create
+    post "/book/:slug/image/new",   ImageController,   :create
+    get  "/chaff",                  ChaffController,   :index
+    get  "/admin",                  AdminController,   :index
+    get  "/login",                  LoginController,   :index
+    post "/login",                  LoginController,   :login
+    get  "/logout",                 LoginController,   :logout
   end
 
   # Other scopes may use custom stacks.

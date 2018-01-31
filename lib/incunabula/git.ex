@@ -28,6 +28,11 @@ defmodule Incunabula.Git do
     {:ok, []}
   end
 
+  def create_chapter(slug, chapter_title) do
+    GenServer.call(__MODULE__, {:create_chapter, {slug, chapter_title}})
+  end
+
+
   def create_book(book_title) do
     GenServer.call(__MODULE__, {:create_book, book_title})
   end
@@ -40,16 +45,16 @@ defmodule Incunabula.Git do
     _dir = Path.join(get_env(:root_directory), "books")
   end
 
-  def get_title(dir) do
-    GenServer.call(__MODULE__, {:read, {dir, "title.db"}})
+  def get_title(slug) do
+    GenServer.call(__MODULE__, {:read, {slug, "title.db"}})
   end
 
-  def get_contents(dir) do
-    GenServer.call(__MODULE__, {:get_contents, dir})
+  def get_chapters(slug) do
+    GenServer.call(__MODULE__, {:get_chapters, slug})
   end
 
-  def get_images(dir) do
-    GenServer.call(__MODULE__, {:get_images,dir})
+  def get_images(slug) do
+    GenServer.call(__MODULE__, {:get_images, slug})
   end
 
   @doc "a shell command to check that the github token and stuff is correct"
@@ -73,15 +78,19 @@ defmodule Incunabula.Git do
   # call backs
   #
 
-  def handle_call({:get_contents, dir}, _from, state) do
-    contents = consult_file(dir, "contents.db")
-    html = Incunabula.FragController.get_contents(contents)
+  def handle_call({:create_chapter, {slug, chapter_title}}, _from, state) do
+    {:reply, do_create_chapter(slug, chapter_title), state}
+  end
+
+  def handle_call({:get_chapters, slug}, _from, state) do
+    chapters = consult_file(get_book_dir(slug), "chapters.db")
+    html = Incunabula.FragController.get_chapters(slug, chapters)
     {:reply, html, state}
   end
 
-  def handle_call({:get_images, dir}, _from, state) do
-    contents = consult_file(dir, "images.db")
-    html = Incunabula.FragController.get_images(contents)
+  def handle_call({:get_images, slug}, _from, state) do
+    chapters = consult_file(get_book_dir(slug), "images.db")
+    html = Incunabula.FragController.get_images(slug, chapters)
     {:reply, html, state}
   end
 
@@ -93,8 +102,8 @@ defmodule Incunabula.Git do
     {:reply, do_create_book(book_title), state}
   end
 
-  def handle_call({:read, {dir, file}}, _from, state) do
-    {:reply, read_file(dir, file), state}
+  def handle_call({:read, {slug, file}}, _from, state) do
+    {:reply, read_file(get_book_dir(slug), file), state}
   end
 
   # this clause handles an info message we get sent when we render HTML
@@ -109,11 +118,38 @@ defmodule Incunabula.Git do
     {:noreply, socket}
   end
 
+  defp do_create_chapter(slug, chapter_title) do
+     chapter_slug = Incunabula.Slug.to_slug(chapter_title)
+    bookdir = get_book_dir(slug)
+    content = Path.join([bookdir, "chapters", chapter_slug <> ".ed"])
+    case File.exists?(content) do
+      false ->
+        :ok = File.touch(content)
+        bookdir
+        |> update_chapters(chapter_title, chapter_slug)
+        |> add_to_git(:all)
+        |> commit_to_git("create new chapter: " <>
+          chapter_title <>
+          " - "         <>
+          chapter_slug)
+        |> push_to_github(slug)
+        :ok
+      true ->
+        # don't care really
+        :ok
+    end
+  end
+
+  defp update_chapters(bookdir, chapter_title, chapter_slug) do
+    old_chapters = consult_file(bookdir, "chapters.db")
+    new_chapters = old_chapters ++ [{chapter_title, chapter_slug}]
+    contents = :io_lib.format('~p.~n', [new_chapters])
+    write_to_book(bookdir, "chapters.db", contents)
+  end
 
   defp do_create_book(book_title) do
-    dir = get_books_dir()
     slug = Incunabula.Slug.to_slug(book_title)
-    bookdir = Path.join(dir, slug)
+    bookdir = get_book_dir(slug)
     case File.exists?(bookdir) do
       false ->
         :ok = create_repo_on_github(slug)
@@ -122,14 +158,14 @@ defmodule Incunabula.Git do
         |> do_git_init
         |> write_to_book("title.db", book_title)
         |> write_to_book(".gitignore", standard_gitignore())
-        |> write_to_book("contents.db", :io_lib.format('~p.~n', [[]]))
+        |> write_to_book("chapters.db", :io_lib.format('~p.~n', [[]]))
         |> write_to_book("images.db",   :io_lib.format('~p.~n', [[]]))
-        |> make_component_dirs("contents")
+        |> make_component_dirs("chapters")
         |> make_component_dirs("images")
         |> add_to_git(:all)
         |> commit_to_git("basic setup of directory")
         |> push_to_github(slug)
-        :ok = push_to_channel(:"books-list")
+        |> push_to_channel(:"books-list")
         {:ok, slug}
       true ->
         {:error, "The book " <> slug <> " exists already"}
@@ -140,6 +176,7 @@ defmodule Incunabula.Git do
     dir = get_books_dir()
     case File.ls(dir) do
       {:ok, files} ->
+        IO.inspect files
         get_books(dir, files)
       {:error, reason} ->
         Logger.error "listings books in " <> dir <> " fails because: "
@@ -203,7 +240,7 @@ defmodule Incunabula.Git do
     ]
     {return, 0} = System.cmd(cmd, args, [cd: dir])
     # force a crash if this failed
-    <<"[master (root-commit) ">> <> _rest = return
+    <<"[master ">> <> _rest = return
     dir
   end
 
@@ -224,11 +261,10 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp push_to_channel(:"books-list") do
+  defp push_to_channel(dir, :"books-list") do
     books = do_get_books()
-    ret = Incunabula.Endpoint.broadcast "books:list", "books", %{books: books}
-    IO.inspect ret
-    :ok
+    Incunabula.Endpoint.broadcast "books:list", "books", %{books: books}
+    dir
   end
 
   defp do_git_init(dir) do
@@ -238,9 +274,9 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp write_to_book(dir, file, contents) do
+  defp write_to_book(dir, file, chapters) do
     path = Path.join([dir, file])
-    :ok = File.write(path, contents)
+    :ok = File.write(path, chapters)
     dir
   end
 
@@ -250,18 +286,26 @@ defmodule Incunabula.Git do
   end
 
   def read_file(dir, file) do
-    rootdir = get_books_dir()
-    File.read(Path.join([rootdir, dir, file]))
+    File.read(Path.join([dir, file]))
   end
 
   def consult_file(dir, file) do
-    rootdir = get_books_dir()
-    {:ok, [contents]} = :file.consult(Path.join([rootdir, dir, file]))
-    contents
+    path = Path.join(dir, file)
+    {:ok, [terms]} = :file.consult(path)
+    terms
   end
 
   defp standard_gitignore() do
     "lock.file"
+  end
+
+  defp get_book_dir(slug) do
+    Path.join(get_books_dir(), slug)
+  end
+
+  defp log(dir, msg) do
+    IO.inspect msg
+    dir
   end
 
 end

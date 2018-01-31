@@ -23,20 +23,16 @@ import socket from "./socket"
 
 var incunabula = {};
 
-incunabula.show_modal = function () {
-    $(".ui.modal").modal("show");
-};
-
-incunabula.edit_link = function (event) {
-    console.log($(event.target.value()));
-    $(".incunabula-new-book").attr('href', '/books/bingo');
+incunabula.setup_modals = function() {
+    $(".incunabula-show").on('click', function () {
+        console.log();
+        var modalclass = $(this).attr("modal");
+        $("." + modalclass).modal("show");
+    })
 }
-
-$(".incunabula-show").on('click', incunabula.show_modal);
-
-$(".incunabula-book-title").on('change', incunabula.edit_link);
 
 //
 // Make the menus and stuff work
 //
 $(".menu .item").tab();
+incunabula.setup_modals();

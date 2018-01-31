@@ -25,8 +25,8 @@ let router = new Map()
 
 // by convention the message set maps to the drawing id with a colon replace
 // by a hyphen becuz css and shit
-router.set("book:get_contents",
-           {id:      "book-get_contents",
+router.set("book:get_chapters",
+           {id:      "book-get_chapters",
             draw_fn: function(id, msg) {draw(id, msg)}})
 router.set("book:get_images",
            {id:      "book-get_images",

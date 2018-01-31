@@ -1,0 +1,9 @@
+<%= if @chapters == [] do %>
+<p>There are no chapters to show</p>
+<% else %>
+<table class="ui striped table">
+  <%= for c <- @chapters do %>
+      <tr><td><div><a href="/books/<%= @slug %>/chapters/<%= c.chapter_slug %>"><%= c.title %></a></div></td></tr>
+      <% end %>
+</table>
+<% end %>

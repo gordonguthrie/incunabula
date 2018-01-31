@@ -1,9 +1,0 @@
-<%= if @contents == [] do %>
-<p>There are no contents to show</p>
-<% else %>
-<table "ui striped table">
-  <%= for c <- @contents do %>
-      <tr><td><div><%= c %></div></td></tr>
-      <% end %>
-</table>
-<% end %>

@@ -1,14 +1,52 @@
 <h1><%= @title %></h1>
 
 <div class="ui top attached tabular menu">
-  <a class="active item" data-tab="contents">Contents</a>
+  <a class="active item" data-tab="chapters">Chapters</a>
   <a class="item" data-tab="images">Images</a>
 </div>
 
-<div class="ui bottom attached active tab segment" data-tab="contents">
-  <div id="book-get_contents" class="incunabula-topic" topic="book:get_contents:<%= @slug %>"></div>
+<div class="ui bottom attached active tab segment" data-tab="chapters">
+  <div id="book-get_chapters" class="incunabula-topic" topic="book:get_chapters:<%= @slug %>"></div>
+<div class="content">
+  <button class="incunabula-show ui primary button" modal="incunabula-new-chapter" >New Chapter</button>
+</div>
 </div>
 
 <div class="ui bottom attached tab segment" data-tab="images">
 <div id="book-get_images" class="incunabula-topic" topic="book:get_images:<%= @slug %>"></div>
+<div class="content">
+  <button class="incunabula-show ui primary button" modal="incunabula-new-image">Upload Image</button>
+</div>
+</div>
+
+<div class="incunabula-new-chapter ui small modal">
+  <div class="content">
+    <div class="ui form">
+      <%= form_for @chapterchangeset, @newchapter, fn f -> %>
+        <div class="field">
+        <label>Create a new chapter
+        <%= text_input(f, :chapter_title,
+            [class: :field,
+            placeholder: "Chapter title"]) %>
+        </label>
+        </div>
+        <%= submit("Create New Chapter", [class: "ui button"]) %>
+      <% end %>
+    </div>
+</div>
+
+  <div class="incunabula-new-image ui small modal">
+  <div class="content">
+    <div class="ui form">
+      <%= form_for @imagechangeset, @newimage, fn f -> %>
+        <div class="field">
+        <label>Upload a new image
+        <%= text_input(f, :image_title,
+            [class: :field,
+            placeholder: "Image title"]) %>
+        </label>
+        </div>
+        <%= submit("Upload new image", [class: "ui button"]) %>
+      <% end %>
+    </div>
 </div>

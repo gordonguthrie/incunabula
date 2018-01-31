@@ -3,10 +3,10 @@
 <div id="books-list" class="incunabula-topic" topic="books:list"></div>
 
 <div class="content">
-  <button class="incunabula-show ui primary button">New Book</button>
+  <button class="incunabula-show ui primary button" modal="incunabula-new-book">New Book</button>
 </div>
 
-<div class="ui small modal">
+<div class="incunabula-new-book ui small modal">
   <div class="content">
     <div class="ui form">
       <%= form_for @changeset, "/book/new", fn f -> %>

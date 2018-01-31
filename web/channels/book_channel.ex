@@ -7,9 +7,9 @@ defmodule Incunabula.BookChannel do
     {:ok, reply, socket}
   end
 
-  def get_reply(book, "get_contents") do
-    contents = Incunabula.Git.get_contents(book)
-    contents
+  def get_reply(book, "get_chapters") do
+    chapters = Incunabula.Git.get_chapters(book)
+    chapters
   end
 
   def get_reply(book, "get_images") do
