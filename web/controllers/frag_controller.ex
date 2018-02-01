@@ -2,7 +2,6 @@ defmodule Incunabula.FragController do
   use Incunabula.Web, :controller
 
   def get_chapters(slug, chapters) do
-    IO.inspect chapters
     #data = for {t, s} <- chapters, do: %{title: t, chapter_slug: s}
     conn = make_fresh_conn()
     make_html conn, "chapters.html",
@@ -11,7 +10,6 @@ defmodule Incunabula.FragController do
   end
 
   def get_images(slug, images) do
-    IO.inspect images
     conn = make_fresh_conn()
     make_html conn, "images.html",
       slug:   slug,
