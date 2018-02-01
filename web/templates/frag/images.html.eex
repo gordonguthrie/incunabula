@@ -3,7 +3,11 @@
 <% else %>
 <table class = "ui striped table">
   <%= for i <- @images do %>
-      <tr><td><div><%= i %></div></td></tr>
+      <tr>
+        <td><%= i.title %></td>
+        <td><small>(original filename: <%= i.original_name %>)</td>
+        <td><div><img src='<%= "/books/" <> @slug <> "/images/" <> i.image_slug %>' alt='<% i.title %>'></div></td>
+      </tr>
       <% end %>
 </table>
 <% end %>

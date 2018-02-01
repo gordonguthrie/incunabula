@@ -28,10 +28,13 @@ defmodule Incunabula.Git do
     {:ok, []}
   end
 
+  def load_image(slug, image) do
+   GenServer.call(__MODULE__, {:load_image, {slug, image}})
+  end
+
   def create_chapter(slug, chapter_title) do
     GenServer.call(__MODULE__, {:create_chapter, {slug, chapter_title}})
   end
-
 
   def create_book(book_title) do
     GenServer.call(__MODULE__, {:create_book, book_title})
@@ -78,6 +81,10 @@ defmodule Incunabula.Git do
   # call backs
   #
 
+ def handle_call({:load_image, {slug, image}}, _from, state) do
+    {:reply, do_load_image(slug, image), state}
+  end
+
   def handle_call({:create_chapter, {slug, chapter_title}}, _from, state) do
     {:reply, do_create_chapter(slug, chapter_title), state}
   end
@@ -114,27 +121,60 @@ defmodule Incunabula.Git do
     {:noreply, socket}
   end
 
+  defp do_load_image(slug, %{"image_title"    => image_title,
+                             "uploaded_image" => uploaded_image}) do
+    %Plug.Upload{filename: filename,
+                 path:     tmp_image_path} = uploaded_image
+    ext = String.downcase(Path.extname(filename))
+    imagename = image_title <> ext
+    imageslug = Incunabula.Slug.to_slug(image_title) <> ext
+    bookdir = get_book_dir(slug)
+    commitmsg = "upload new image: " <> imagename <>
+      " - " <> imageslug
+    bookdir
+    |> copy_image(imageslug, tmp_image_path)
+    |> update_images(imagename, filename, imageslug)
+    |> add_to_git(:all)
+    |> commit_to_git(commitmsg)
+    |> push_to_github(slug)
+    |> push_to_channel(slug, :"book-get_images")
+    :ok
+  end
+
+  defp copy_image(dir, titleslug, tmp_image_path) do
+    path = Path.join(dir, "images")
+    to   = Path.join(path, titleslug)
+    :ok = File.cp(tmp_image_path, to)
+    dir
+  end
+
   defp do_create_chapter(slug, chapter_title) do
-     chapter_slug = Incunabula.Slug.to_slug(chapter_title)
+    chapter_slug = Incunabula.Slug.to_slug(chapter_title)
     bookdir = get_book_dir(slug)
     content = Path.join([bookdir, "chapters", chapter_slug <> ".ed"])
     case File.exists?(content) do
       false ->
         :ok = File.touch(content)
+        commitmsg = "create new chapter: " <> chapter_title <>
+          " - " <> chapter_slug
         bookdir
         |> update_chapters(chapter_title, chapter_slug)
         |> add_to_git(:all)
-        |> commit_to_git("create new chapter: " <>
-          chapter_title <>
-          " - "         <>
-          chapter_slug)
+        |> commit_to_git(commitmsg)
         |> push_to_github(slug)
-        |> push_to_channel(slug, :"books-get_chapters")
-       :ok
+        |> push_to_channel(slug, :"book-get_chapters")
+        :ok
       true ->
         # don't care really
         :ok
     end
+  end
+
+  defp update_images(bookdir, image_title, origfilename, image_slug) do
+    old_images = consult_file(bookdir, "images.db")
+    new_images = old_images ++ [{image_title, origfilename, image_slug}]
+    images = :io_lib.format('~p.~n', [new_images])
+    write_to_book(bookdir, "images.db", images)
   end
 
   defp update_chapters(bookdir, chapter_title, chapter_slug) do
@@ -183,7 +223,6 @@ defmodule Incunabula.Git do
     dir = get_books_dir()
     case File.ls(dir) do
       {:ok, files} ->
-        IO.inspect files
         get_books(dir, files)
       {:error, reason} ->
         Logger.error "listings books in " <> dir <> " fails because: "
@@ -274,7 +313,7 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp push_to_channel(dir, slug, :"books-get_chapters") do
+  defp push_to_channel(dir, slug, :"book-get_chapters") do
     chapters = do_get_chapters(slug)
     # No I don't understand why the event and the message associated with it have to be called books neither
     Incunabula.Endpoint.broadcast "book:get_chapters:" <> slug,
@@ -282,7 +321,7 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp push_to_channel(dir, slug, :"books-get_images") do
+  defp push_to_channel(dir, slug, :"book-get_images") do
     images = do_get_images(slug)
     # No I don't understand why the event and the message associated with it have to be called books neither
     Incunabula.Endpoint.broadcast "book:get_images:" <> slug,

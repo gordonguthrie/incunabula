@@ -10,9 +10,15 @@ defmodule Incunabula.FragController do
   end
 
   def get_images(slug, images) do
+    IO.inspect images
+    data = for {t, o, s} <- images, do: %{title:         t,
+                                          original_name: o,
+                                          image_slug:    s}
+    IO.inspect data
     conn = make_fresh_conn()
     make_html conn, "images.html",
-      images: images
+      slug:   slug,
+      images: data
   end
 
   def get_books(books) do

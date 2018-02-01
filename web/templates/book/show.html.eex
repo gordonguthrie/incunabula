@@ -38,13 +38,16 @@
   <div class="incunabula-new-image ui small modal">
   <div class="content">
     <div class="ui form">
-      <%= form_for @imagechangeset, @newimage, fn f -> %>
-        <div class="field">
+      <%= form_for @imagechangeset, @newimage, [multipart: true, class: "ui form"], fn f -> %>
+      <div class="field">
         <label>Upload a new image
         <%= text_input(f, :image_title,
             [class: :field,
             placeholder: "Image title"]) %>
+        <%= error_tag f, :caption %>
         </label>
+        <%= file_input f, :uploaded_image , [class: "ui button"]%>
+        <%= error_tag f, :caption %>
         </div>
         <%= submit("Upload new image", [class: "ui button"]) %>
       <% end %>
