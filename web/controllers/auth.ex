@@ -26,7 +26,6 @@ defmodule Incunabula.Auth do
   end
 
   defp put_current_user(conn, user) do
-    IO.inspect user
     token = Phoenix.Token.sign(conn, "user socket", user)
     conn
     |> assign(:current_user, user)
