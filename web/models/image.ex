@@ -16,9 +16,11 @@ defmodule Incunabula.Image do
 
   # This fn would normally be automagiced by various macro's and shit
   def __changeset__() do
-    %{id:    Incubula.Image,
-      image: :binary,
-      title: :image}
+    %{id:            Incubula.Image,
+      title:         :string,
+      original_name: :string,
+      image_slug:    :string,
+      image_details: :string}
   end
 
   def changeset() do
