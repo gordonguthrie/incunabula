@@ -14,10 +14,14 @@ html, body {
 }
 
 
-.incunabula-body {
+.incunabula-body, incunabula-alerts {
     max-width: 700px;
     margin:    auto;
 }
+
+.alert-info:empty, .alert-danger:empty {
+                       display:none;
+                   }
 
 main {
     padding:   20px;

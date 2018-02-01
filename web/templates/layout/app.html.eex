@@ -33,7 +33,7 @@
         </nav>
       </header>
       <div>
-        <div class="incunabula-body ">
+        <div class="incunabula-alerts">
           <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
           <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
           </div>
