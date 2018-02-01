@@ -1,6 +1,16 @@
 defmodule Incunabula.ImageController do
   use Incunabula.Web, :controller
 
+  def show(conn, %{"image" => image,
+                   "slug"  => slug}) do
+    booksdir = Incunabula.Git.get_books_dir()
+    file = Path.join([booksdir, slug, "images", image])
+    {:ok, binary} = File.read(file)
+    conn
+    |> put_resp_content_type("application/octet-stream")
+    |> send_resp(200, binary)
+  end
+
   def create(conn, %{"image" => image,
                     "slug"   => slug} = params) do
     case is_valid_image?(image) do

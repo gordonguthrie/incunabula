@@ -3,6 +3,7 @@
 <div class="ui top attached tabular menu">
   <a class="active item" data-tab="chapters">Chapters</a>
   <a class="item" data-tab="images">Images</a>
+  <!-- <a class="item" data-tab="chaff">Chaff</a> -->
 </div>
 
 <div class="ui bottom attached active tab segment" data-tab="chapters">
@@ -18,6 +19,14 @@
   <button class="incunabula-show ui primary button" modal="incunabula-new-image">Upload Image</button>
 </div>
 </div>
+<!--
+<div class="ui bottom attached tab segment" data-tab="chaff">
+<div id="book-get_chaff" class="incunabula-topic" topic="book:get_chaff:<%= @slug %>"></div>
+<div class="content">
+  <button class="incunabula-show ui primary button" modal="incunabula-new-chaff">Create New Chaff</button>
+</div>
+</div>
+-->
 
 <div class="incunabula-new-chapter ui small modal">
   <div class="content">
@@ -51,5 +60,26 @@
         </div>
         <%= submit("Upload new image", [class: "ui button"]) %>
       <% end %>
+    </div>
+</div>
+
+    <div class="incunabula-new-chaff ui small modal">
+  <div class="content">
+<!--    <div class="ui form">
+      <%% = form_for @imagechangeset, @newchaff, [multipart: true, class: "ui form"], fn f -> %>
+      <div class="field">
+        <label>Upload a new image
+        <%% = text_input(f, :image_title,
+            [class: :field,
+            placeholder: "Image title"]) %>
+        <%% = error_tag f, :caption %>
+        </label>
+        <%% = file_input f, :uploaded_image , [class: "ui button"] %>
+        <%% = error_tag f, :caption %>
+        </div>
+        <%% = submit("Upload new image", [class: "ui button"]) %>
+      <%% end %>
+      -->
+<p>FIX ME UP</p>
     </div>
 </div>

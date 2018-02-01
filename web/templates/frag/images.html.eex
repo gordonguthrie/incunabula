@@ -2,12 +2,17 @@
 <p>There are no images to show</p>
 <% else %>
 <table class = "ui striped table">
+  <tr><th>Image</th></tr>
   <%= for i <- @images do %>
       <tr>
-        <td><%= i.title %></td>
-        <td><small>(original filename: <%= i.original_name %>)</td>
-        <td><div><img src='<%= "/books/" <> @slug <> "/images/" <> i.image_slug %>' alt='<% i.title %>'></div></td>
+        <td>
+          <p><%= i.title %></p>
+          <p><small>(original name: <%= i.original_name %></small>)</p>
+          <p><code>&lt;img src='<%= "/books/" <> @slug <> "/images/" <> i.image_slug %>' alt='<%= i.title %>'></code></p>
       </tr>
-      <% end %>
+      <tr>
+        <td><div><img src='<%= "/books/" <> @slug <> "/images/" <> i.image_slug %>' alt='<% i.title %>' width='100%'></div></td>
+        <% end %>
+      </tr>
 </table>
 <% end %>

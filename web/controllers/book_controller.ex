@@ -18,8 +18,8 @@ defmodule Incunabula.BookController do
       title:            title,
       chapterchangeset: chapterchangeset,
       imagechangeset:   imagechangeset,
-      newchapter:       "/book/" <> slug <> "/chapter/new",
-      newimage:         "/book/" <> slug <> "/image/new"
+      newchapter:       "/books/" <> slug <> "/chapter/new",
+      newimage:         "/books/" <> slug <> "/image/new"
   end
 
   def create(conn, %{"book" => book}) do
