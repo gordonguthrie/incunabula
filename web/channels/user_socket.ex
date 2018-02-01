@@ -21,7 +21,6 @@ defmodule Incunabula.UserSocket do
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
   def connect(%{"token" => token} = _params, socket) do
-    IO.inspect "in channel connect"
     case Phoenix.Token.verify(socket, "user socket", token, max_age: @max_age) do
       {:ok, user_id} ->
         {:ok, assign(socket, :user_id, user_id)}
