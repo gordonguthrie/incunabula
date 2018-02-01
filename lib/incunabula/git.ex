@@ -52,6 +52,11 @@ defmodule Incunabula.Git do
     GenServer.call(__MODULE__, {:read, {slug, "title.db"}})
   end
 
+  def get_chapter_title(slug, chapterslug) do
+    GenServer.call(__MODULE__, {:get_chapter_title, {slug, chapterslug}})
+  end
+
+
   def get_chapters(slug) do
     GenServer.call(__MODULE__, {:get_chapters, slug})
   end
@@ -88,6 +93,11 @@ defmodule Incunabula.Git do
   def handle_call({:create_chapter, {slug, chapter_title}}, _from, state) do
     {:reply, do_create_chapter(slug, chapter_title), state}
   end
+
+  def handle_call({:get_chapter_title, {slug, chapterslug}}, _from, state) do
+    {:reply, do_get_chapter_title(slug, chapterslug), state}
+  end
+
 
   def handle_call({:get_chapters, slug}, _from, state) do
     {:reply, do_get_chapters(slug), state}
@@ -230,6 +240,12 @@ defmodule Incunabula.Git do
   defp do_get_images(slug) do
     images = consult_file(get_book_dir(slug), "images.db")
     _html  = Incunabula.FragController.get_images(slug, images)
+  end
+
+  defp do_get_chapter_title(slug, chapterslug) do
+    chapters = consult_file(get_book_dir(slug), "chapters.db")
+    [match] = for %{chapter_slug: chapterslug} = x <- chapters, do: x[:chapter_title]
+    {:ok, match}
   end
 
   defp do_get_chapters(slug) do

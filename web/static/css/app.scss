@@ -19,23 +19,12 @@ html, body {
     margin:    auto;
 }
 
-.alert-info:empty, .alert-danger:empty {
-                       display:none;
-                   }
-
 main {
     padding:   20px;
 }
 
 .grid ul {
     padding-left: 15px;
-}
-
-// keep the alerts padded left the same as main
-// keep their height fixed so the main body doens't flash on error
-.alert-info, .alert-danger {
-    height:       2em;
-    padding-left: 20px;
 }
 
 .alert-info {
@@ -58,6 +47,20 @@ body.pushable {
     font-size:   3em;
     text-shadow: 1px 1px 0px rgb(255, 255, 255), 2px 2px 0px rgb(120, 120, 120);
 }
+/*                                           */
+/* make the alerts disappear when no message */
+/*                                           */
+
+.alert-info:empty, .alert-danger:empty {
+                       display:none;
+                   }
+
+// keep the alerts padded left the same as main
+// keep their height fixed so the main body doens't flash on error
+.alert-info, .alert-danger {
+    height:       2em;
+    padding-left: 20px;
+}
 
 /*                        */
 /* Resizing the text area */
@@ -67,6 +70,10 @@ body.pushable {
     height:   100%;
 }
 
+// hide the text area in the form for saving edits
+.incunabula-edits-hidden {
+    display: none;
+}
 
 /*                         */
 /* Media queries and stuff */

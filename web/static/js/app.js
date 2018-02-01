@@ -43,10 +43,17 @@ incunabula.setup_modals();
 //
 $(window).resize(function() {
     var offset = $("#incunabula-eiderdown").offset();
-    var available = window.innerHeight - offset.top - 20;
+    var available = window.innerHeight - offset.top - 50;
     var height = String(available) + "px";
     $("#incunabula-eiderdown").css("height", height);
 });
 
 // Now trigger the resize event on load to resize
 $(window).trigger('resize');
+
+// Set up the save edits stuff
+console.log($(".incunabula-load-saves"));
+$(".incunabula-load-saves").on('click', function() {
+    var edits= $(".incunabula-eiderdown, textarea").val();
+    $(".incunabula-edits-hidden").val(edits);
+});
