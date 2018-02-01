@@ -1,18 +1,30 @@
 <%= if @images == [] do %>
 <p>There are no images to show</p>
 <% else %>
-<table class = "ui striped table">
-  <tr><th>Image</th></tr>
-  <%= for i <- @images do %>
-      <tr>
-        <td>
-          <p><%= i.title %></p>
-          <p><small>(original name: <%= i.original_name %></small>)</p>
-          <p><code>&lt;img src='<%= "/books/" <> @slug <> "/images/" <> i.image_slug %>' alt='<%= i.title %>'></code></p>
-      </tr>
-      <tr>
-        <td><div><img src='<%= "/books/" <> @slug <> "/images/" <> i.image_slug %>' alt='<% i.title %>' width='100%'></div></td>
-        <% end %>
-      </tr>
-</table>
+    <div class="ui two stackable cards">
+<%= for i <- @images do %>
+    <div class="raised card">
+      <div class="image">
+        <img src='<%= "/books/" <> @slug <> "/images/" <> i.image_slug %><%= i.extension %>' alt='<% i.title %>'>
+      </div>
+      <div class="content">
+        <div class="header">
+          <%= i.title %>
+        </div>
+        <div class="meta">
+          (original name: <%= i.original_name %>)
+        </div>
+        <div class="description">
+          <small><%= i.image_details %></small>
+        </div>
+      </div>
+      <div class="extra content">
+        <div class="header">
+          Image link to copy and paste
+        </div>
+        <code>&lt;img src='<%= "/books/" <> @slug <> "/images/" <> i.image_slug %><%= i.extension %>' alt='<%= i.title %>'></code>
+</div>
+</div>
+<% end %>
+</div>
 <% end %>

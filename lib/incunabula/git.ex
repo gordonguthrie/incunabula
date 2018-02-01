@@ -127,13 +127,14 @@ defmodule Incunabula.Git do
                  path:     tmp_image_path} = uploaded_image
     ext = String.downcase(Path.extname(filename))
     imagename = image_title <> ext
-    imageslug = Incunabula.Slug.to_slug(image_title) <> ext
+    shortimageslug = Incunabula.Slug.to_slug(image_title)
+    imageslug = shortimageslug <> ext
     bookdir = get_book_dir(slug)
     commitmsg = "upload new image: " <> imagename <>
       " - " <> imageslug
     bookdir
     |> copy_image(imageslug, tmp_image_path)
-    |> update_images(imagename, filename, imageslug)
+    |> update_imagesDB(imagename, filename, shortimageslug, ext)
     |> add_to_git(:all)
     |> commit_to_git(commitmsg)
     |> push_to_github(slug)
@@ -158,7 +159,7 @@ defmodule Incunabula.Git do
         commitmsg = "create new chapter: " <> chapter_title <>
           " - " <> chapter_slug
         bookdir
-        |> update_chapters(chapter_title, chapter_slug)
+        |> update_chaptersDB(chapter_title, chapter_slug)
         |> add_to_git(:all)
         |> commit_to_git(commitmsg)
         |> push_to_github(slug)
@@ -170,18 +171,35 @@ defmodule Incunabula.Git do
     end
   end
 
-  defp update_images(bookdir, image_title, origfilename, image_slug) do
+  defp update_imagesDB(bookdir, image_title, origfilename, image_slug, ext) do
+    imagedetails = get_image_details(bookdir, image_slug)
+    newentry = %{title:         image_title,
+                 original_name: origfilename,
+                 image_slug:    image_slug,
+                 image_details: imagedetails,
+                 extension:     ext}
     old_images = consult_file(bookdir, "images.db")
-    new_images = old_images ++ [{image_title, origfilename, image_slug}]
+    new_images = old_images ++ [newentry]
     images = :io_lib.format('~p.~n', [new_images])
     write_to_book(bookdir, "images.db", images)
   end
 
-  defp update_chapters(bookdir, chapter_title, chapter_slug) do
+  defp update_chaptersDB(bookdir, chapter_title, chapter_slug) do
+    newentry = %{chapter_title: chapter_title,
+                 chapter_slug: chapter_slug}
     old_chapters = consult_file(bookdir, "chapters.db")
-    new_chapters = old_chapters ++ [{chapter_title, chapter_slug}]
+    new_chapters = old_chapters ++ [newentry]
     contents = :io_lib.format('~p.~n', [new_chapters])
     write_to_book(bookdir, "chapters.db", contents)
+  end
+
+  defp get_image_details(dir, image_file) do
+    args = [
+      to_string(Path.join([dir, "images", image_file]))
+    ]
+    workingdir = to_string(Path.join(dir, "images"))
+    details = System.cmd("file", args, [cd: workingdir])
+    :lists.flatten(:io_lib.format("~p", [details]))
   end
 
   defp do_create_book(book_title) do
