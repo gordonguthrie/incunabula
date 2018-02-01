@@ -1,8 +1,8 @@
 defmodule Incunabula.ImageController do
   use Incunabula.Web, :controller
 
-  def show(conn, %{"image" => image,
-                   "slug"  => slug}) do
+  def show(conn, %{"imageslug" => image,
+                   "slug"      => slug}) do
     booksdir = Incunabula.Git.get_books_dir()
     file = Path.join([booksdir, slug, "images", image])
     {:ok, binary} = File.read(file)

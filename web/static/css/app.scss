@@ -55,10 +55,24 @@ body.pushable {
     text-shadow: 1px 1px 0px rgb(255, 255, 255), 2px 2px 0px rgb(120, 120, 120);
 }
 
+/*                        */
+/* Resizing the text area */
+/*                        */
+
+#incunabula-eiderdown > textarea {
+    height:   100%;
+}
+
+
 /*                         */
 /* Media queries and stuff */
 /*                         */
 
 @media only screen and (max-width: 700px) {
+
+#incunabula-eiderdown > textarea {
+    min-height:   900px;
+}
+
 
 }

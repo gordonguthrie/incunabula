@@ -9,4 +9,15 @@ defmodule Incunabula.ChapterController do
     |> redirect(to: Path.join("/books", slug))
   end
 
+  def show(conn, %{"chapterslug" => chapterslug,
+                   "slug"        => slug}) do
+    IO.inspect chapterslug
+    {:ok, booktitle} = Incunabula.Git.get_title(slug)
+    {:ok, chaptertitle} = Incunabula.Git.get_chapter_title(slug, chapterslug)
+    render conn, "show.html",
+      title:        booktitle,
+      chaptertitle: chaptertitle,
+      slug:         slug
+  end
+
 end

@@ -34,5 +34,19 @@ incunabula.setup_modals = function() {
 //
 // Make the menus and stuff work
 //
+
 $(".menu .item").tab();
 incunabula.setup_modals();
+
+//
+// Resize the text area box
+//
+$(window).resize(function() {
+    var offset = $("#incunabula-eiderdown").offset();
+    var available = window.innerHeight - offset.top - 20;
+    var height = String(available) + "px";
+    $("#incunabula-eiderdown").css("height", height);
+});
+
+// Now trigger the resize event on load to resize
+$(window).trigger('resize');
