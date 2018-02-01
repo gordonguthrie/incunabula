@@ -39,7 +39,7 @@
             placeholder: "Chapter title"]) %>
         </label>
         </div>
-        <%= submit("Create New Chapter", [class: "ui button"]) %>
+        <%= submit("Create New Chapter", [class: "ui primary button"]) %>
       <% end %>
     </div>
 </div>
@@ -58,7 +58,7 @@
         <%= file_input f, :uploaded_image , [class: "ui button"]%>
         <%= error_tag f, :caption %>
         </div>
-        <%= submit("Upload new image", [class: "ui button"]) %>
+        <%= submit("Upload new image", [class: "ui primary button"]) %>
       <% end %>
     </div>
 </div>
@@ -77,7 +77,7 @@
         <%% = file_input f, :uploaded_image , [class: "ui button"] %>
         <%% = error_tag f, :caption %>
         </div>
-        <%% = submit("Upload new image", [class: "ui button"]) %>
+        <%% = submit("Upload new image", [class: "ui primary button"]) %>
       <%% end %>
       -->
 <p>FIX ME UP</p>
