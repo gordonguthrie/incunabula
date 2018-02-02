@@ -41,53 +41,55 @@ incunabula.setup_modals();
 //
 // Resize the text area box
 //
-$(window).resize(function() {
-    // if there is an eiderdown editor resize it
-    if ($("#incunabula-eiderdown").length){
+
+if ($("#incunabula-eiderdown").length){
+
+    $(window).resize(function() {
+        // if there is an eiderdown editor resize it
         var offset = $("#incunabula-eiderdown").offset();
         var available = window.innerHeight - offset.top - 50;
         var height = String(available) + "px";
         $("#incunabula-eiderdown").css("height", height);
+    });
+
+    // Now trigger the resize event on load to resize
+    $(window).trigger('resize');
+
+    // Set up the save edits stuff
+
+    incunabula.maybe_save_edits_fn = function() {
+        console.log("in mebbies");
+        var is_dirty = $(".incunabula-eiderdown, textarea").attr("dirty");
+        console.log(is_dirty);
     }
-});
 
-// Now trigger the resize event on load to resize
-$(window).trigger('resize');
+    incunabula.save_edits_fn = function (type, data, msg) {
+        console.log("in save edits");
+        console.log(data);
+        console.log(msg)
+    };
 
-// Set up the save edits stuff
+    $(".incunabula-submit-edits").on('click', function () {
+        var edits= $(".incunabula-eiderdown, textarea").val();
+        var commit_msg = $(".incunabula-commit_msg").val();
+        incunabula.save_edits_fn("save", edits, commit_msg);
+    });
 
-incunabula.maybe_save_edits_fn = function() {
-    console.log("in mebbies");
-    var is_dirty = $(".incunabula-eiderdown, textarea").attr("dirty");
-    console.log(is_dirty);
-}
+    //
+    // This function detects change on the textarea and marks it as dirty
+    // The timer function only commits changes if the textarea is dirty
+    //
+    // YOU NEED TWO FUNCTIONS TO BE SURE IT WORKS
+    //
 
-incunabula.save_edits_fn = function (type, data, msg) {
-    console.log("in save edits");
-    console.log(data);
-    console.log(msg)
+    $(".incunabula-eiderdown, textarea").on('keyup', function () {
+        $(".incunabula-eiderdown, textarea").attr("dirty", true);
+    });
+
+    $(".incunabula-eiderdown, textarea").on('change', function () {
+        $(".incunabula-eiderdown, textarea").attr("dirty", true);
+    });
+
+    // tick once a minute
+    window.setInterval(incunabula.maybe_save_edits_fn, 1000);
 };
-
-$(".incunabula-submit-edits").on('click', function () {
-    var edits= $(".incunabula-eiderdown, textarea").val();
-    var commit_msg = $(".incunabula-commit_msg").val();
-    incunabula.save_edits_fn("save", edits, commit_msg);
-});
-
-//
-// This function detects change on the textarea and marks it as dirty
-// The timer function only commits changes if the textarea is dirty
-//
-// YOU NEED TWO FUNCTIONS TO BE SURE IT WORKS
-//
-
-$(".incunabula-eiderdown, textarea").on('keyup', function () {
-    $(".incunabula-eiderdown, textarea").attr("dirty", true);
-});
-
-$(".incunabula-eiderdown, textarea").on('change', function () {
-    $(".incunabula-eiderdown, textarea").attr("dirty", true);
-});
-
-// tick once a minute
-window.setInterval(incunabula.maybe_save_edits_fn, 1000);
