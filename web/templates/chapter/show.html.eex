@@ -1,39 +1,32 @@
-
-<table class="ui striped table">
-  <tr>
-    <td><h1>Book</h1></td><td><h1><em><%= @title %></em></h1></td>
-  </tr>
-  <tr>
-    <td><h2>Chapter</h2></td><td><h2><em><%= @chaptertitle %></em></h2></td>
-  </tr>
-</table>
+<h2><%= @title %> - <em><%= @chaptertitle %></em></h2>
 
 <div class="ui form">
   <div id="incunabula-eiderdown" class="field">
     <!-- rows are given as 4 to disable CSS that styles it when rows aren't set
          the box is resized by javascript -->
-    <textarea rows="4">
+    <textarea rows="4" dirty="false">
     </textarea>
   </div>
 </div>
 
-<button class="incunabula-show incunabula-load-saves ui primary button" modal="incunabula-save-edits">Save</button>
+<button class="incunabula-show ui primary button" modal="incunabula-save-edits">Save</button>
 
-  <div class="incunabula-save-edits ui small modal">
+<div class="incunabula-save-edits ui small modal">
   <div class="content">
     <div class="ui form">
       <%= form_for @changeset, @save_edits, [class: "ui form"], fn f -> %>
       <div class="field">
         <label>Save message
-        <%= textarea(f, :commit_message,
-            [class: :field,
-            placeholder: "What changes have you made..."]) %>
-        <%= error_tag f, :caption %>
-        <%= text_input(f, :contents,
-            [class: "incunabula-edits-hidden field"]) %>
+          <%= textarea(f, :commit_message,
+              [class: "incunabula-commit_msg field",
+              placeholder: "What changes have you made..."]) %>
+          <%= error_tag f, :caption %>
+          <%= text_input(f, :contents,
+              [class: "incunabula-edits-hidden field"]) %>
         </label>
-        </div>
-        <button class="incunabula-submit-edits ui primary button">Save Edits</button>
+      </div>
       <% end %>
     </div>
+    <button class="incunabula-submit-edits ui primary button">Save Edits</button>
+  </div>
 </div>
