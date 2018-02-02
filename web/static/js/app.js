@@ -42,10 +42,13 @@ incunabula.setup_modals();
 // Resize the text area box
 //
 $(window).resize(function() {
-    var offset = $("#incunabula-eiderdown").offset();
-    var available = window.innerHeight - offset.top - 50;
-    var height = String(available) + "px";
-    $("#incunabula-eiderdown").css("height", height);
+    // if there is an eiderdown editor resize it
+    if ($("#incunabula-eiderdown").length){
+        var offset = $("#incunabula-eiderdown").offset();
+        var available = window.innerHeight - offset.top - 50;
+        var height = String(available) + "px";
+        $("#incunabula-eiderdown").css("height", height);
+    }
 });
 
 // Now trigger the resize event on load to resize
