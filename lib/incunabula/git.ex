@@ -244,9 +244,13 @@ defmodule Incunabula.Git do
 
   defp do_get_chapter_title(slug, chapterslug) do
     chapters = consult_file(get_book_dir(slug), "chapters.db")
-    [match] = for %{chapter_slug: chapterslug} = x <- chapters, do: x[:chapter_title]
-    {:ok, match}
+    title = for %{chapter_slug: chapterslug} = x <- chapters, do: x[:chapter_title]
+    {:ok, title}
   end
+
+  defp get_title(slug, [%{chapter_slug:  slug,
+                          chapter_title: chapter_title} | _T]), do: chapter_title
+  defp get_title(slug, [_H | T]), do: get_title(slug, T)
 
   defp do_get_chapters(slug) do
     chapters = consult_file(get_book_dir(slug), "chapters.db")
