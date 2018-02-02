@@ -10,12 +10,12 @@ defmodule Incunabula.BookController do
   end
 
   def show(conn, %{"slug"  => slug}) do
-    {:ok, title} = Incunabula.Git.get_title(slug)
+    booktitle = Incunabula.Git.get_book_title(slug)
     chapterchangeset = Incunabula.Chapter.changeset()
     imagechangeset   = Incunabula.Image.changeset()
     render conn, "show.html",
       slug:             slug,
-      title:            title,
+      title:            booktitle,
       chapterchangeset: chapterchangeset,
       imagechangeset:   imagechangeset,
       newchapter:       "/books/" <> slug <> "/chapter/new",

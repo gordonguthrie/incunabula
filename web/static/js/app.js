@@ -19,7 +19,7 @@ import $ from "jquery"
 // Local files can be imported directly using relative
 // paths "./socket" or full ones "web/static/js/socket".
 
-import socket from "./socket"
+import {socket, socket_push} from "./socket"
 
 var incunabula = {};
 
@@ -58,15 +58,19 @@ if ($("#incunabula-eiderdown").length){
     // Set up the save edits stuff
 
     incunabula.maybe_save_edits_fn = function() {
-        console.log("in mebbies");
         var is_dirty = $(".incunabula-eiderdown, textarea").attr("dirty");
-        console.log(is_dirty);
+        var edits= $(".incunabula-eiderdown, textarea").val();
+        incunabula.save_edits_fn("autosaved", edits, "");
     }
 
     incunabula.save_edits_fn = function (type, data, msg) {
-        console.log("in save edits");
-        console.log(data);
-        console.log(msg)
+        if (type == "save") {
+            msg += "saved by the user"
+        } else if (type == "autosaved") {
+            msg += "autosaved"
+        }
+        var topic = $("#book-chapter-save_edits").attr("topic");
+        socket_push(topic, {commit_msg: msg, data: data})
     };
 
     $(".incunabula-submit-edits").on('click', function () {
@@ -91,5 +95,5 @@ if ($("#incunabula-eiderdown").length){
     });
 
     // tick once a minute
-    window.setInterval(incunabula.maybe_save_edits_fn, 1000);
+    window.setInterval(incunabula.maybe_save_edits_fn, 60000);
 };

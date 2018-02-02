@@ -5,10 +5,23 @@
 // and connect at the socket path in "lib/my_app/endpoint.ex":
 import {Socket} from "phoenix"
 
+// Create our socket
+let socket = new Socket("/socket", {params: {token: window.userToken}})
 
-// Define the various draw functions
+// Create a route for channel message
+let router = new Map()
 
-function sanatize(html){return $("div/>").text(html).html()}
+// Now get all the topics that the page wishes to subscribe to
+let topics = document.getElementsByClassName("incunabula-topic")
+
+// define some captures we will use later
+var topic_router = []
+
+
+//
+// Define the functions that we are going to use
+//
+function sanitize(html){return $("div/>").text(html).html()}
 
 function draw(id, msg) {
     console.log("got new thing to draw", id, msg)
@@ -17,88 +30,88 @@ function draw(id, msg) {
 
 function make_key(str) {
     var components = str.split(":")
-    return components[0] + ":" + components[1]
+    if (components.length == 2) {
+        return components[0] + ":" + components[1]
+    } else if (components.length == 3) {
+        return components[0] + ":" + components[1]
+    } else if (components.length == 5) {
+        // this is a save edits channel
+        return components[0] + ":" + components[2] + ":" + components[4]
+    }
 }
 
-// Create a route for channel message
-let router = new Map()
+function make_topic_router(topics) {
+    let topic_router = []
+    Array.from(topics).forEach((t) => {
+        let topic = t.getAttribute("topic")
+        let channel = socket.channel(topic, {})
+        console.log(topic)
+        let key = make_key(topic)
+        console.log(key)
+        let route = router.get(key)
+        channel.join()
+            .receive("ok", resp => {
+                console.log("got response")
+                console.log(route)
+                route.draw_fn(route.id, resp)
+            })
+        .receive("error", resp => {
+            console.log("Unable to join", topic, resp)
+        })
+        channel.on("ping",  ({count})   => ('ok'))
+        channel.on("books", (payload) => route.draw_fn(route.id, payload.books))
+        topic_router[key] = channel
+    })
+    return topic_router
+}
 
-// by convention the message set maps to the drawing id with a colon replace
+//
+// Now set up the socket
+//
+
+//
+// First we set up our router that will map incoming messages with the draw
+// functions that are called on the responses
+//
+// By convention the message set maps to the drawing id with a colon replace
 // by a hyphen becuz css and shit
+//
+
+// router for all books
+router.set("books:list",
+           {id:      "books-list",
+            draw_fn: function(id, msg) {draw(id, msg)}})
+
+// router for a particular book
 router.set("book:get_chapters",
            {id:      "book-get_chapters",
             draw_fn: function(id, msg) {draw(id, msg)}})
 router.set("book:get_images",
            {id:      "book-get_images",
             draw_fn: function(id, msg) {draw(id, msg)}})
-router.set("books:list",
-           {id:      "books-list",
+router.set("book:get_book_title",
+           {id:      "book-get_book_title",
             draw_fn: function(id, msg) {draw(id, msg)}})
-
-let socket = new Socket("/socket", {params: {token: window.userToken}})
-
-// When you connect, you'll often need to authenticate the client.
-// For example, imagine you have an authentication plug, `MyAuth`,
-// which authenticates the session and assigns a `:current_user`.
-// If the current user exists you can assign the user's token in
-// the connection for use in the layout.
-//
-// In your "web/router.ex":
-//
-//     pipeline :browser do
-//       ...
-//       plug MyAuth
-//       plug :put_user_token
-//     end
-//
-//     defp put_user_token(conn, _) do
-//       if current_user = conn.assigns[:current_user] do
-//         token = Phoenix.Token.sign(conn, "user socket", current_user.id)
-//         assign(conn, :user_token, token)
-//       else
-//         conn
-//       end
-//     end
-//
-// Now you need to pass this token to JavaScript. You can do so
-// inside a script tag in "web/templates/layout/app.html.eex":
-//
-//     <script>window.userToken = "<%= assigns[:user_token] %>";</script>
-//
-// You will need to verify the user token in the "connect/2" function
-// in "web/channels/user_socket.ex":
-//
-//     def connect(%{"token" => token}, socket) do
-//       # max_age: 1209600 is equivalent to two weeks in seconds
-//       case Phoenix.Token.verify(socket, "user socket", token, max_age: 1209600) do
-//         {:ok, user_id} ->
-//           {:ok, assign(socket, :user, user_id)}
-//         {:error, reason} ->
-//           :error
-//       end
-//     end
-//
-// Finally, pass the token on connect as below. Or remove it
-// from connect if you don't care about authentication.
+router.set("book:get_book_title",
+           {id:      "book-get_book_title",
+            draw_fn: function(id, msg) {draw(id, msg)}})
+router.set("book:chapter:save_edits",
+           {id:      "book-chapter-save_edits",
+            draw_fn: function(id, msg) {console.log("got", msg)}})
 
 socket.connect()
 
-let topics = document.getElementsByClassName("incunabula-topic")
+console.log("about to make topic ruter")
 
-Array.from(topics).forEach((t) => {
-    let topic = t.getAttribute("topic")
-    let channel = socket.channel(topic, {})
-    var key = make_key(topic)
-    let route = router.get(key)
-    channel.join()
-        .receive("ok", resp => {
-            route.draw_fn(route.id, resp)
-        })
-        .receive("error", resp => {
-            console.log("Unable to join", topic, resp)
-        })
-    channel.on("ping",  ({count})   => ('ok'))
-    channel.on("books", (payload) => route.draw_fn(route.id, payload.books))
-})
+topic_router = make_topic_router(topics)
+console.log(topic_router)
+
+export function socket_push(topic, msg) {
+    console.log("pushing", msg, "to", topic)
+    let key = make_key(topic)
+    topic_router[key].push(topic, msg)
+        .receive("ok", resp => {console.log("got ok")})
+        .receive("error", e => console.log(e))
+}
 
 export default socket

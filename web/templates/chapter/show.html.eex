@@ -11,6 +11,15 @@
 
 <button class="incunabula-show ui primary button" modal="incunabula-save-edits">Save</button>
 
+<div id="book-chapter-save_edits"
+     class="incunabula-topic"
+     topic='<%= "book:" <>
+                @slug <>
+                ":chapter:" <>
+                @chapterslug <>
+                ":save_edits"
+                %>' style="display:none;"></div>
+
 <div class="incunabula-save-edits ui small modal">
   <div class="content">
     <div class="ui form">
@@ -27,6 +36,6 @@
       </div>
       <% end %>
     </div>
-    <button class="incunabula-submit-edits ui primary button">Save Edits</button>
+    <button class="incunabula-submit-edits ui primary button">Save</button>
   </div>
 </div>

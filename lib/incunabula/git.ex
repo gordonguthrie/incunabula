@@ -48,14 +48,13 @@ defmodule Incunabula.Git do
     _dir = Path.join(get_env(:root_directory), "books")
   end
 
-  def get_title(slug) do
-    GenServer.call(__MODULE__, {:read, {slug, "title.db"}})
+  def get_book_title(slug) do
+    GenServer.call(__MODULE__, {:get_book_title, slug})
   end
 
   def get_chapter_title(slug, chapterslug) do
     GenServer.call(__MODULE__, {:get_chapter_title, {slug, chapterslug}})
   end
-
 
   def get_chapters(slug) do
     GenServer.call(__MODULE__, {:get_chapters, slug})
@@ -94,10 +93,14 @@ defmodule Incunabula.Git do
     {:reply, do_create_chapter(slug, chapter_title), state}
   end
 
+  def handle_call({:get_book_title, slug}, _from, state) do
+    {:ok, title} = read_file(get_book_dir(slug), "title.db")
+    {:reply, title, state}
+  end
+
   def handle_call({:get_chapter_title, {slug, chapterslug}}, _from, state) do
     {:reply, do_get_chapter_title(slug, chapterslug), state}
   end
-
 
   def handle_call({:get_chapters, slug}, _from, state) do
     {:reply, do_get_chapters(slug), state}
@@ -244,13 +247,17 @@ defmodule Incunabula.Git do
 
   defp do_get_chapter_title(slug, chapterslug) do
     chapters = consult_file(get_book_dir(slug), "chapters.db")
-    title = for %{chapter_slug: chapterslug} = x <- chapters, do: x[:chapter_title]
-    {:ok, title}
+    _title   = read_chapter_title(chapterslug, chapters)
   end
 
-  defp get_title(slug, [%{chapter_slug:  slug,
-                          chapter_title: chapter_title} | _T]), do: chapter_title
-  defp get_title(slug, [_H | T]), do: get_title(slug, T)
+  defp read_chapter_title(slug, [%{chapter_slug:  slug,
+                                  chapter_title: chapter_title} | _T]) do
+    chapter_title
+  end
+
+  defp read_chapter_title(slug, [_H | T]) do
+    get_chapter_title(slug, T)
+  end
 
   defp do_get_chapters(slug) do
     chapters = consult_file(get_book_dir(slug), "chapters.db")

@@ -1,4 +1,7 @@
-<h1><%= @title %></h1>
+
+  <h2><span id="book-get_book_title"
+         class="incunabula-topic"
+         topic="book:get_book_title:<%= @slug %>"></span>&nbsp;<i class="edit icon"></i></h2>
 
 <div class="ui top attached tabular menu">
   <a class="active item" data-tab="chapters">Chapters</a>
@@ -80,6 +83,9 @@
         <%% = submit("Upload new image", [class: "ui primary button"]) %>
       <%% end %>
       -->
+
+
+
 <p>FIX ME UP</p>
     </div>
 </div>
