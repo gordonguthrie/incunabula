@@ -17,7 +17,7 @@
             placeholder: "Book title"]) %>
         </label>
         </div>
-        <%= submit("Create New Book", [class: "ui button"]) %>
+        <%= submit("Create New Book", [class: "ui primary button"]) %>
       <% end %>
     </div>
 </div>
