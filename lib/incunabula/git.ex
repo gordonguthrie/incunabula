@@ -213,6 +213,7 @@ defmodule Incunabula.Git do
         msg
       false ->
         bookdir
+        |> make_html(ch_title, ch_slug, user)
         |> add_to_git(:all)
         |> commit_to_git(commit_msg)
         |> bump_tag(tag, tag_bump, user)
@@ -225,10 +226,11 @@ defmodule Incunabula.Git do
   defp do_create_chapter(slug, chapter_title, user) do
     chapter_slug = Incunabula.Slug.to_slug(chapter_title)
     bookdir = get_book_dir(slug)
-    content = Path.join([bookdir, "chapters", chapter_slug <> ".eider"])
-    case File.exists?(content) do
+    fileroot = Path.join([bookdir, "chapters", chapter_slug])
+    file = Path.join([bookdir, "chapters", chapter_slug <> ".eider"])
+    case File.exists?(file) do
       false ->
-        :ok = File.touch(content)
+        :ok = File.touch(file)
         # creating a new chapter is a banal event
         # so we just reuse the tag for the commit msg
         tag = make_tag("create new chapter",  chapter_title,
@@ -236,6 +238,7 @@ defmodule Incunabula.Git do
         bookdir
         |> update_chaptersDB(chapter_title, chapter_slug)
         |> add_to_git(:all)
+        |> make_html(chapter_title, chapter_slug, user)
         |> commit_to_git(tag)
         |> bump_tag(tag, "major", user)
         |> push_to_github(slug)
@@ -294,6 +297,7 @@ defmodule Incunabula.Git do
         |> write_to_book("images.db",   :io_lib.format('~p.~n', [[]]))
         |> make_component_dirs("chapters")
         |> make_component_dirs("images")
+        |> make_component_dirs("html")
         |> add_to_git(:all)
         |> commit_to_git("basic setup of directory")
         |> tag_github(1, 0, "initial creation of " <> slug, author)
@@ -575,7 +579,6 @@ defmodule Incunabula.Git do
       "status"
     ]
     {reply, 0} = System.cmd("git", args, [cd: dir])
-    IO.inspect reply
     split = String.split(reply, "\n")
     case split do
       [
@@ -585,6 +588,16 @@ defmodule Incunabula.Git do
       ]                                              -> true
       _                                              -> false
     end
+  end
+
+  defp make_html(dir, chapter_title, chapter_slug, user) do
+    eiderdownfile = Path.join([dir, "chapters", chapter_slug <> ".eider"])
+    webpage       = Path.join([dir, "html",     chapter_slug  <> ".html"])
+    {:ok, eiderdown} = File.read(eiderdownfile)
+    body = to_string(:eiderdown.conv(to_charlist(eiderdown)))
+    html = Incunabula.HTMLController.make_preview(chapter_title, user, body)
+    :ok = File.write(webpage, html)
+    dir
   end
 
 end
