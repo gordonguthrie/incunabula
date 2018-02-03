@@ -30,4 +30,19 @@ defmodule Incunabula.ChapterController do
       slug:         slug
   end
 
+  def show_preview(conn, %{"chapterslug" => chapterslug,
+                           "slug"        => slug}, _user) do
+    booksdir = Incunabula.Git.get_books_dir()
+    file = Path.join([
+      booksdir,
+      slug,
+      "html",
+      chapterslug <> ".html"
+    ])
+    {:ok, binary} = File.read(file)
+    conn
+    |> put_resp_header("content-type", "text/html; charset=utf-8")
+    |> send_resp(200, binary)
+  end
+
 end

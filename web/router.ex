@@ -17,19 +17,20 @@ defmodule Incunabula.Router do
   scope "/", Incunabula do
     pipe_through :browser # Use the default browser stack
 
-    get  "/",                                  PageController,    :index
-    get  "/books",                             BookController,    :index
-    post "/book/new",                          BookController,    :create
-    get  "/books/:slug",                       BookController,    :show
-    post "/books/:slug/chapter/new",           ChapterController, :create
-    get  "/books/:slug/chapters/:chapterslug", ChapterController, :show
-    post "/books/:slug/image/new",             ImageController,   :create
-    get  "/books/:slug/images/:imageslug",     ImageController,   :show
-    get  "/books/:slug/chaff",                 ChaffController,   :index
-    get  "/admin",                             AdminController,   :index
-    get  "/login",                             LoginController,   :index
-    post "/login",                             LoginController,   :login
-    get  "/logout",                            LoginController,   :logout
+    get  "/",                                          PageController,    :index
+    get  "/books",                                     BookController,    :index
+    post "/book/new",                                  BookController,    :create
+    get  "/books/:slug",                               BookController,    :show
+    post "/books/:slug/chapter/new",                   ChapterController, :create
+    get  "/books/:slug/chapters/:chapterslug",         ChapterController, :show
+    get  "/books/:slug/chapters/:chapterslug/preview", ChapterController, :show_preview
+    post "/books/:slug/image/new",                     ImageController,   :create
+    get  "/books/:slug/images/:imageslug",             ImageController,   :show
+    get  "/books/:slug/chaff",                         ChaffController,   :index
+    get  "/admin",                                     AdminController,   :index
+    get  "/login",                                     LoginController,   :index
+    post "/login",                                     LoginController,   :login
+    get  "/logout",                                    LoginController,   :logout
   end
 
   # Other scopes may use custom stacks.

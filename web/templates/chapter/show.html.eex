@@ -1,5 +1,5 @@
 <h2><%= @title %> - <em><%= @chaptertitle %></em></h2>
-
+<small><a href='<%= Path.join(["/books", @slug, "chapters", @chapterslug, "preview"]) %>' target='blank'>Preview</a></small>
 <div class="ui form">
   <div id="incunabula-eiderdown" class="field">
     <!-- rows are given as 4 to disable CSS that styles it when rows aren't set
