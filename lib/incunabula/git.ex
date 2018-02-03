@@ -196,18 +196,30 @@ defmodule Incunabula.Git do
 
   defp do_update_chapter(slug, ch_slug, commit_title, commit_msg,
     data, tag_bump, user) do
-    bookdir = get_book_dir(slug)
+    bookdir  = get_book_dir(slug)
     ch_title = do_get_chapter_title(slug, ch_slug)
-    tag = make_tag("update chapter", ch_title, ch_slug, user, commit_title)
-    chapter = Path.join("chapters", ch_slug <> ".eider")
+    tag      = make_tag("update chapter", ch_title, ch_slug, user, commit_title)
+    chapter  = Path.join("chapters", ch_slug <> ".eider")
+    route    = slug <> ":chapter:" <> ch_slug
+    # the user may have pressed save without making any changes
+    # so we write the data, check if there is any change
+    # and then, and only then, retag etc
     bookdir
     |> write_to_book(chapter, data)
-    |> add_to_git(:all)
-    |> commit_to_git(commit_msg)
-    |> bump_tag(tag, tag_bump, user)
-    |> push_to_github(slug)
-    |> push_to_channel(slug, slug <> ":chapter:" <> ch_slug, :"book-save_edits")
-    |> do_get_current_tag_msg
+    case nothing_to_commit?(bookdir) do
+      true ->
+        msg = "no changes to save: " <> do_get_current_tag_msg(bookdir)
+        :ok = direct_push_to_channel(route, "book-save_edits", msg)
+        msg
+      false ->
+        bookdir
+        |> add_to_git(:all)
+        |> commit_to_git(commit_msg)
+        |> bump_tag(tag, tag_bump, user)
+        |> push_to_github(slug)
+        |> push_to_channel(slug, route, :"book-save_edits")
+        |> do_get_current_tag_msg
+    end
   end
 
   defp do_create_chapter(slug, chapter_title, user) do
@@ -489,6 +501,12 @@ defmodule Incunabula.Git do
     dir
   end
 
+  defp direct_push_to_channel(route, "book-save_edits", msg) do
+    Incunabula.Endpoint.broadcast "book:save_edits:" <> route,
+      "books", %{books: msg}
+    :ok
+  end
+
   defp do_git_init(dir) do
     return = System.cmd("git", ["init"], cd: dir)
     # force a crash if this failed
@@ -550,6 +568,23 @@ defmodule Incunabula.Git do
 
   defp make_tag(prefix, title, slug, user, msg) do
     Enum.join([prefix, title, "(" <> slug <> ")", "by", user, msg], " - ")
+  end
+
+  defp nothing_to_commit?(dir) do
+    args = [
+      "status"
+    ]
+    {reply, 0} = System.cmd("git", args, [cd: dir])
+    IO.inspect reply
+    split = String.split(reply, "\n")
+    case split do
+      [
+        "On branch " <> _rest,
+       "nothing to commit, working directory clean",
+        ""
+      ]                                              -> true
+      _                                              -> false
+    end
   end
 
 end

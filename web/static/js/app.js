@@ -66,13 +66,13 @@ if ($("#incunabula-eiderdown").length){
         var is_dirty = $(".incunabula-eiderdown, textarea").attr("dirty");
         var edits= $(".incunabula-eiderdown, textarea").val();
         if (is_dirty == "true") {
-            incunabula.save_edits_fn(edits, "autosaved", "", "minor");
+            incunabula.save_edits_fn(edits, "autosaved",
+                                     "autosaved in browser", "minor");
             $(".incunabula-eiderdown, textarea").attr("dirty", "false");
         }
     }
 
     incunabula.save_edits_fn = function (data, title, msg, tag_bump) {
-        console.log(tag_bump);
         var topic = $("#book-chapter-save_edits").attr("topic");
         socket_push(topic, {commit_title: title,
                             commit_msg:   msg,
@@ -86,6 +86,12 @@ if ($("#incunabula-eiderdown").length){
         var commit_title = $(".incunabula-commit_title").val();
         $(".incunabula-save-edits").modal("hide");
         // clear up the old messages
+        if (commit_title == "") {
+            commit_title = "untitled save";
+        }
+        if (commit_msg == "") {
+            commit_msg = "no save message";
+        }
         $(".incunabula-commit_msg").val("");
         $(".incunabula-commit_title").val("");
         $(".incunabula-eiderdown, textarea").attr("dirty", "false");
