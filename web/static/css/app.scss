@@ -75,14 +75,27 @@ body.pushable {
     display: none;
 }
 
+//
+// fade some text back
+//
+
+// this is knicked from the colour of the semantic meta tag in cards
+// should prolly be in their CSS somehow, but halfwit me, yeah?
+.incunabula-grey {
+    color: rgba(0, 0, 0, 0.4);
+}
+
 /*                         */
 /* Media queries and stuff */
 /*                         */
 
+// this breakpoint is also used in the javascript that resizes the
+// text area in the chapter editing screen on window resize
+// - change it here you must also change it there
 @media only screen and (max-width: 700px) {
 
 #incunabula-eiderdown > textarea {
-    min-height:   900px;
+    min-height: 900px;
 }
 
 

@@ -97,7 +97,7 @@ router.set("book:get_book_title",
             draw_fn: function(id, msg) {draw(id, msg)}})
 router.set("book:chapter:save_edits",
            {id:      "book-chapter-save_edits",
-            draw_fn: function(id, msg) {console.log("got", msg)}})
+            draw_fn: function(id, msg) {draw(id, msg)}})
 
 socket.connect()
 

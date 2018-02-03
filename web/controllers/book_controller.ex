@@ -1,15 +1,17 @@
 defmodule Incunabula.BookController do
   use Incunabula.Web, :controller
 
-  plug :authenticate_user when action in [:index]
+  use Incunabula.Controller
 
-  def index(conn, _params) do
+  plug :authenticate_user when action in [:index, :show, :create]
+
+  def index(conn, _params, _user) do
     changeset = Incunabula.Book.changeset()
     render conn, "index.html",
       changeset: changeset
   end
 
-  def show(conn, %{"slug"  => slug}) do
+  def show(conn, %{"slug"  => slug}, _user) do
     booktitle = Incunabula.Git.get_book_title(slug)
     chapterchangeset = Incunabula.Chapter.changeset()
     imagechangeset   = Incunabula.Image.changeset()
@@ -22,9 +24,9 @@ defmodule Incunabula.BookController do
       newimage:         "/books/" <> slug <> "/image/new"
   end
 
-  def create(conn, %{"book" => book}) do
+  def create(conn, %{"book" => book} = params, user) do
     %{"book_title" => book_title} = book
-    case Incunabula.Git.create_book(book_title) do
+    case Incunabula.Git.create_book(book_title, user) do
       {:ok, slug} ->
         conn
         |> redirect(to: "/books/" <> slug)

@@ -1,8 +1,12 @@
 defmodule Incunabula.ImageController do
   use Incunabula.Web, :controller
 
+  use Incunabula.Controller
+
+  plug :authenticate_user when action in [:show, :create, :index]
+
   def show(conn, %{"imageslug" => image,
-                   "slug"      => slug}) do
+                   "slug"      => slug}, user) do
     booksdir = Incunabula.Git.get_books_dir()
     file = Path.join([booksdir, slug, "images", image])
     {:ok, binary} = File.read(file)
@@ -12,7 +16,7 @@ defmodule Incunabula.ImageController do
   end
 
   def create(conn, %{"image" => image,
-                    "slug"   => slug} = params) do
+                     "slug"  => slug} = params, user) do
     case is_valid_image?(image) do
       true ->
         :ok = Incunabula.Git.load_image(slug, image)

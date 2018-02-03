@@ -7,31 +7,45 @@ defmodule Incunabula.BookChannel do
     {:ok, reply, socket}
   end
 
-  def handle_in(topic, params, socket) do
-    IO.inspect topic
-    IO.inspect params
+  def handle_in("book:" <> bookslug, pushparams, socket) do
+    {route, topicparams} = parse_topic(bookslug)
+    reply = get_reply(route, topicparams, pushparams)
     {:reply, :ok, socket}
   end
 
+  @doc "get_reply/2 is the reply on joining"
   def get_reply(:get_book_title, %{slug: slug}) do
-    title = Incunabula.Git.get_book_title(slug)
-    title
+    _title = Incunabula.Git.get_book_title(slug)
   end
 
   def get_reply(:get_chapters, %{slug: slug}) do
-    chapters = Incunabula.Git.get_chapters(slug)
-    chapters
+    _chapters = Incunabula.Git.get_chapters(slug)
   end
 
   def get_reply(:get_images, %{slug: slug}) do
-    images = Incunabula.Git.get_images(slug)
-    images
+    _images = Incunabula.Git.get_images(slug)
   end
 
-  # this is a push channel so we only reply :ok on it
+  # this is a push channel so we only reply the current tag
   def get_reply(:save_edits, %{slug:        slug,
-                               chapterslug: chapterslug}) do
-    :ok
+                               chapterslug: _chapterslug}) do
+    _current_tag_msg = Incunabula.Git.get_current_tag_msg(slug)
+  end
+
+  @doc "get_reply/3 is the reply on a push request"
+  def get_reply(:save_edits, topicparams, pushparams) do
+    %{slug:        slug,
+      chapterslug: chapterslug} = topicparams
+    IO.inspect "in get_reply for save_edits"
+    IO.inspect pushparams
+    %{"commit_title" => commit_title,
+      "commit_msg"   => commit_msg,
+      "data"         => data,
+      "tag_bump"     => tag_bump} = pushparams
+      tag = Incunabula.Git.update_chapter(slug, chapterslug, commit_title,
+        commit_msg, data, tag_bump, "General Franco")
+      IO.inspect tag
+      tag
   end
 
   defp parse_topic(topic) do

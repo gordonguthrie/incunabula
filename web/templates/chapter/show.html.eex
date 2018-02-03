@@ -4,38 +4,53 @@
   <div id="incunabula-eiderdown" class="field">
     <!-- rows are given as 4 to disable CSS that styles it when rows aren't set
          the box is resized by javascript -->
-    <textarea rows="4" dirty="false">
-    </textarea>
+    <!-- IMPORTANT to keep this on one line otherwise you inject white space -->
+    <textarea rows="4" dirty="false"><%= @contents %></textarea>
+    <!-- IMPORTANT -->
   </div>
 </div>
 
-<button class="incunabula-show ui primary button" modal="incunabula-save-edits">Save</button>
-
-<div id="book-chapter-save_edits"
-     class="incunabula-topic"
-     topic='<%= "book:" <>
-                @slug <>
-                ":chapter:" <>
-                @chapterslug <>
-                ":save_edits"
-                %>' style="display:none;"></div>
+<div class="ui grid">
+  <div class="four wide column">
+    <button class="incunabula-show ui primary button" modal="incunabula-save-edits">Save</button>
+  </div>
+  <div class="two wide column">
+    <small><strong class="incunabula-grey">Last saved:</strong></small>
+  </div>
+  <div class="ten wide column">
+      <small><div id="book-chapter-save_edits"
+           class="incunabula-topic incunabula-grey"
+           topic='<%= "book:" <>
+                      @slug <>
+                      ":chapter:" <>
+                      @chapterslug <>
+                      ":save_edits"
+                      %>'></div></small>
+  </div>
+</div>
 
 <div class="incunabula-save-edits ui small modal">
   <div class="content">
-    <div class="ui form">
       <%= form_for @changeset, @save_edits, [class: "ui form"], fn f -> %>
       <div class="field">
-        <label>Save message
-          <%= textarea(f, :commit_message,
-              [class: "incunabula-commit_msg field",
-              placeholder: "What changes have you made..."]) %>
+        <label>Save title
+          <%= text_input(f, :commit_title,
+              [class: "incunabula-commit_title",
+              placeholder: "This is how this save will appear in your history"]) %>
           <%= error_tag f, :caption %>
-          <%= text_input(f, :contents,
-              [class: "incunabula-edits-hidden field"]) %>
         </label>
       </div>
+      <div class="field">
+        <%= textarea(f, :commit_message,
+            [class: "incunabula-commit_msg",
+            placeholder: "As the writing process unfolds you can use this message to work out what you were doing and thinking of when you made this commit. The details will become more useful as time goes on..."]) %>
+        <%= error_tag f, :caption %>
+      </div>
+      <div class="field">
+        <%= text_input(f, :contents,
+            [class: "incunabula-edits-hidden"]) %>
+      </div>
       <% end %>
-    </div>
-    <button class="incunabula-submit-edits ui primary button">Save</button>
+  <button class="incunabula-submit-edits ui primary button">Save</button>
   </div>
 </div>

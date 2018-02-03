@@ -28,16 +28,27 @@ defmodule Incunabula.Git do
     {:ok, []}
   end
 
-  def load_image(slug, image) do
-   GenServer.call(__MODULE__, {:load_image, {slug, image}})
+  def load_image(slug, image, user) do
+   GenServer.call(__MODULE__, {:load_image, {slug, image, user}})
   end
 
-  def create_chapter(slug, chapter_title) do
-    GenServer.call(__MODULE__, {:create_chapter, {slug, chapter_title}})
+  def create_chapter(slug, chapter_title, user) do
+    GenServer.call(__MODULE__, {:create_chapter, {slug, chapter_title, user}})
   end
 
-  def create_book(book_title) do
-    GenServer.call(__MODULE__, {:create_book, book_title})
+  def update_chapter(slug, chapter_slug, commit_title,
+    commit_msg, data, tag_bump, user) do
+    GenServer.call(__MODULE__, {:update_chapter, {slug, chapter_slug,
+                                                  commit_title, commit_msg,
+                                                  data, tag_bump, user}})
+  end
+
+  def create_book(book_title, author) do
+    GenServer.call(__MODULE__, {:create_book, {book_title, author}})
+  end
+
+  def get_current_tag_msg(slug) do
+    GenServer.call(__MODULE__, {:get_current_tag_msg, slug})
   end
 
   def get_books() do
@@ -50,6 +61,10 @@ defmodule Incunabula.Git do
 
   def get_book_title(slug) do
     GenServer.call(__MODULE__, {:get_book_title, slug})
+  end
+
+    def get_chapter(slug, chapterslug) do
+    GenServer.call(__MODULE__, {:get_chapter, {slug, chapterslug}})
   end
 
   def get_chapter_title(slug, chapterslug) do
@@ -85,17 +100,37 @@ defmodule Incunabula.Git do
   # call backs
   #
 
- def handle_call({:load_image, {slug, image}}, _from, state) do
-    {:reply, do_load_image(slug, image), state}
+ def handle_call({:load_image, {slug, image, user}}, _from, state) do
+    {:reply, do_load_image(slug, image, user), state}
   end
 
-  def handle_call({:create_chapter, {slug, chapter_title}}, _from, state) do
-    {:reply, do_create_chapter(slug, chapter_title), state}
+  def handle_call({:create_chapter, {slug, chapter_title, user}}, _from, state) do
+    {:reply, do_create_chapter(slug, chapter_title, user), state}
+  end
+
+  def handle_call({:update_chapter, {slug, chapter_slug,
+                                     commit_title, commit_msg,
+                                     data, tag_bump, user}}, _from, state) do
+    reply = do_update_chapter(slug, chapter_slug, commit_title, commit_msg,
+      data, tag_bump, user)
+    {:reply, reply, state}
+  end
+
+  def handle_call({:create_book, {book_title, author}}, _from, state) do
+    {:reply, do_create_book(book_title, author), state}
+  end
+
+  def handle_call({:get_current_tag_msg, slug}, _from, state) do
+    {:reply, do_get_current_tag_msg(get_book_dir(slug)), state}
   end
 
   def handle_call({:get_book_title, slug}, _from, state) do
     {:ok, title} = read_file(get_book_dir(slug), "title.db")
     {:reply, title, state}
+  end
+
+  def handle_call({:get_chapter, {slug, chapterslug}}, _from, state) do
+    {:reply, do_get_chapter(slug, chapterslug), state}
   end
 
   def handle_call({:get_chapter_title, {slug, chapterslug}}, _from, state) do
@@ -112,10 +147,6 @@ defmodule Incunabula.Git do
 
   def handle_call(:get_books, _from, state) do
     {:reply, do_get_books(), state}
-  end
-
-  def handle_call({:create_book, book_title}, _from, state) do
-    {:reply, do_create_book(book_title), state}
   end
 
   def handle_call({:read, {slug, file}}, _from, state) do
@@ -135,7 +166,7 @@ defmodule Incunabula.Git do
   end
 
   defp do_load_image(slug, %{"image_title"    => image_title,
-                             "uploaded_image" => uploaded_image}) do
+                             "uploaded_image" => uploaded_image}, user) do
     %Plug.Upload{filename: filename,
                  path:     tmp_image_path} = uploaded_image
     ext = String.downcase(Path.extname(filename))
@@ -144,12 +175,13 @@ defmodule Incunabula.Git do
     imageslug = shortimageslug <> ext
     bookdir = get_book_dir(slug)
     commitmsg = "upload new image: " <> imagename <>
-      " - " <> imageslug
+      " - " <> imageslug <> " by " <> user
     bookdir
     |> copy_image(imageslug, tmp_image_path)
     |> update_imagesDB(imagename, filename, shortimageslug, ext)
     |> add_to_git(:all)
     |> commit_to_git(commitmsg)
+    |> bump_tag("new image loaded " <> imageslug, "major", user)
     |> push_to_github(slug)
     |> push_to_channel(slug, :"book-get_images")
     :ok
@@ -162,19 +194,37 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp do_create_chapter(slug, chapter_title) do
+  defp do_update_chapter(slug, ch_slug, commit_title, commit_msg,
+    data, tag_bump, user) do
+    bookdir = get_book_dir(slug)
+    ch_title = do_get_chapter_title(slug, ch_slug)
+    tag = "update " <> make_tag(ch_title, ch_slug, user, commit_title)
+    chapter = Path.join("chapters", ch_slug <> ".eider")
+    bookdir
+    |> write_to_book(chapter, data)
+    |> add_to_git(:all)
+    |> commit_to_git(commit_msg)
+    |> bump_tag(tag, tag_bump, user)
+    |> push_to_github(slug)
+    |> push_to_channel(slug, :"book-save_edits")
+  end
+
+  defp do_create_chapter(slug, chapter_title, user) do
     chapter_slug = Incunabula.Slug.to_slug(chapter_title)
     bookdir = get_book_dir(slug)
-    content = Path.join([bookdir, "chapters", chapter_slug <> ".ed"])
+    content = Path.join([bookdir, "chapters", chapter_slug <> ".eider"])
     case File.exists?(content) do
       false ->
         :ok = File.touch(content)
-        commitmsg = "create new chapter: " <> chapter_title <>
-          " - " <> chapter_slug
+        # creating a new chapter is a banal event
+        # so we just reuse the tag for the commit msg
+        tag = make_tag("create new chapter",  chapter_title,
+          chapter_slug, user)
         bookdir
         |> update_chaptersDB(chapter_title, chapter_slug)
         |> add_to_git(:all)
-        |> commit_to_git(commitmsg)
+        |> commit_to_git(tag)
+        |> bump_tag(tag, "major", user)
         |> push_to_github(slug)
         |> push_to_channel(slug, :"book-get_chapters")
         :ok
@@ -215,7 +265,7 @@ defmodule Incunabula.Git do
     :lists.flatten(:io_lib.format("~p", [details]))
   end
 
-  defp do_create_book(book_title) do
+  defp do_create_book(book_title, author) do
     slug = Incunabula.Slug.to_slug(book_title)
     bookdir = get_book_dir(slug)
     case File.exists?(bookdir) do
@@ -225,6 +275,7 @@ defmodule Incunabula.Git do
         |> make_dir
         |> do_git_init
         |> write_to_book("title.db", book_title)
+        |> write_to_book("author.db", author)
         |> write_to_book(".gitignore", standard_gitignore())
         |> write_to_book("chapters.db", :io_lib.format('~p.~n', [[]]))
         |> write_to_book("images.db",   :io_lib.format('~p.~n', [[]]))
@@ -232,6 +283,7 @@ defmodule Incunabula.Git do
         |> make_component_dirs("images")
         |> add_to_git(:all)
         |> commit_to_git("basic setup of directory")
+        |> tag_github(1, 0, "initial creation of " <> slug, author)
         |> push_to_github(slug)
         |> push_to_channel(slug, :"books-list")
         {:ok, slug}
@@ -240,9 +292,34 @@ defmodule Incunabula.Git do
     end
   end
 
+  defp do_get_current_tag_msg(dir) do
+    tag = get_current_tag(dir)
+    args = [
+      "show"
+    ]
+    {msg, 0} = System.cmd("git", args, [cd: dir])
+    tag <> " - " <> parse_commit_msg(msg)
+  end
+
+  defp get_current_tag(dir) do
+    args = [
+      "describe",
+      "--tags",
+      "--abbrev=0"
+    ]
+    {tag, 0} = System.cmd("git", args, [cd: dir])
+    String.strip(tag)
+  end
+
   defp do_get_images(slug) do
     images = consult_file(get_book_dir(slug), "images.db")
     _html  = Incunabula.FragController.get_images(slug, images)
+  end
+
+  defp do_get_chapter(slug, chapterslug) do
+    path = Path.join([get_book_dir(slug), "chapters"])
+    {:ok, contents} = read_file(path, chapterslug <> ".eider")
+    {"some tag string", contents}
   end
 
   defp do_get_chapter_title(slug, chapterslug) do
@@ -329,9 +406,33 @@ defmodule Incunabula.Git do
       "-m",
       msg
     ]
-    {return, 0} = System.cmd(cmd, args, [cd: dir])
-    # force a crash if this failed
-    <<"[master ">> <> _rest = return
+    {_return, 0} = System.cmd(cmd, args, [cd: dir])
+    dir
+  end
+
+  defp bump_tag(dir, msg, type, person) when type == "major"
+  or type == "minor" do
+    tag = get_current_tag(dir)
+    [i, j] = String.split(tag, ".")
+    {major, minor} = case type do
+                       "major" ->
+                         {to_string(String.to_integer(i) + 1), j}
+                       "minor" ->
+                         {i, to_string(String.to_integer(j) + 1)}
+                     end
+    tag_github(dir, major, minor, msg, person)
+    dir
+  end
+
+  defp tag_github(dir, major, minor, msg, person) do
+    args = [
+      "tag",
+      "-a",
+      to_string(major) <> "." <> to_string(minor),
+      "-m",
+      msg <> "\ncommited by " <> person
+    ]
+    {"", 0} = System.cmd("git", args, [cd: dir])
     dir
   end
 
@@ -360,7 +461,8 @@ defmodule Incunabula.Git do
 
   defp push_to_channel(dir, slug, :"book-get_chapters") do
     chapters = do_get_chapters(slug)
-    # No I don't understand why the event and the message associated with it have to be called books neither
+    # No I don't understand why the event and the message associated with it
+    # have to be called books neither
     Incunabula.Endpoint.broadcast "book:get_chapters:" <> slug,
       "books", %{books: chapters}
     dir
@@ -368,12 +470,22 @@ defmodule Incunabula.Git do
 
   defp push_to_channel(dir, slug, :"book-get_images") do
     images = do_get_images(slug)
-    # No I don't understand why the event and the message associated with it have to be called books neither
+    # No I don't understand why the event and the message associated with it
+    # have to be called books neither
     Incunabula.Endpoint.broadcast "book:get_images:" <> slug,
       "books", %{books: images}
     dir
   end
 
+  defp push_to_channel(dir, slug, :"book-save_edits") do
+    bookdir = get_book_dir(slug)
+    tag = do_get_current_tag_msg(bookdir)
+    # No I don't understand why the event and the message associated with it
+    # have to be called books neither
+    Incunabula.Endpoint.broadcast "book:get_images:" <> slug,
+      "books", %{books: tag}
+    dir
+  end
 
   defp do_git_init(dir) do
     return = System.cmd("git", ["init"], cd: dir)
@@ -382,9 +494,9 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp write_to_book(dir, file, chapters) do
+  defp write_to_book(dir, file, data) do
     path = Path.join([dir, file])
-    :ok = File.write(path, chapters)
+    :ok = File.write(path, data)
     dir
   end
 
@@ -414,6 +526,28 @@ defmodule Incunabula.Git do
   defp log(dir, msg) do
     IO.inspect msg
     dir
+  end
+
+  defp wrap_in_quotes(string) when is_binary(string) do
+    "\"" <> string <> "\""
+  end
+
+  defp parse_commit_msg(string) do
+    lines = String.split(string, "\n")
+    fetch(lines, 2) <> " - " <> fetch(lines, 4)
+  end
+
+  defp fetch(list, index) when is_list(list) and is_integer(index) do
+    {:ok, val} = Enum.fetch(list, index)
+    val
+  end
+
+  defp make_tag(prefix, title, slug, user) do
+    make_tag(prefix, title, slug, user, "")
+  end
+
+  defp make_tag(prefix, title, slug, user, msg) do
+    Enum.join([prefix, title, "(" <> slug <> ")", "by", user, msg], " - ")
   end
 
 end

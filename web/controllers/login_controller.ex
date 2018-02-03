@@ -1,13 +1,15 @@
 defmodule Incunabula.LoginController do
   use Incunabula.Web, :controller
 
-  def index(conn, _params) do
+  use Incunabula.Controller
+
+  def index(conn, _params, _user) do
     changeset = Incunabula.Login.changeset
     render conn, "index.html",
       changeset: changeset
   end
 
-  def login(conn, %{"login" => login}) do
+  def login(conn, %{"login" => login}, _user) do
     %{"username" => username,
       "password" => password} = login
     case IncunabulaUtilities.Users.is_login_valid(username, password) do
@@ -24,7 +26,7 @@ defmodule Incunabula.LoginController do
     end
   end
 
-  def logout(conn, _params) do
+  def logout(conn, _params, _user) do
     conn
     |> configure_session(drop: true)
     |> redirect(to: "/")
