@@ -1,3 +1,4 @@
+<%= if @books != [] do %>
 <table class="ui striped table">
   <%= for {title, slug} <- @books do %>
     <tr>
@@ -7,3 +8,4 @@
     </tr>
     <% end %>
 </table>
+<% end %>
