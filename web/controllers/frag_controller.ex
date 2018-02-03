@@ -22,7 +22,7 @@ defmodule Incunabula.FragController do
       books: books
   end
 
-  def make_html(conn, template, args) do
+  defp make_html(conn, template, args) do
     response = render(conn, template, args)
     response.resp_body
   end
