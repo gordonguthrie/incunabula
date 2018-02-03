@@ -8,9 +8,10 @@ defmodule Incunabula.BookChannel do
   end
 
   def handle_in("book:" <> bookslug, pushparams, socket) do
+    %Phoenix.Socket{assigns: %{user_id: user}} = socket
     {route, topicparams} = parse_topic(bookslug)
-    reply = get_reply(route, topicparams, pushparams)
-    {:reply, :ok, socket}
+    reply = get_reply(route, topicparams, pushparams, user)
+    {:reply, {:ok, %{books: reply}}, socket}
   end
 
   @doc "get_reply/2 is the reply on joining"
@@ -33,18 +34,15 @@ defmodule Incunabula.BookChannel do
   end
 
   @doc "get_reply/3 is the reply on a push request"
-  def get_reply(:save_edits, topicparams, pushparams) do
+  def get_reply(:save_edits, topicparams, pushparams, user) do
     %{slug:        slug,
       chapterslug: chapterslug} = topicparams
-    IO.inspect "in get_reply for save_edits"
-    IO.inspect pushparams
     %{"commit_title" => commit_title,
       "commit_msg"   => commit_msg,
       "data"         => data,
       "tag_bump"     => tag_bump} = pushparams
       tag = Incunabula.Git.update_chapter(slug, chapterslug, commit_title,
-        commit_msg, data, tag_bump, "General Franco")
-      IO.inspect tag
+        commit_msg, data, tag_bump, user)
       tag
   end
 
@@ -65,7 +63,7 @@ defmodule Incunabula.BookChannel do
     {:get_images, %{slug: slug}}
   end
 
-  defp parse_route([slug, "chapter", chapterslug, "save_edits"]) do
+  defp parse_route(["save_edits", slug, "chapter", chapterslug]) do
     {:save_edits, %{slug:        slug,
                     chapterslug: chapterslug}}
   end

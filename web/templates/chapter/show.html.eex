@@ -20,11 +20,10 @@
   <div class="ten wide column">
       <small><div id="book-chapter-save_edits"
            class="incunabula-topic incunabula-grey"
-           topic='<%= "book:" <>
+           topic='<%= "book:save_edits:" <>
                       @slug <>
                       ":chapter:" <>
-                      @chapterslug <>
-                      ":save_edits"
+                      @chapterslug
                       %>'></div></small>
   </div>
 </div>

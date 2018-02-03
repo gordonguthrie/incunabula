@@ -30,14 +30,7 @@ function draw(id, msg) {
 
 function make_key(str) {
     var components = str.split(":")
-    if (components.length == 2) {
-        return components[0] + ":" + components[1]
-    } else if (components.length == 3) {
-        return components[0] + ":" + components[1]
-    } else if (components.length == 5) {
-        // this is a save edits channel
-        return components[0] + ":" + components[2] + ":" + components[4]
-    }
+    return components[0] + ":" + components[1]
 }
 
 function make_topic_router(topics) {
@@ -95,7 +88,7 @@ router.set("book:get_book_title",
 router.set("book:get_book_title",
            {id:      "book-get_book_title",
             draw_fn: function(id, msg) {draw(id, msg)}})
-router.set("book:chapter:save_edits",
+router.set("book:save_edits",
            {id:      "book-chapter-save_edits",
             draw_fn: function(id, msg) {draw(id, msg)}})
 

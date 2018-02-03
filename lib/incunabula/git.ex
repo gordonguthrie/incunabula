@@ -183,7 +183,7 @@ defmodule Incunabula.Git do
     |> commit_to_git(commitmsg)
     |> bump_tag("new image loaded " <> imageslug, "major", user)
     |> push_to_github(slug)
-    |> push_to_channel(slug, :"book-get_images")
+    |> push_to_channel(slug, slug, :"book-get_images")
     :ok
   end
 
@@ -198,7 +198,7 @@ defmodule Incunabula.Git do
     data, tag_bump, user) do
     bookdir = get_book_dir(slug)
     ch_title = do_get_chapter_title(slug, ch_slug)
-    tag = "update " <> make_tag(ch_title, ch_slug, user, commit_title)
+    tag = make_tag("update chapter", ch_title, ch_slug, user, commit_title)
     chapter = Path.join("chapters", ch_slug <> ".eider")
     bookdir
     |> write_to_book(chapter, data)
@@ -206,7 +206,8 @@ defmodule Incunabula.Git do
     |> commit_to_git(commit_msg)
     |> bump_tag(tag, tag_bump, user)
     |> push_to_github(slug)
-    |> push_to_channel(slug, :"book-save_edits")
+    |> push_to_channel(slug, slug <> ":chapter:" <> ch_slug, :"book-save_edits")
+    |> do_get_current_tag_msg
   end
 
   defp do_create_chapter(slug, chapter_title, user) do
@@ -226,7 +227,7 @@ defmodule Incunabula.Git do
         |> commit_to_git(tag)
         |> bump_tag(tag, "major", user)
         |> push_to_github(slug)
-        |> push_to_channel(slug, :"book-get_chapters")
+        |> push_to_channel(slug, slug, :"book-get_chapters")
         :ok
       true ->
         # don't care really
@@ -285,7 +286,7 @@ defmodule Incunabula.Git do
         |> commit_to_git("basic setup of directory")
         |> tag_github(1, 0, "initial creation of " <> slug, author)
         |> push_to_github(slug)
-        |> push_to_channel(slug, :"books-list")
+        |> push_to_channel("", "", :"books-list")
         {:ok, slug}
       true ->
         {:error, "The book " <> slug <> " exists already"}
@@ -295,7 +296,8 @@ defmodule Incunabula.Git do
   defp do_get_current_tag_msg(dir) do
     tag = get_current_tag(dir)
     args = [
-      "show"
+      "show",
+      tag
     ]
     {msg, 0} = System.cmd("git", args, [cd: dir])
     tag <> " - " <> parse_commit_msg(msg)
@@ -453,36 +455,36 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp push_to_channel(dir, _slug, :"books-list") do
+  defp push_to_channel(dir, _slug, _route, :"books-list") do
     books = do_get_books()
     Incunabula.Endpoint.broadcast "books:list", "books", %{books: books}
     dir
   end
 
-  defp push_to_channel(dir, slug, :"book-get_chapters") do
+  defp push_to_channel(dir, slug, route, :"book-get_chapters") do
     chapters = do_get_chapters(slug)
     # No I don't understand why the event and the message associated with it
     # have to be called books neither
-    Incunabula.Endpoint.broadcast "book:get_chapters:" <> slug,
+    Incunabula.Endpoint.broadcast "book:get_chapters:" <> route,
       "books", %{books: chapters}
     dir
   end
 
-  defp push_to_channel(dir, slug, :"book-get_images") do
+  defp push_to_channel(dir, slug, route, :"book-get_images") do
     images = do_get_images(slug)
     # No I don't understand why the event and the message associated with it
     # have to be called books neither
-    Incunabula.Endpoint.broadcast "book:get_images:" <> slug,
+    Incunabula.Endpoint.broadcast "book:get_images:" <> route,
       "books", %{books: images}
     dir
   end
 
-  defp push_to_channel(dir, slug, :"book-save_edits") do
+  defp push_to_channel(dir, slug, route, :"book-save_edits") do
     bookdir = get_book_dir(slug)
     tag = do_get_current_tag_msg(bookdir)
     # No I don't understand why the event and the message associated with it
     # have to be called books neither
-    Incunabula.Endpoint.broadcast "book:get_images:" <> slug,
+    Incunabula.Endpoint.broadcast "book:save_edits:" <> route,
       "books", %{books: tag}
     dir
   end
