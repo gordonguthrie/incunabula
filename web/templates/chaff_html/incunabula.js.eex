@@ -1,0 +1,28 @@
+<script>
+// NOTE: The contents of this file will only be executed if
+// you uncomment its entry in "web/static/js/app.js".
+
+// To use Phoenix channels, the first step is to import Socket
+// and connect at the socket path in "lib/my_app/endpoint.ex":
+import {Socket} from "phoenix"
+
+// Create our socket
+let socket = new Socket("/socket", {params: {token: window.userToken}})
+
+let topic = "preview:notifications"
+let channel = socket.channel(topic, {})
+channel.join()
+  .receive("ok", resp => {
+    console.log("got response", resp)
+  })
+  .receive("error", resp => {
+    console.log("error", resp)
+  })
+
+channel.on("refresh", () => console.log("refresh"))
+})
+
+socket.connect()
+
+export default socket
+</script>

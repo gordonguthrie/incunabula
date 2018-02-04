@@ -36,7 +36,7 @@ defmodule Incunabula.ChapterController do
     file = Path.join([
       booksdir,
       slug,
-      "html",
+      "preview_html",
       chapterslug <> ".html"
     ])
     {:ok, binary} = File.read(file)

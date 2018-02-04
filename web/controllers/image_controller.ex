@@ -19,13 +19,13 @@ defmodule Incunabula.ImageController do
                      "slug"  => slug} = params, user) do
     case is_valid_image?(image) do
       true ->
-        :ok = Incunabula.Git.load_image(slug, image)
+        :ok = Incunabula.Git.load_image(slug, image, user)
         conn
-        |> redirect(to: "/books/" <> slug)
+        |> redirect(to: Path.join(["/books/", slug, "#images"]))
       false ->
         conn
         |> put_flash(:error, "Not a valid image name")
-        |> redirect(to: "/books/" <> slug)
+        |> redirect(to: Path.join(["/books/", slug, "#images"]))
     end
   end
 

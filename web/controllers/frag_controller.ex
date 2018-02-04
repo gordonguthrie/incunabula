@@ -1,11 +1,17 @@
 defmodule Incunabula.FragController do
   use Incunabula.Web, :controller
 
+  def get_chaffs(slug, chaffs) do
+    conn = make_fresh_conn()
+    make_html conn, "chaffs.html",
+      slug:   slug,
+      chaffs: chaffs
+  end
+
   def get_chapters(slug, chapters) do
-    #data = for {t, s} <- chapters, do: %{title: t, chapter_slug: s}
     conn = make_fresh_conn()
     make_html conn, "chapters.html",
-      slug: slug,
+      slug:     slug,
       chapters: chapters
   end
 

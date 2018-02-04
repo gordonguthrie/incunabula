@@ -41,7 +41,7 @@ incunabula.setup_modals();
 // Resize the text area box
 //
 
-if ($("#incunabula-eiderdown").length){
+if ($("#incunabula-eiderdown").length) {
 
     $(window).resize(function() {
         // if there is an eiderdown editor resize it
@@ -116,3 +116,20 @@ if ($("#incunabula-eiderdown").length){
     // tick once a minute
     window.setInterval(incunabula.maybe_save_edits_fn, 60000);
 };
+
+//
+// set the tabs menus up
+//
+if ($(".tabular.menu").length) {
+    if (window.location.hash == "#images") {
+        $(".active.item").removeClass("active");
+        $("a[data-tab='images']").addClass("active");
+        $(".active.segment").removeClass("active");
+        $("div[data-tab='images']").addClass("active");
+    } else if (window.location.hash == "#chaff") {
+        $(".active.item").removeClass("active");
+        $("a[data-tab='chaff']").addClass("active");
+        $(".active.segment").removeClass("active");
+        $("div[data-tab='chaff']").addClass("active");
+    }
+}

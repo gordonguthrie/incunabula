@@ -6,7 +6,7 @@
 <div class="ui top attached tabular menu">
   <a class="active item" data-tab="chapters">Chapters</a>
   <a class="item" data-tab="images">Images</a>
-  <!-- <a class="item" data-tab="chaff">Chaff</a> -->
+  <a class="item" data-tab="chaff">Chaff</a>
 </div>
 
 <div class="ui bottom attached active tab segment" data-tab="chapters">
@@ -22,14 +22,14 @@
   <button class="incunabula-show ui primary button" modal="incunabula-new-image">Upload Image</button>
 </div>
 </div>
-<!--
+
 <div class="ui bottom attached tab segment" data-tab="chaff">
-<div id="book-get_chaff" class="incunabula-topic" topic="book:get_chaff:<%= @slug %>"></div>
+<div id="book-get_chaffs" class="incunabula-topic" topic="book:get_chaffs:<%= @slug %>"></div>
 <div class="content">
   <button class="incunabula-show ui primary button" modal="incunabula-new-chaff">Create New Chaff</button>
+  <button class="incunabula-show ui primary button" modal="incunabula-copy-chaff">Copy A Chapter</button>
 </div>
 </div>
--->
 
 <div class="incunabula-new-chapter ui small modal">
   <div class="content">
@@ -68,24 +68,35 @@
 
     <div class="incunabula-new-chaff ui small modal">
   <div class="content">
-<!--    <div class="ui form">
-      <%% = form_for @imagechangeset, @newchaff, [multipart: true, class: "ui form"], fn f -> %>
+    <div class="ui form">
+      <%= form_for @newchaffchangeset, @newchaff, [class: "ui form"], fn f -> %>
       <div class="field">
-        <label>Upload a new image
-        <%% = text_input(f, :image_title,
+        <label>Create new
+        <%= text_input(f, :chaff_title,
             [class: :field,
-            placeholder: "Image title"]) %>
-        <%% = error_tag f, :caption %>
+            placeholder: "What should this new chaff be called"]) %>
+        <%= error_tag f, :caption %>
         </label>
-        <%% = file_input f, :uploaded_image , [class: "ui button"] %>
-        <%% = error_tag f, :caption %>
+        <div class="incunabula-edits-hidden">
+          <%= checkbox(f, :copy?, value: "false") %>
         </div>
-        <%% = submit("Upload new image", [class: "ui primary button"]) %>
+        </div>
+        <%= submit("Create new chaff", [class: "ui primary button"]) %>
+      <% end %>
+    </div>
+</div>
+
+  <div class="incunabula-copy-chaff ui small modal">
+  <div class="content">
+    <div class="ui form">
+      <%% = form_for @copychaffchangeset, @copychaff, [class: "ui form"], fn f -> %>
+      <div class="field">
+        <label>Pick a chapter to copy
+          <p>Fix me up</p>
+          <%% = error_tag f, :caption %>
+        </label>
+        </div>
+        <%% = submit("Copy chapter", [class: "ui primary button"]) %>
       <%% end %>
-      -->
-
-
-
-<p>FIX ME UP</p>
     </div>
 </div>

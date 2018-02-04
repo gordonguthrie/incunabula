@@ -1,0 +1,9 @@
+<%= if @chaffs == [] do %>
+<p>There are no chaffs to show</p>
+<% else %>
+<table class="ui striped table">
+  <%= for c <- @chaffs do %>
+      <tr><td><div><a href="/books/<%= @slug %>/chaffs/<%= c.chaff_slug %>"><%= c.chaff_title %></a></div></td></tr>
+      <% end %>
+</table>
+<% end %>

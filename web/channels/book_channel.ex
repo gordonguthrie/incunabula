@@ -19,6 +19,10 @@ defmodule Incunabula.BookChannel do
     _title = Incunabula.Git.get_book_title(slug)
   end
 
+  def get_reply(:get_chaffs, %{slug: slug}) do
+    chaff = Incunabula.Git.get_chaffs(slug)
+  end
+
   def get_reply(:get_chapters, %{slug: slug}) do
     _chapters = Incunabula.Git.get_chapters(slug)
   end
@@ -53,6 +57,10 @@ defmodule Incunabula.BookChannel do
 
   defp parse_route(["get_book_title", slug]) do
     {:get_book_title, %{slug: slug}}
+  end
+
+  defp parse_route(["get_chaffs", slug]) do
+    {:get_chaffs, %{slug: slug}}
   end
 
   defp parse_route(["get_chapters", slug]) do

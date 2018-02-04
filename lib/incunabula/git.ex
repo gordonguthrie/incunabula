@@ -32,8 +32,13 @@ defmodule Incunabula.Git do
    GenServer.call(__MODULE__, {:load_image, {slug, image, user}})
   end
 
+  def create_chaff(slug, chaff_title, user) do
+    GenServer.call(__MODULE__, {:create, {:chaff, slug, chaff_title, user}})
+  end
+
+
   def create_chapter(slug, chapter_title, user) do
-    GenServer.call(__MODULE__, {:create_chapter, {slug, chapter_title, user}})
+    GenServer.call(__MODULE__, {:create, {:chapter, slug, chapter_title, user}})
   end
 
   def update_chapter(slug, chapter_slug, commit_title,
@@ -71,12 +76,16 @@ defmodule Incunabula.Git do
     GenServer.call(__MODULE__, {:get_chapter_title, {slug, chapterslug}})
   end
 
+  def get_chaffs(slug) do
+    GenServer.call(__MODULE__, {:get, {:chaffs, slug}})
+  end
+
   def get_chapters(slug) do
-    GenServer.call(__MODULE__, {:get_chapters, slug})
+    GenServer.call(__MODULE__, {:get, {:chapters, slug}})
   end
 
   def get_images(slug) do
-    GenServer.call(__MODULE__, {:get_images, slug})
+    GenServer.call(__MODULE__, {:get, {:images, slug}})
   end
 
   @doc "a shell command to check that the github token and stuff is correct"
@@ -104,8 +113,8 @@ defmodule Incunabula.Git do
     {:reply, do_load_image(slug, image, user), state}
   end
 
-  def handle_call({:create_chapter, {slug, chapter_title, user}}, _from, state) do
-    {:reply, do_create_chapter(slug, chapter_title, user), state}
+  def handle_call({:create, {type, slug, chapter_title, user}}, _from, state) do
+    {:reply, do_create(type, slug, chapter_title, user), state}
   end
 
   def handle_call({:update_chapter, {slug, chapter_slug,
@@ -137,12 +146,8 @@ defmodule Incunabula.Git do
     {:reply, do_get_chapter_title(slug, chapterslug), state}
   end
 
-  def handle_call({:get_chapters, slug}, _from, state) do
-    {:reply, do_get_chapters(slug), state}
-  end
-
-  def handle_call({:get_images, slug}, _from, state) do
-    {:reply, do_get_images(slug), state}
+  def handle_call({:get, {type, slug}}, _from, state) do
+    {:reply, do_get(type, slug), state}
   end
 
   def handle_call(:get_books, _from, state) do
@@ -213,7 +218,7 @@ defmodule Incunabula.Git do
         msg
       false ->
         bookdir
-        |> make_html(ch_title, ch_slug, user)
+        |> make_html(:chapter, ch_title, ch_slug, user)
         |> add_to_git(:all)
         |> commit_to_git(commit_msg)
         |> bump_tag(tag, tag_bump, user)
@@ -223,26 +228,37 @@ defmodule Incunabula.Git do
     end
   end
 
-  defp do_create_chapter(slug, chapter_title, user) do
-    chapter_slug = Incunabula.Slug.to_slug(chapter_title)
+  defp do_create(type, slug, title, user) do
+    title_slug = Incunabula.Slug.to_slug(title)
     bookdir = get_book_dir(slug)
-    fileroot = Path.join([bookdir, "chapters", chapter_slug])
-    file = Path.join([bookdir, "chapters", chapter_slug <> ".eider"])
+    subdir = case type do
+               :chapter -> "chapters"
+               :chaff   -> "chaff"
+             end
+    fileroot = Path.join([bookdir, subdir, title_slug])
+    file     = Path.join([bookdir, subdir, title_slug <> ".eider"])
     case File.exists?(file) do
       false ->
         :ok = File.touch(file)
         # creating a new chapter is a banal event
         # so we just reuse the tag for the commit msg
-        tag = make_tag("create new chapter",  chapter_title,
-          chapter_slug, user)
+        prefix = case type do
+                   :chapter -> "create new chapter"
+                   :chaff   -> "create new chaff"
+                 end
+        channel = case type do
+                   :chapter -> :"book-get_chapters"
+                   :chaff   -> :"book-get_chaffs"
+                 end
+        tag = make_tag(prefix, title, title_slug, user)
         bookdir
-        |> update_chaptersDB(chapter_title, chapter_slug)
+        |> update_DB(type, title, title_slug)
         |> add_to_git(:all)
-        |> make_html(chapter_title, chapter_slug, user)
+        |> make_html(type, title, title_slug, user)
         |> commit_to_git(tag)
         |> bump_tag(tag, "major", user)
         |> push_to_github(slug)
-        |> push_to_channel(slug, slug, :"book-get_chapters")
+        |> push_to_channel(slug, slug, channel)
         :ok
       true ->
         # don't care really
@@ -263,13 +279,22 @@ defmodule Incunabula.Git do
     write_to_book(bookdir, "images.db", images)
   end
 
-  defp update_chaptersDB(bookdir, chapter_title, chapter_slug) do
-    newentry = %{chapter_title: chapter_title,
-                 chapter_slug: chapter_slug}
-    old_chapters = consult_file(bookdir, "chapters.db")
-    new_chapters = old_chapters ++ [newentry]
-    contents = :io_lib.format('~p.~n', [new_chapters])
-    write_to_book(bookdir, "chapters.db", contents)
+  defp update_DB(bookdir, type, title, slug) do
+    IO.inspect "in updateDB"
+    newentry = case type do
+                 :chapter -> %{chapter_title: title,
+                              chapter_slug:   slug}
+                 :chaff   -> %{chaff_title: title,
+                              chaff_slug:   slug}
+               end
+    db = case type do
+           :chapter -> "chapters.db"
+           :chaff   -> "chaff.db"
+         end
+    old = consult_file(bookdir, db)
+    new = old ++ [newentry]
+    contents = :io_lib.format('~p.~n', [new])
+    write_to_book(bookdir, db, contents)
   end
 
   defp get_image_details(dir, image_file) do
@@ -290,14 +315,17 @@ defmodule Incunabula.Git do
         bookdir
         |> make_dir
         |> do_git_init
-        |> write_to_book("title.db", book_title)
-        |> write_to_book("author.db", author)
-        |> write_to_book(".gitignore", standard_gitignore())
+        |> write_to_book("title.db",    book_title)
+        |> write_to_book("author.db",   author)
+        |> write_to_book(".gitignore",  standard_gitignore())
         |> write_to_book("chapters.db", :io_lib.format('~p.~n', [[]]))
+        |> write_to_book("chaff.db",    :io_lib.format('~p.~n', [[]]))
         |> write_to_book("images.db",   :io_lib.format('~p.~n', [[]]))
         |> make_component_dirs("chapters")
         |> make_component_dirs("images")
-        |> make_component_dirs("html")
+        |> make_component_dirs("preview_html")
+        |> make_component_dirs("chaff")
+        |> make_component_dirs("chaff_html")
         |> add_to_git(:all)
         |> commit_to_git("basic setup of directory")
         |> tag_github(1, 0, "initial creation of " <> slug, author)
@@ -329,11 +357,6 @@ defmodule Incunabula.Git do
     String.strip(tag)
   end
 
-  defp do_get_images(slug) do
-    images = consult_file(get_book_dir(slug), "images.db")
-    _html  = Incunabula.FragController.get_images(slug, images)
-  end
-
   defp do_get_chapter(slug, chapterslug) do
     path = Path.join([get_book_dir(slug), "chapters"])
     {:ok, contents} = read_file(path, chapterslug <> ".eider")
@@ -354,9 +377,19 @@ defmodule Incunabula.Git do
     get_chapter_title(slug, T)
   end
 
-  defp do_get_chapters(slug) do
+  defp do_get(:chaffs, slug) do
+    chapters = consult_file(get_book_dir(slug), "chaff.db")
+    _html    = Incunabula.FragController.get_chaffs(slug, chapters)
+  end
+
+  defp do_get(:chapters, slug) do
     chapters = consult_file(get_book_dir(slug), "chapters.db")
     _html    = Incunabula.FragController.get_chapters(slug, chapters)
+  end
+
+  defp do_get(:images, slug) do
+    images = consult_file(get_book_dir(slug), "images.db")
+    _html  = Incunabula.FragController.get_images(slug, images)
   end
 
   defp do_get_books() do
@@ -434,7 +467,7 @@ defmodule Incunabula.Git do
     [i, j] = String.split(tag, ".")
     {major, minor} = case type do
                        "major" ->
-                         {to_string(String.to_integer(i) + 1), j}
+                         {to_string(String.to_integer(i) + 1), "0"}
                        "minor" ->
                          {i, to_string(String.to_integer(j) + 1)}
                      end
@@ -477,8 +510,17 @@ defmodule Incunabula.Git do
     dir
   end
 
+  defp push_to_channel(dir, slug, route, :"book-get_chaffs") do
+    chaffs = do_get(:chaffs, slug)
+    # No I don't understand why the event and the message associated with it
+    # have to be called books neither
+    Incunabula.Endpoint.broadcast "book:get_chaffs:" <> route,
+      "books", %{books: chaffs}
+    dir
+  end
+
   defp push_to_channel(dir, slug, route, :"book-get_chapters") do
-    chapters = do_get_chapters(slug)
+    chapters = do_get(:chapters, slug)
     # No I don't understand why the event and the message associated with it
     # have to be called books neither
     Incunabula.Endpoint.broadcast "book:get_chapters:" <> route,
@@ -487,7 +529,7 @@ defmodule Incunabula.Git do
   end
 
   defp push_to_channel(dir, slug, route, :"book-get_images") do
-    images = do_get_images(slug)
+    images = do_get(:images, slug)
     # No I don't understand why the event and the message associated with it
     # have to be called books neither
     Incunabula.Endpoint.broadcast "book:get_images:" <> route,
@@ -590,12 +632,22 @@ defmodule Incunabula.Git do
     end
   end
 
-  defp make_html(dir, chapter_title, chapter_slug, user) do
-    eiderdownfile = Path.join([dir, "chapters", chapter_slug <> ".eider"])
-    webpage       = Path.join([dir, "html",     chapter_slug  <> ".html"])
+  defp make_html(dir, :chapter, chapter_title, chapter_slug, user) do
+    eiderdownfile = Path.join([dir, "chapters",     chapter_slug <> ".eider"])
+    webpage       = Path.join([dir, "preview_html", chapter_slug  <> ".html"])
     {:ok, eiderdown} = File.read(eiderdownfile)
     body = to_string(:eiderdown.conv(to_charlist(eiderdown)))
     html = Incunabula.HTMLController.make_preview(chapter_title, user, body)
+    :ok = File.write(webpage, html)
+    dir
+  end
+
+  defp make_html(dir, :chaff, chaff_title, chaff_slug, user) do
+    eiderdownfile = Path.join([dir, "chaff",      chaff_slug <> ".eider"])
+    webpage       = Path.join([dir, "chaff_html", chaff_slug  <> ".html"])
+    {:ok, eiderdown} = File.read(eiderdownfile)
+    body = to_string(:eiderdown.conv(to_charlist(eiderdown)))
+    html = Incunabula.ChaffHTMLController.make_preview(chaff_title, user, body)
     :ok = File.write(webpage, html)
     dir
   end
