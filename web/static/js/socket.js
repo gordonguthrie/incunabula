@@ -76,6 +76,9 @@ router.set("books:list",
             draw_fn: function(id, msg) {draw(id, msg)}})
 
 // router for a particular book
+router.set("book:get_chaffs",
+           {id:      "book-get_chaffs",
+            draw_fn: function(id, msg) {draw(id, msg)}})
 router.set("book:get_chapters",
            {id:      "book-get_chapters",
             draw_fn: function(id, msg) {draw(id, msg)}})
@@ -93,8 +96,6 @@ router.set("book:save_edits",
             draw_fn: function(id, msg) {draw(id, msg)}})
 
 socket.connect()
-
-console.log("about to make topic ruter")
 
 topic_router = make_topic_router(topics)
 console.log(topic_router)
