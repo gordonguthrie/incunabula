@@ -52,6 +52,10 @@ defmodule Incunabula.Git do
     GenServer.call(__MODULE__, {:create_book, {book_title, author}})
   end
 
+  def get_chapters_dropdown(slug) do
+    GenServer.call(__MODULE__, {:get_chapters_dropdown, slug})
+  end
+
   def get_current_tag_msg(slug) do
     GenServer.call(__MODULE__, {:get_current_tag_msg, slug})
   end
@@ -109,7 +113,7 @@ defmodule Incunabula.Git do
   # call backs
   #
 
- def handle_call({:load_image, {slug, image, user}}, _from, state) do
+  def handle_call({:load_image, {slug, image, user}}, _from, state) do
     {:reply, do_load_image(slug, image, user), state}
   end
 
@@ -136,6 +140,10 @@ defmodule Incunabula.Git do
   def handle_call({:get_book_title, slug}, _from, state) do
     {:ok, title} = read_file(get_book_dir(slug), "title.db")
     {:reply, title, state}
+  end
+
+  def handle_call({:get_chapters_dropdown, slug}, _from, state) do
+    {:reply, do_get_chapters_dropdown(slug), state}
   end
 
   def handle_call({:get_chapter, {slug, chapterslug}}, _from, state) do
@@ -279,18 +287,30 @@ defmodule Incunabula.Git do
     write_to_book(bookdir, "images.db", images)
   end
 
-  defp update_DB(bookdir, type, title, slug) do
-    IO.inspect "in updateDB"
-    newentry = case type do
-                 :chapter -> %{chapter_title: title,
-                              chapter_slug:   slug}
-                 :chaff   -> %{chaff_title: title,
-                              chaff_slug:   slug}
-               end
-    db = case type do
-           :chapter -> "chapters.db"
-           :chaff   -> "chaff.db"
-         end
+  defp update_DB_annotated(bookdir, :chaff, title, slug, msg) do
+    newentry =  %{chaff_title: title,
+                  creation:     msg,
+                  chaff_slug:   slug}
+    db =  "chaff.db"
+    do_update_DB(bookdir, db, newentry)
+  end
+
+  defp update_DB(bookdir, :chapter, title, slug) do
+    newentry =  %{chapter_title: title,
+                  chapter_slug:   slug}
+    db = "chapters.db"
+    do_update_DB(bookdir, db, newentry)
+  end
+
+  defp update_DB(bookdir, :chaff, title, slug) do
+    newentry =  %{chaff_title: title,
+                  creation:     "ex novo",
+                  chaff_slug:   slug}
+    db =  "chaff.db"
+    do_update_DB(bookdir, db, newentry)
+  end
+
+  defp do_update_DB(bookdir, db, newentry) do
     old = consult_file(bookdir, db)
     new = old ++ [newentry]
     contents = :io_lib.format('~p.~n', [new])
@@ -328,7 +348,7 @@ defmodule Incunabula.Git do
         |> make_component_dirs("chaff_html")
         |> add_to_git(:all)
         |> commit_to_git("basic setup of directory")
-        |> tag_github(1, 0, "initial creation of " <> slug, author)
+        |> tag_github(0, 1, 1, "initial creation of " <> slug, author)
         |> push_to_github(slug)
         |> push_to_channel("", "", :"books-list")
         {:ok, slug}
@@ -357,10 +377,17 @@ defmodule Incunabula.Git do
     String.strip(tag)
   end
 
+  defp do_get_chapters_dropdown(slug) do
+    chapters = consult_file(get_book_dir(slug), "chapters.db")
+    _dropdown = Incunabula.FragController.get_chapters_dropdown(slug, chapters)
+  end
+
   defp do_get_chapter(slug, chapterslug) do
+    bookdir = get_book_dir(slug)
+    tag = do_get_current_tag_msg(bookdir)
     path = Path.join([get_book_dir(slug), "chapters"])
     {:ok, contents} = read_file(path, chapterslug <> ".eider")
-    {"some tag string", contents}
+    {tag, contents}
   end
 
   defp do_get_chapter_title(slug, chapterslug) do
@@ -462,24 +489,27 @@ defmodule Incunabula.Git do
   end
 
   defp bump_tag(dir, msg, type, person) when type == "major"
-  or type == "minor" do
+  or type == "minor"
+  or type == "release" do
     tag = get_current_tag(dir)
-    [i, j] = String.split(tag, ".")
-    {major, minor} = case type do
-                       "major" ->
-                         {to_string(String.to_integer(i) + 1), "0"}
-                       "minor" ->
-                         {i, to_string(String.to_integer(j) + 1)}
+    [i, j, k] = String.split(tag, ".")
+    {release, major, minor} = case type do
+                                "major" ->
+                                  {i, to_string(String.to_integer(j) + 1), "0"}
+                                "minor" ->
+                                  {i, j, to_string(String.to_integer(k) + 1)}
+                                "release" ->
+                                  {to_string(String.to_integer(i) + 1), 0, 0}
                      end
-    tag_github(dir, major, minor, msg, person)
+    tag_github(dir, release, major, minor, msg, person)
     dir
   end
 
-  defp tag_github(dir, major, minor, msg, person) do
+  defp tag_github(dir, release, major, minor, msg, person) do
     args = [
       "tag",
       "-a",
-      to_string(major) <> "." <> to_string(minor),
+      to_string(release) <> "." <> to_string(major) <> "." <> to_string(minor),
       "-m",
       msg <> "\ncommited by " <> person
     ]

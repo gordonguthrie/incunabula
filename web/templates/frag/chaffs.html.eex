@@ -3,7 +3,7 @@
 <% else %>
 <table class="ui striped table">
   <%= for c <- @chaffs do %>
-      <tr><td><div><a href="/books/<%= @slug %>/chaffs/<%= c.chaff_slug %>"><%= c.chaff_title %></a></div></td></tr>
+      <tr><td><div><a href="/books/<%= @slug %>/chaffs/<%= c.chaff_slug %>"><%= c.chaff_title %></a></div></td><td><small class="incunabula-grey"><%= c.creation %></small></td></tr>
       <% end %>
 </table>
 <% end %>

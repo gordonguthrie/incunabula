@@ -79,6 +79,9 @@ router.set("books:list",
 router.set("book:get_chaffs",
            {id:      "book-get_chaffs",
             draw_fn: function(id, msg) {draw(id, msg)}})
+router.set("book:get_chapters_dropdown",
+           {id:      "book-get_chapters_dropdown",
+            draw_fn: function(id, msg) {draw(id, msg)}})
 router.set("book:get_chapters",
            {id:      "book-get_chapters",
             draw_fn: function(id, msg) {draw(id, msg)}})

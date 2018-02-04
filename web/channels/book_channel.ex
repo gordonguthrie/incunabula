@@ -15,6 +15,10 @@ defmodule Incunabula.BookChannel do
   end
 
   @doc "get_reply/2 is the reply on joining"
+  def get_reply(:get_chapters_dropdown, %{slug: slug}) do
+    _dropdown = Incunabula.Git.get_chapters_dropdown(slug)
+  end
+
   def get_reply(:get_book_title, %{slug: slug}) do
     _title = Incunabula.Git.get_book_title(slug)
   end
@@ -36,8 +40,6 @@ defmodule Incunabula.BookChannel do
                                chapterslug: _chapterslug}) do
     _current_tag_msg = Incunabula.Git.get_current_tag_msg(slug)
   end
-
-  @doc "get_reply/3 is the reply on a push request"
   def get_reply(:save_edits, topicparams, pushparams, user) do
     %{slug:        slug,
       chapterslug: chapterslug} = topicparams
@@ -53,6 +55,10 @@ defmodule Incunabula.BookChannel do
   defp parse_topic(topic) do
     route = String.split(topic, ":")
     parse_route(route)
+  end
+
+  defp parse_route(["get_chapters_dropdown", slug]) do
+    {:get_chapters_dropdown, %{slug: slug}}
   end
 
   defp parse_route(["get_book_title", slug]) do

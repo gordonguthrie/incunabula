@@ -8,6 +8,13 @@ defmodule Incunabula.FragController do
       chaffs: chaffs
   end
 
+  def get_chapters_dropdown(slug, chapters) do
+    conn = make_fresh_conn()
+    make_html conn, "chapters_dropdown.html",
+      slug:               slug,
+      chapters:           chapters
+  end
+
   def get_chapters(slug, chapters) do
     conn = make_fresh_conn()
     make_html conn, "chapters.html",

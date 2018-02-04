@@ -45,9 +45,10 @@
         <%= submit("Create New Chapter", [class: "ui primary button"]) %>
       <% end %>
     </div>
+  </div>
 </div>
 
-  <div class="incunabula-new-image ui small modal">
+<div class="incunabula-new-image ui small modal">
   <div class="content">
     <div class="ui form">
       <%= form_for @imagechangeset, @newimage, [multipart: true, class: "ui form"], fn f -> %>
@@ -64,39 +65,54 @@
         <%= submit("Upload new image", [class: "ui primary button"]) %>
       <% end %>
     </div>
+  </div>
 </div>
 
-    <div class="incunabula-new-chaff ui small modal">
+<div class="incunabula-new-chaff ui small modal">
   <div class="content">
     <div class="ui form">
       <%= form_for @newchaffchangeset, @newchaff, [class: "ui form"], fn f -> %>
       <div class="field">
         <label>Create new
-        <%= text_input(f, :chaff_title,
-            [class: :field,
-            placeholder: "What should this new chaff be called"]) %>
-        <%= error_tag f, :caption %>
+          <%= text_input(f, :chaff_title,
+              [class: :field,
+              placeholder: "What should this new chaff be called"]) %>
+          <%= error_tag f, :caption %>
         </label>
+        </div>
         <div class="incunabula-edits-hidden">
           <%= checkbox(f, :copy?, value: "false") %>
         </div>
-        </div>
-        <%= submit("Create new chaff", [class: "ui primary button"]) %>
+      <%= submit("Create new chaff", [class: "ui primary button"]) %>
       <% end %>
     </div>
+  </div>
 </div>
 
-  <div class="incunabula-copy-chaff ui small modal">
+<div class="incunabula-copy-chaff ui small modal">
   <div class="content">
     <div class="ui form">
-      <%% = form_for @copychaffchangeset, @copychaff, [class: "ui form"], fn f -> %>
+      <%= form_for @copychaffchangeset, @copychaff, [class: "ui form"], fn f -> %>
       <div class="field">
-        <label>Pick a chapter to copy
-          <p>Fix me up</p>
-          <%% = error_tag f, :caption %>
+        <label>Create new copy
+          <%= text_input(f, :chaff_title,
+              [class: :field,
+              placeholder: "What should this new chaff be called"]) %>
+          <%= error_tag f, :caption %>
         </label>
-        </div>
-        <%% = submit("Copy chapter", [class: "ui primary button"]) %>
-      <%% end %>
+      </div>
+      <div class="field">
+        <label>Pick a chapter to copy over to the chaff
+            <div id="book-get_chapters_dropdown" class="incunabula-topic" topic="book:get_chapters_dropdown:<%= @slug %>"></div>
+        </label>
+      </div>
+      <div class="incunabula-edits-hidden">
+        <%= checkbox(f, :copy?, value: "true") %>
+      </div>
+      <%= error_tag f, :caption %>
     </div>
+    <%= submit("Copy chapter", [class: "ui primary button"]) %>
+    <% end %>
+  </div>
+  </div>
 </div>

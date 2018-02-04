@@ -24,6 +24,7 @@ defmodule Incunabula.Router do
     post "/books/:slug/chapter/new",                   ChapterController, :create
     post "/books/:slug/chaff/new",                     ChaffController,   :new
     post "/books/:slug/chaff/copy",                    ChaffController,   :copy
+    get  "/books/:slug/chaffs/:chaffslug",             ChaffController,   :show
     get  "/books/:slug/chapters/:chapterslug",         ChapterController, :show
     get  "/books/:slug/chapters/:chapterslug/preview", ChapterController, :show_preview
     post "/books/:slug/image/new",                     ImageController,   :create
