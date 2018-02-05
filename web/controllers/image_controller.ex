@@ -22,9 +22,9 @@ defmodule Incunabula.ImageController do
         :ok = Incunabula.Git.load_image(slug, image, user)
         conn
         |> redirect(to: Path.join(["/books/", slug, "#images"]))
-      false ->
+      {:error, error} ->
         conn
-        |> put_flash(:error, "Not a valid image name")
+        |> put_flash(:error, error)
         |> redirect(to: Path.join(["/books/", slug, "#images"]))
     end
   end
@@ -45,10 +45,14 @@ defmodule Incunabula.ImageController do
           ".png"  -> true
           ".gif"  -> true
           ".tiff" -> true
-          _       -> false
+          _       -> {:error, "not a valid image type"}
         end
-      false -> false
+      false -> {:error, "images must have titles"}
     end
+  end
+
+  defp is_valid_image?(_) do
+    {:error, "you must select a file"}
   end
 
 end

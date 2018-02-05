@@ -8,9 +8,15 @@ defmodule Incunabula.ChapterController do
   def create(conn, %{"chapter" => chapter,
                      "slug"    => slug} = params, user) do
     %{"chapter_title" => chapter_title} = chapter
-    :ok = Incunabula.Git.create_chapter(slug, chapter_title, user)
-    conn
-    |> redirect(to: Path.join("/books", slug))
+    case Incunabula.Git.create_chapter(slug, chapter_title, user) do
+      :ok ->
+        conn
+        |> redirect(to: Path.join("/books", slug))
+      {:error, error} ->
+        conn
+        |> put_flash(:error, error)
+        |> redirect(to: Path.join(["/books", slug]))
+    end
   end
 
   def show(conn, %{"chapterslug" => chapterslug,

@@ -28,14 +28,37 @@ defmodule Incunabula.Git do
     {:ok, []}
   end
 
+  def has_chapters?(slug) do
+    GenServer.call(__MODULE__, {:has_chapters?, slug})
+  end
+
   def load_image(slug, image, user) do
    GenServer.call(__MODULE__, {:load_image, {slug, image, user}})
+  end
+
+  def copy_chapter_to_chaff(_slug, _chapter_slug, "", _user) do
+    {:error, "title cannot be blank"}
+  end
+
+  def copy_chapter_to_chaff(_slug, "", _chaff_title, _user) do
+    {:error, "must specify a chapter to copy"}
+  end
+
+  def copy_chapter_to_chaff(slug, chapter_slug, chaff_title, user) do
+   GenServer.call(__MODULE__, {:copy_chapter_to_chaff, {slug, chapter_slug, chaff_title, user}})
+  end
+
+  def create_chaff(_slug, "", _user) do
+    {:error, "title cannot be blank"}
   end
 
   def create_chaff(slug, chaff_title, user) do
     GenServer.call(__MODULE__, {:create, {:chaff, slug, chaff_title, user}})
   end
 
+  def create_chapter(_slug, "", _user) do
+    {:error, "title cannot be blank"}
+  end
 
   def create_chapter(slug, chapter_title, user) do
     GenServer.call(__MODULE__, {:create, {:chapter, slug, chapter_title, user}})
@@ -46,6 +69,10 @@ defmodule Incunabula.Git do
     GenServer.call(__MODULE__, {:update_chapter, {slug, chapter_slug,
                                                   commit_title, commit_msg,
                                                   data, tag_bump, user}})
+  end
+
+  def create_book("", _author) do
+    {:error, "title cannot be blank"}
   end
 
   def create_book(book_title, author) do
@@ -113,8 +140,21 @@ defmodule Incunabula.Git do
   # call backs
   #
 
+  def handle_call({:has_chapters?, slug}, _from, state) do
+    reply = case consult_file(get_book_dir(slug), "chapters.db") do
+      [] -> false
+      _  -> true
+    end
+    {:reply, reply, state}
+  end
+
   def handle_call({:load_image, {slug, image, user}}, _from, state) do
     {:reply, do_load_image(slug, image, user), state}
+  end
+
+  def handle_call({:copy_chapter_to_chaff, {slug, chapter_slug, chaff_title, user}},
+    _from, state) do
+    {:reply, do_copy_chapter_to_chaff(slug, chapter_slug, chaff_title, user), state}
   end
 
   def handle_call({:create, {type, slug, chapter_title, user}}, _from, state) do
@@ -236,6 +276,31 @@ defmodule Incunabula.Git do
     end
   end
 
+  defp do_copy_chapter_to_chaff(slug, chapter_slug, chaff_title, user) do
+    chaff_slug = Incunabula.Slug.to_slug(chaff_title)
+    bookdir = get_book_dir(slug)
+    from = Path.join([bookdir, "chapters", chapter_slug <> ".eider"])
+    to   = Path.join([bookdir, "chaff",    chaff_slug   <> ".eider"])
+    case File.exists?(to) do
+      false ->
+        {:ok, 0} = File.copy(from, to)
+        prefix = chaff_slug <> " copied from " <> chapter_slug
+        tag = make_tag(prefix, chaff_title, chaff_slug, user)
+        currenttag = get_current_tag(bookdir)
+        bookdir
+        |> update_chaff_DB_annotated(chaff_title, chaff_slug, prefix <> " at " <> currenttag)
+        |> add_to_git(:all)
+        |> make_html(:chaff, chaff_title, chaff_slug, user)
+        |> commit_to_git(tag)
+        |> bump_tag(tag, "major", user)
+        |> push_to_github(slug)
+        |> push_to_channel(slug, slug, :"book-get_chaffs")
+        :ok
+        true ->
+        {:error, chaff_slug <> " already exists"}
+    end
+  end
+
   defp do_create(type, slug, title, user) do
     title_slug = Incunabula.Slug.to_slug(title)
     bookdir = get_book_dir(slug)
@@ -267,10 +332,15 @@ defmodule Incunabula.Git do
         |> bump_tag(tag, "major", user)
         |> push_to_github(slug)
         |> push_to_channel(slug, slug, channel)
-        :ok
+        case type == :chapter do
+          true ->
+            bookdir = push_to_channel(bookdir, slug, slug, "book-get_chapters_dropdown")
+            :ok
+          false ->
+            :ok
+        end
       true ->
-        # don't care really
-        :ok
+        {:error, title <> " already exists"}
     end
   end
 
@@ -287,7 +357,7 @@ defmodule Incunabula.Git do
     write_to_book(bookdir, "images.db", images)
   end
 
-  defp update_DB_annotated(bookdir, :chaff, title, slug, msg) do
+  defp update_chaff_DB_annotated(bookdir, title, slug, msg) do
     newentry =  %{chaff_title: title,
                   creation:     msg,
                   chaff_slug:   slug}
@@ -303,8 +373,9 @@ defmodule Incunabula.Git do
   end
 
   defp update_DB(bookdir, :chaff, title, slug) do
+    currenttag = get_current_tag(bookdir)
     newentry =  %{chaff_title: title,
-                  creation:     "ex novo",
+                  creation:     "ex novo at " <> currenttag,
                   chaff_slug:   slug}
     db =  "chaff.db"
     do_update_DB(bookdir, db, newentry)

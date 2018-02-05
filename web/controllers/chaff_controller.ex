@@ -9,9 +9,15 @@ defmodule Incunabula.ChaffController do
                   "slug"  => slug}, user) do
     %{"chaff_title" => chaff_title,
       "copy?"       => "false"} = chaff
-    :ok = Incunabula.Git.create_chaff(slug, chaff_title, user)
-    conn
-    |> redirect(to: Path.join(["/books", slug, "#chaff"]))
+    case Incunabula.Git.create_chaff(slug, chaff_title, user) do
+      :ok ->
+        conn
+        |> redirect(to: Path.join(["/books", slug, "#chaff"]))
+      {:error, error} ->
+        conn
+        |> put_flash(:error, error)
+        |> redirect(to: Path.join(["/books", slug, "#chaff"]))
+    end
   end
 
   def copy(conn, %{"chaff" => chaff,
@@ -19,17 +25,19 @@ defmodule Incunabula.ChaffController do
     %{"chaff_title"  => chaff_title,
       "chapter_slug" => chapter_slug,
       "copy?"        => "true"} = chaff
-    IO.inspect "in chaff copy"
-    IO.inspect chaff
-    conn
-    |> redirect(to: Path.join(["/books", slug, "#chaff"]))
+    case Incunabula.Git.copy_chapter_to_chaff(slug, chapter_slug, chaff_title, user) do
+      :ok ->
+        conn
+        |> redirect(to: Path.join(["/books", slug, "#chaff"]))
+      {:error, error} ->
+        conn
+        |> put_flash(:error, error)
+        |> redirect(to: Path.join(["/books", slug, "#chaff"]))
+    end
   end
 
   def show(conn, %{"chaffslug" => chaff_slug,
                    "slug"      => slug}, user) do
-    IO.inspect "in chaff copy"
-    IO.inspect chaff_slug
-    IO.inspect user
     conn
     |> redirect(to: Path.join(["/books", slug, "#chaff"]))
   end

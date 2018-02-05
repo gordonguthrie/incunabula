@@ -1,7 +1,7 @@
-
-  <h2><span id="book-get_book_title"
+<h2><span id="book-get_book_title"
          class="incunabula-topic"
-         topic="book:get_book_title:<%= @slug %>"></span>&nbsp;<i class="edit icon"></i></h2>
+            topic="book:get_book_title:<%= @slug %>"></span>&nbsp;<i class="edit icon"></i>
+</h2>
 
 <div class="ui top attached tabular menu">
   <a class="active item" data-tab="chapters">Chapters</a>
@@ -27,7 +27,9 @@
 <div id="book-get_chaffs" class="incunabula-topic" topic="book:get_chaffs:<%= @slug %>"></div>
 <div class="content">
   <button class="incunabula-show ui primary button" modal="incunabula-new-chaff">Create New Chaff</button>
+  <%= if @showchaff do %>
   <button class="incunabula-show ui primary button" modal="incunabula-copy-chaff">Copy A Chapter</button>
+  <% end %>
 </div>
 </div>
 

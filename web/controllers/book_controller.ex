@@ -12,7 +12,8 @@ defmodule Incunabula.BookController do
   end
 
   def show(conn, %{"slug"  => slug}, _user) do
-    booktitle        = Incunabula.Git.get_book_title(slug)
+    booktitle     = Incunabula.Git.get_book_title(slug)
+    has_chapters? = Incunabula.Git.has_chapters?(slug)
     render conn, "show.html",
       slug:               slug,
       title:              booktitle,
@@ -23,7 +24,8 @@ defmodule Incunabula.BookController do
       newchapter:         Path.join(["/books",  slug, "/chapter/new"]),
       newimage:           Path.join(["/books/", slug, "/image/new"]),
       newchaff:           Path.join(["/books",  slug, "chaff/new"]),
-      copychaff:          Path.join(["/books",  slug, "chaff/copy"])
+      copychaff:          Path.join(["/books",  slug, "chaff/copy"]),
+      showchaff:          has_chapters?
   end
 
   def create(conn, %{"book" => book} = params, user) do
@@ -33,9 +35,10 @@ defmodule Incunabula.BookController do
         conn
         |> redirect(to: "/books/" <> slug)
       {:error, err} ->
+        changeset = Incunabula.Book.changeset()
         conn
         |> put_flash(:error, err)
-        |> render("index.html")
+        |> render("index.html", [changeset: changeset])
     end
   end
 
