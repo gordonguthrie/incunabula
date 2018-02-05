@@ -36,14 +36,25 @@ defmodule Incunabula.ChaffController do
     end
   end
 
-  def show(conn, %{"chaffslug" => chaff_slug,
+  def show(conn, %{"chaffslug" => chaffslug,
                    "slug"      => slug}, user) do
-    conn
-    |> redirect(to: Path.join(["/books", slug, "#chaff"]))
+    booktitle  = Incunabula.Git.get_book_title(slug)
+    chafftitle = Incunabula.Git.get_chaff_title(slug, chaffslug)
+    changeset  = Incunabula.SaveEdit.changeset()
+    savepath   = Path.join(["/books", slug, "chaff", chaffslug, "save"])
+    {_tag, contents} = Incunabula.Git.get_chaff(slug, chaffslug)
+    render conn, "show.html",
+      changeset:  changeset,
+      title:      booktitle,
+      chafftitle: chafftitle,
+      chaffslug:  chaffslug,
+      save_edits: savepath,
+      contents:   contents,
+      slug:       slug
   end
-
 
   def index(conn, _params, _user) do
     render conn, "index.html"
   end
+
 end

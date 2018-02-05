@@ -92,8 +92,11 @@ router.set("book:get_book_title",
             draw_fn: function(id, msg) {draw(id, msg)}})
 
 // some update routes
-router.set("book:save_edits",
-           {id:      "book-chapter-save_edits",
+router.set("book:save_chaff_edits",
+           {id:      "book-save_edits",
+            draw_fn: function(id, msg) {draw(id, msg)}})
+router.set("book:save_chapter_edits",
+           {id:      "book-save_edits",
             draw_fn: function(id, msg) {draw(id, msg)}})
 // some updates we do nothing on return
 router.set("book:update_title",

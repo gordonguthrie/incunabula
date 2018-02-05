@@ -1,55 +1,13 @@
-<h2><%= @title %> - <em><%= @chaptertitle %></em></h2>
-<small><a href='<%= Path.join(["/books", @slug, "chapters", @chapterslug, "preview"]) %>' target='blank'>Preview</a></small>
-<div class="ui form">
-  <div id="incunabula-eiderdown" class="field">
-    <!-- rows are given as 4 to disable CSS that styles it when rows aren't set
-         the box is resized by javascript -->
-    <!-- IMPORTANT to keep this on one line otherwise you inject white space -->
-    <textarea rows="4" dirty="false"><%= @contents %></textarea>
-    <!-- IMPORTANT -->
-  </div>
-</div>
+<h2><a href="/books/<%= @slug %>"><%= @title %></a> - <em><%= @chaptertitle %></em></h2>
+<small><a href='<%= Path.join(["/books", @slug, "chapters", @chapterslug, "preview"]) %>' target='blank'>Preview this chapter</a></small>
 
-<div class="ui grid">
-  <div class="four wide column">
-    <button class="incunabula-show ui primary button" modal="incunabula-save-edits">Save</button>
-  </div>
-  <div class="two wide column">
-    <small><strong class="incunabula-grey">Last saved:</strong></small>
-  </div>
-  <div class="ten wide column">
-      <small><div id="book-chapter-save_edits"
-           class="incunabula-topic incunabula-grey"
-           topic='<%= "book:save_edits:" <>
-                      @slug <>
-                      ":chapter:" <>
-                      @chapterslug
-                      %>'></div></small>
-  </div>
-</div>
-
-<div class="incunabula-save-edits ui small modal">
-  <div class="content">
-      <%= form_for @changeset, @save_edits, [class: "ui form"], fn f -> %>
-      <div class="field">
-        <label>Save title
-          <%= text_input(f, :commit_title,
-              [class: "incunabula-commit_title",
-              placeholder: "This is how this save will appear in your history"]) %>
-          <%= error_tag f, :caption %>
-        </label>
-      </div>
-      <div class="field">
-        <%= textarea(f, :commit_message,
-            [class: "incunabula-commit_msg",
-            placeholder: "As the writing process unfolds you can use this message to work out what you were doing and thinking of when you made this commit. The details will become more useful as time goes on..."]) %>
-        <%= error_tag f, :caption %>
-      </div>
-      <div class="field">
-        <%= text_input(f, :contents,
-            [class: "incunabula-edits-hidden"]) %>
-      </div>
-      <% end %>
-  <button class="incunabula-submit-edits ui primary button">Save</button>
-  </div>
-</div>
+<%= render Incunabula.EditorView, "editor.html",
+    changeset:     @changeset,
+    title:         @title,
+    contentstitle: @chaptertitle,
+    contentsslug:  @chapterslug,
+    save_edits:    @save_edits,
+    contents:      @contents,
+    slug:          @slug,
+    topic:         "book:save_chapter_edits:" <> @slug <> ":chapter:" <> @chapterslug
+   %>

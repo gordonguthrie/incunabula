@@ -75,6 +75,13 @@ defmodule Incunabula.Git do
                                                   data, tag_bump, user}})
   end
 
+  def update_chaff(slug, chaff_slug, commit_title,
+    commit_msg, data, tag_bump, user) do
+    GenServer.call(__MODULE__, {:update_chaff, {slug, chaff_slug,
+                                                   commit_title, commit_msg,
+                                                   data, tag_bump, user}})
+  end
+
   def create_book("", _author) do
     {:error, "title cannot be blank"}
   end
@@ -103,8 +110,16 @@ defmodule Incunabula.Git do
     GenServer.call(__MODULE__, {:get_book_title, slug})
   end
 
-    def get_chapter(slug, chapterslug) do
+  def get_chaff(slug, chaffslug) do
+    GenServer.call(__MODULE__, {:get_chaff, {slug, chaffslug}})
+  end
+
+  def get_chapter(slug, chapterslug) do
     GenServer.call(__MODULE__, {:get_chapter, {slug, chapterslug}})
+  end
+
+  def get_chaff_title(slug, chaffslug) do
+    GenServer.call(__MODULE__, {:get_chaff_title, {slug, chaffslug}})
   end
 
   def get_chapter_title(slug, chapterslug) do
@@ -169,6 +184,14 @@ defmodule Incunabula.Git do
     {:reply, do_update_book_title(slug, new_title, user), state}
   end
 
+  def handle_call({:update_chaff, {slug, chaff_slug,
+                                   commit_title, commit_msg,
+                                   data, tag_bump, user}}, _from, state) do
+    reply = do_update_chaff(slug, chaff_slug, commit_title, commit_msg,
+      data, tag_bump, user)
+    {:reply, reply, state}
+  end
+
   def handle_call({:update_chapter, {slug, chapter_slug,
                                      commit_title, commit_msg,
                                      data, tag_bump, user}}, _from, state) do
@@ -194,8 +217,16 @@ defmodule Incunabula.Git do
     {:reply, do_get_chapters_dropdown(slug), state}
   end
 
+  def handle_call({:get_chaff, {slug, chaffslug}}, _from, state) do
+    {:reply, do_get_text(slug, :chaff, chaffslug), state}
+  end
+
   def handle_call({:get_chapter, {slug, chapterslug}}, _from, state) do
-    {:reply, do_get_chapter(slug, chapterslug), state}
+    {:reply, do_get_text(slug, :chapter, chapterslug), state}
+  end
+
+  def handle_call({:get_chaff_title, {slug, chaffslug}}, _from, state) do
+    {:reply, do_get_chaff_title(slug, chaffslug), state}
   end
 
   def handle_call({:get_chapter_title, {slug, chapterslug}}, _from, state) do
@@ -272,11 +303,40 @@ defmodule Incunabula.Git do
     :ok
   end
 
+  defp do_update_chaff(slug, ch_slug, commit_title, commit_msg,
+    data, tag_bump, user) do
+    bookdir  = get_book_dir(slug)
+    ch_title =  do_get_chapter_title(slug, ch_slug)
+    tag = make_tag("update chaff", ch_title, ch_slug, user, commit_title)
+    chapter  = Path.join("chaff", ch_slug <> ".eider")
+    route    = make_route([slug, "chaff", ch_slug])
+    # the user may have pressed save without making any changes
+    # so we write the data, check if there is any change
+    # and then, and only then, retag etc
+    bookdir
+    |> write_to_book(chapter, data)
+    case nothing_to_commit?(bookdir) do
+      true ->
+        msg = "no changes to save: " <> do_get_current_tag_msg(bookdir)
+        :ok = direct_push_to_channel(route, "book-save_chaff_edits", msg)
+        msg
+      false ->
+        bookdir
+        |> make_html(:chaff, ch_title, ch_slug, user)
+        |> add_to_git(:all)
+        |> commit_to_git(commit_msg)
+        |> bump_tag(tag, tag_bump, user)
+        |> push_to_github(slug)
+        |> push_to_channel(slug, route, "book-save_chaff_edits")
+        |> do_get_current_tag_msg
+    end
+  end
+
   defp do_update_chapter(slug, ch_slug, commit_title, commit_msg,
     data, tag_bump, user) do
     bookdir  = get_book_dir(slug)
-    ch_title = do_get_chapter_title(slug, ch_slug)
-    tag      = make_tag("update chapter", ch_title, ch_slug, user, commit_title)
+    ch_title =  do_get_chapter_title(slug, ch_slug)
+    tag = make_tag("update chapter", ch_title, ch_slug, user, commit_title)
     chapter  = Path.join("chapters", ch_slug <> ".eider")
     route    = make_route([slug, "chapter", ch_slug])
     # the user may have pressed save without making any changes
@@ -287,7 +347,7 @@ defmodule Incunabula.Git do
     case nothing_to_commit?(bookdir) do
       true ->
         msg = "no changes to save: " <> do_get_current_tag_msg(bookdir)
-        :ok = direct_push_to_channel(route, "book-save_edits", msg)
+        :ok = direct_push_to_channel(route, "book-save_chapter_edits", msg)
         msg
       false ->
         bookdir
@@ -296,7 +356,7 @@ defmodule Incunabula.Git do
         |> commit_to_git(commit_msg)
         |> bump_tag(tag, tag_bump, user)
         |> push_to_github(slug)
-        |> push_to_channel(slug, route, "book-save_edits")
+        |> push_to_channel(slug, route, "book-save_chapter_edits")
         |> do_get_current_tag_msg
     end
   end
@@ -478,17 +538,34 @@ defmodule Incunabula.Git do
     _dropdown = Incunabula.FragController.get_chapters_dropdown(slug, chapters)
   end
 
-  defp do_get_chapter(slug, chapterslug) do
+  defp do_get_text(slug, type, textslug) do
     bookdir = get_book_dir(slug)
     tag = do_get_current_tag_msg(bookdir)
-    path = Path.join([get_book_dir(slug), "chapters"])
-    {:ok, contents} = read_file(path, chapterslug <> ".eider")
+    path = case type do
+             :chapter -> Path.join([get_book_dir(slug), "chapters"])
+             :chaff   -> Path.join([get_book_dir(slug), "chaff"])
+           end
+    {:ok, contents} = read_file(path, textslug <> ".eider")
     {tag, contents}
+  end
+
+  defp do_get_chaff_title(slug, chaffslug) do
+    chaff  = consult_file(get_book_dir(slug), "chaff.db")
+    _title = read_chaff_title(chaffslug, chaff)
   end
 
   defp do_get_chapter_title(slug, chapterslug) do
     chapters = consult_file(get_book_dir(slug), "chapters.db")
     _title   = read_chapter_title(chapterslug, chapters)
+  end
+
+  defp read_chaff_title(slug, [%{chaff_slug:  slug,
+                                 chaff_title: chaff_title} | _T]) do
+    chaff_title
+  end
+
+  defp read_chaff_title(slug, [_H | T]) do
+    get_chaff_title(slug, T)
   end
 
   defp read_chapter_title(slug, [%{chapter_slug:  slug,
@@ -681,18 +758,34 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp push_to_channel(dir, slug, route, "book-save_edits") do
+  defp push_to_channel(dir, slug, route, "book-save_chaff_edits") do
     bookdir = get_book_dir(slug)
     tag = do_get_current_tag_msg(bookdir)
     # No I don't understand why the event and the message associated with it
     # have to be called books neither
-    Incunabula.Endpoint.broadcast "book:save_edits:" <> route,
+    Incunabula.Endpoint.broadcast "book:save_chaff_edits:" <> route,
       "books", %{books: tag}
     dir
   end
 
-  defp direct_push_to_channel(route, "book-save_edits", msg) do
-    Incunabula.Endpoint.broadcast "book:save_edits:" <> route,
+  defp push_to_channel(dir, slug, route, "book-save_chapter_edits") do
+    bookdir = get_book_dir(slug)
+    tag = do_get_current_tag_msg(bookdir)
+    # No I don't understand why the event and the message associated with it
+    # have to be called books neither
+    Incunabula.Endpoint.broadcast "book:save_chapter_edits:" <> route,
+      "books", %{books: tag}
+    dir
+  end
+
+  defp direct_push_to_channel(route, "book-save_chaff_edits", msg) do
+    Incunabula.Endpoint.broadcast "book:save_chaff_edits:" <> route,
+      "books", %{books: msg}
+    :ok
+  end
+
+  defp direct_push_to_channel(route, "book-save_chapter_edits", msg) do
+    Incunabula.Endpoint.broadcast "book:save_chapter_edits:" <> route,
       "books", %{books: msg}
     :ok
   end

@@ -109,7 +109,7 @@ if ($("#incunabula-eiderdown").length) {
     }
 
     incunabula.save_edits_fn = function (data, title, msg, tag_bump) {
-        var topic = $("#book-chapter-save_edits").attr("topic");
+        var topic = $("#book-save_edits").attr("topic");
         socket_push(topic, {commit_title: title,
                             commit_msg:   msg,
                             data:         data,
