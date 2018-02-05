@@ -306,7 +306,7 @@ defmodule Incunabula.Git do
   defp do_update_chaff(slug, ch_slug, commit_title, commit_msg,
     data, tag_bump, user) do
     bookdir  = get_book_dir(slug)
-    ch_title =  do_get_chapter_title(slug, ch_slug)
+    ch_title =  do_get_chaff_title(slug, ch_slug)
     tag = make_tag("update chaff", ch_title, ch_slug, user, commit_title)
     chapter  = Path.join("chaff", ch_slug <> ".eider")
     route    = make_route([slug, "chaff", ch_slug])
@@ -569,7 +569,7 @@ defmodule Incunabula.Git do
   end
 
   defp read_chapter_title(slug, [%{chapter_slug:  slug,
-                                  chapter_title: chapter_title} | _T]) do
+                                   chapter_title: chapter_title} | _T]) do
     chapter_title
   end
 

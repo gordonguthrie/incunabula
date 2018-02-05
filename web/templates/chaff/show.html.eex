@@ -1,5 +1,5 @@
 <h2><a href="/books/<%= @slug %>"><%= @title %> - <em class="incunabula-chaff"><%= @chafftitle %></em></h2>
-<small><a href='<%= Path.join(["/books", @slug, "chaff", @chaffslug, "preview"]) %>' target='blank'>Preview this chaff</a></small>
+<small><a href='<%= Path.join(["/books", @slug, "chaffs", @chaffslug, "preview"]) %>' target='blank'>Preview this chaff</a></small>
 
 <%= render Incunabula.EditorView, "editor.html",
     changeset:     @changeset,

@@ -3,7 +3,7 @@ defmodule Incunabula.ChapterController do
 
   use Incunabula.Controller
 
-  plug :authenticate_user when action in [:create, :show, :show_preview]
+  plug :authenticate_user when action in [:create, :show]
 
   def create(conn, %{"chapter" => chapter,
                      "slug"    => slug} = params, user) do
@@ -34,21 +34,6 @@ defmodule Incunabula.ChapterController do
       save_edits:   savepath,
       contents:     contents,
       slug:         slug
-  end
-
-  def show_preview(conn, %{"chapterslug" => chapterslug,
-                           "slug"        => slug}, _user) do
-    booksdir = Incunabula.Git.get_books_dir()
-    file = Path.join([
-      booksdir,
-      slug,
-      "preview_html",
-      chapterslug <> ".html"
-    ])
-    {:ok, binary} = File.read(file)
-    conn
-    |> put_resp_header("content-type", "text/html; charset=utf-8")
-    |> send_resp(200, binary)
   end
 
 end
