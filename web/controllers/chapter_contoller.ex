@@ -3,7 +3,7 @@ defmodule Incunabula.ChapterController do
 
   use Incunabula.Controller
 
-  plug :authenticate_user when action in [:create, :show]
+  plug :authenticate_user when action in [:create, :show, :show_preview]
 
   def create(conn, %{"chapter" => chapter,
                      "slug"    => slug} = params, user) do
