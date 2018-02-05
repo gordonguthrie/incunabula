@@ -16,6 +16,6 @@
                     placeholder: "Password") %>
     </label>
     </div>
-  <%= submit("Login", [class: "ui button"]) %>
+  <%= submit("Login", [class: "ui primary button"]) %>
   <% end %>
 </div>
