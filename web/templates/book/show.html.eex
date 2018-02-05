@@ -1,6 +1,10 @@
 <h2><span id="book-get_book_title"
-         class="incunabula-topic"
-            topic="book:get_book_title:<%= @slug %>"></span>&nbsp;<i class="edit icon"></i>
+          class="incunabula-topic"
+          data-fieldsource="book-get_book_title"
+          topic="book:get_book_title:<%= @slug %>"></span>&nbsp;
+  <i class="incunabula-show incunabula-bound edit icon"
+     data-fieldbinding="book-get_book_title"
+     modal="incunabula-edit_title"></i>
 </h2>
 
 <div class="ui top attached tabular menu">
@@ -11,9 +15,9 @@
 
 <div class="ui bottom attached active tab segment" data-tab="chapters">
   <div id="book-get_chapters" class="incunabula-topic" topic="book:get_chapters:<%= @slug %>"></div>
-<div class="content">
-  <button class="incunabula-show ui primary button" modal="incunabula-new-chapter" >New Chapter</button>
-</div>
+  <div class="content">
+    <button class="incunabula-show ui primary button" modal="incunabula-new-chapter" >New Chapter</button>
+  </div>
 </div>
 
 <div class="ui bottom attached tab segment" data-tab="images">
@@ -24,14 +28,24 @@
 </div>
 
 <div class="ui bottom attached tab segment" data-tab="chaff">
-<div id="book-get_chaffs" class="incunabula-topic" topic="book:get_chaffs:<%= @slug %>"></div>
-<div class="content">
-  <button class="incunabula-show ui primary button" modal="incunabula-new-chaff">Create New Chaff</button>
+  <div id="book-get_chaffs" class="incunabula-topic" topic="book:get_chaffs:<%= @slug %>">
+  </div>
+  <div class="content">
+    <button class="incunabula-show ui primary button" modal="incunabula-new-chaff">Create New Chaff</button>
   <%= if @showchaff do %>
   <button class="incunabula-show ui primary button" modal="incunabula-copy-chaff">Copy A Chapter</button>
   <% end %>
+  </div>
 </div>
-</div>
+
+<%= render Incunabula.FieldModalView, "field.html",
+    id:           "incunabula-edit_title",
+    label:        "Edit book title",
+    modal:        "incunabula-edit_title",
+    fieldbinding: "book-get_book_title",
+    button_title: "Save new title",
+    bound_topic:  "book:update_title:" <> @slug
+    %>
 
 <div class="incunabula-new-chapter ui small modal">
   <div class="content">

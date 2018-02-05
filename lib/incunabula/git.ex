@@ -64,6 +64,10 @@ defmodule Incunabula.Git do
     GenServer.call(__MODULE__, {:create, {:chapter, slug, chapter_title, user}})
   end
 
+  def update_book_title(slug, new_title, user) do
+    GenServer.call(__MODULE__, {:update_book_title, {slug, new_title, user}})
+  end
+
   def update_chapter(slug, chapter_slug, commit_title,
     commit_msg, data, tag_bump, user) do
     GenServer.call(__MODULE__, {:update_chapter, {slug, chapter_slug,
@@ -161,6 +165,10 @@ defmodule Incunabula.Git do
     {:reply, do_create(type, slug, chapter_title, user), state}
   end
 
+  def handle_call({:update_book_title, {slug, new_title, user}}, _from, state) do
+    {:reply, do_update_book_title(slug, new_title, user), state}
+  end
+
   def handle_call({:update_chapter, {slug, chapter_slug,
                                      commit_title, commit_msg,
                                      data, tag_bump, user}}, _from, state) do
@@ -236,7 +244,7 @@ defmodule Incunabula.Git do
     |> commit_to_git(commitmsg)
     |> bump_tag("new image loaded " <> imageslug, "major", user)
     |> push_to_github(slug)
-    |> push_to_channel(slug, slug, :"book-get_images")
+    |> push_to_channel(slug, slug, "book-get_images")
     :ok
   end
 
@@ -247,13 +255,30 @@ defmodule Incunabula.Git do
     dir
   end
 
+  defp do_update_book_title(slug, new_title, user) do
+    bookdir = get_book_dir(slug)
+    {:ok, oldtitle} = read_file(get_book_dir(slug), "title.db")
+    commitmsg = "old title was " <> oldtitle <> "new title is "
+    <> new_title <> "(" <> slug <> ")"
+    tag = make_tag("edit book title", new_title, slug, user, "new book title ")
+    bookdir
+    |> write_to_book("title.db", new_title)
+    |> add_to_git(:all)
+    |> commit_to_git(commitmsg)
+    |> bump_tag(tag, "major", user)
+    |> push_to_github(slug)
+    |> push_to_channel(slug, slug, "books-list")
+    |> push_to_channel(slug, slug, "book-get_book_title")
+    :ok
+  end
+
   defp do_update_chapter(slug, ch_slug, commit_title, commit_msg,
     data, tag_bump, user) do
     bookdir  = get_book_dir(slug)
     ch_title = do_get_chapter_title(slug, ch_slug)
     tag      = make_tag("update chapter", ch_title, ch_slug, user, commit_title)
     chapter  = Path.join("chapters", ch_slug <> ".eider")
-    route    = slug <> ":chapter:" <> ch_slug
+    route    = make_route([slug, "chapter", ch_slug])
     # the user may have pressed save without making any changes
     # so we write the data, check if there is any change
     # and then, and only then, retag etc
@@ -271,7 +296,7 @@ defmodule Incunabula.Git do
         |> commit_to_git(commit_msg)
         |> bump_tag(tag, tag_bump, user)
         |> push_to_github(slug)
-        |> push_to_channel(slug, route, :"book-save_edits")
+        |> push_to_channel(slug, route, "book-save_edits")
         |> do_get_current_tag_msg
     end
   end
@@ -294,7 +319,7 @@ defmodule Incunabula.Git do
         |> commit_to_git(tag)
         |> bump_tag(tag, "major", user)
         |> push_to_github(slug)
-        |> push_to_channel(slug, slug, :"book-get_chaffs")
+        |> push_to_channel(slug, slug, "book-get_chaffs")
         :ok
         true ->
         {:error, chaff_slug <> " already exists"}
@@ -320,8 +345,8 @@ defmodule Incunabula.Git do
                    :chaff   -> "create new chaff"
                  end
         channel = case type do
-                   :chapter -> :"book-get_chapters"
-                   :chaff   -> :"book-get_chaffs"
+                   :chapter -> "book-get_chapters"
+                   :chaff   -> "book-get_chaffs"
                  end
         tag = make_tag(prefix, title, title_slug, user)
         bookdir
@@ -421,7 +446,7 @@ defmodule Incunabula.Git do
         |> commit_to_git("basic setup of directory")
         |> tag_github(0, 1, 1, "initial creation of " <> slug, author)
         |> push_to_github(slug)
-        |> push_to_channel("", "", :"books-list")
+        |> push_to_channel("", "", "books-list")
         {:ok, slug}
       true ->
         {:error, "The book " <> slug <> " exists already"}
@@ -605,13 +630,22 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp push_to_channel(dir, _slug, _route, :"books-list") do
+  defp push_to_channel(dir, _slug, _route, "books-list") do
     books = do_get_books()
     Incunabula.Endpoint.broadcast "books:list", "books", %{books: books}
     dir
   end
 
-  defp push_to_channel(dir, slug, route, :"book-get_chaffs") do
+  defp push_to_channel(dir, slug, route, "book-get_book_title") do
+    {:ok, title} = read_file(get_book_dir(slug), "title.db")
+    # No I don't understand why the event and the message associated with it
+    # have to be called books neither
+    Incunabula.Endpoint.broadcast "book:get_book_title:" <> route,
+      "books", %{books: title}
+    dir
+  end
+
+  defp push_to_channel(dir, slug, route, "book-get_chaffs") do
     chaffs = do_get(:chaffs, slug)
     # No I don't understand why the event and the message associated with it
     # have to be called books neither
@@ -620,7 +654,16 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp push_to_channel(dir, slug, route, :"book-get_chapters") do
+  defp push_to_channel(dir, slug, route, "book-get_chapters_dropdown") do
+    chapters = do_get(:chapters, slug)
+    # No I don't understand why the event and the message associated with it
+    # have to be called books neither
+    Incunabula.Endpoint.broadcast "book:get_chapters_dropdown:" <> route,
+      "books", %{books: chapters}
+    dir
+  end
+
+  defp push_to_channel(dir, slug, route, "book-get_chapters") do
     chapters = do_get(:chapters, slug)
     # No I don't understand why the event and the message associated with it
     # have to be called books neither
@@ -629,7 +672,7 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp push_to_channel(dir, slug, route, :"book-get_images") do
+  defp push_to_channel(dir, slug, route, "book-get_images") do
     images = do_get(:images, slug)
     # No I don't understand why the event and the message associated with it
     # have to be called books neither
@@ -638,7 +681,7 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp push_to_channel(dir, slug, route, :"book-save_edits") do
+  defp push_to_channel(dir, slug, route, "book-save_edits") do
     bookdir = get_book_dir(slug)
     tag = do_get_current_tag_msg(bookdir)
     # No I don't understand why the event and the message associated with it
@@ -751,6 +794,10 @@ defmodule Incunabula.Git do
     html = Incunabula.ChaffHTMLController.make_preview(chaff_title, user, body)
     :ok = File.write(webpage, html)
     dir
+  end
+
+  defp make_route(list) do
+    Enum.join(list, ":")
   end
 
 end

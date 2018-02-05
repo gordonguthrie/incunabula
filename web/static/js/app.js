@@ -24,18 +24,54 @@ import {socket, socket_push} from "./socket"
 var incunabula = {};
 
 incunabula.setup_modals = function() {
+    // for each bound modal form we need to bind the submit button
+    var modals = $(".incunabula-show");
+    $(modals).each(function () {
+        if ($(this).hasClass("incunabula-bound")) {
+            var inputbinding = $(this).attr("data-fieldbinding");
+            var button = $("[data-fieldtarget='" + inputbinding + "'] button")
+            var topic  = $("[data-fieldtarget='" + inputbinding + "']")
+                .attr("topic");
+            $(button).on('click', function () {
+                var val = $("[data-fieldtarget='" + inputbinding
+                               + "'] input").val();
+                socket_push(topic, {field: val});
+                // no, even I do not think this is elegant
+                $(this).
+                    parent().
+                    parent().
+                    parent().
+                    parent().
+                    parent().
+                    modal("hide");
+            });
+        };
+    });
+
+    // for bound field modals we need to copy the value
+    // that we are editing over to the modal dialog box
+    // we do this at open dialog time because the value we wish
+    // to edit is - by defintion - coming via a channel and won't be here
+    // at load time
     $(".incunabula-show").on('click', function () {
         var modalclass = $(this).attr("modal");
+        if ($(this).hasClass("incunabula-bound")) {
+            var inputbinding = $(this).attr("data-fieldbinding");
+            var input  = $("[data-fieldtarget='" + inputbinding + "'] input")
+            var source = $("[data-fieldsource='" + inputbinding + "']");
+            input.val(source.html());
+        };
+
         $("." + modalclass).modal("show");
     })
 }
+incunabula.setup_modals();
 
 //
 // Make the menus and stuff work
 //
 
 $(".menu .item").tab();
-incunabula.setup_modals();
 
 //
 // Resize the text area box
@@ -77,7 +113,7 @@ if ($("#incunabula-eiderdown").length) {
         socket_push(topic, {commit_title: title,
                             commit_msg:   msg,
                             data:         data,
-                            tag_bump:     tag_bump})
+                            tag_bump:     tag_bump});
     };
 
     $(".incunabula-submit-edits").on('click', function () {

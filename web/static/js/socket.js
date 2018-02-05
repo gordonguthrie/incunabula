@@ -17,14 +17,13 @@ let topics = document.getElementsByClassName("incunabula-topic")
 // define some captures we will use later
 var topic_router = []
 
-
 //
 // Define the functions that we are going to use
 //
 function sanitize(html){return $("div/>").text(html).html()}
 
 function draw(id, msg) {
-    console.log("got new thing to draw", id, msg)
+    //console.log("got new thing to draw", id, msg)
     $("#" + id).html(msg)
 }
 
@@ -40,12 +39,9 @@ function make_topic_router(topics) {
         let channel = socket.channel(topic, {})
         console.log(topic)
         let key = make_key(topic)
-        console.log(key)
         let route = router.get(key)
         channel.join()
             .receive("ok", resp => {
-                console.log("got response")
-                console.log(route)
                 route.draw_fn(route.id, resp)
             })
         .receive("error", resp => {
@@ -94,17 +90,21 @@ router.set("book:get_book_title",
 router.set("book:get_book_title",
            {id:      "book-get_book_title",
             draw_fn: function(id, msg) {draw(id, msg)}})
+
+// some update routes
 router.set("book:save_edits",
            {id:      "book-chapter-save_edits",
             draw_fn: function(id, msg) {draw(id, msg)}})
+// some updates we do nothing on return
+router.set("book:update_title",
+           {id:      "book-update_title",
+            draw_fn: function(id, msg) {}})
 
 socket.connect()
 
 topic_router = make_topic_router(topics)
-console.log(topic_router)
 
 export function socket_push(topic, msg) {
-    console.log("pushing", msg, "to", topic)
     let key = make_key(topic)
     topic_router[key].push(topic, msg)
         .receive("ok", resp => {console.log("got ok")})

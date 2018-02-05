@@ -35,11 +35,25 @@ defmodule Incunabula.BookChannel do
     _images = Incunabula.Git.get_images(slug)
   end
 
+  def get_reply(:update_title, %{slug: slug}) do
+    :ok
+  end
+
   # this is a push channel so we only reply the current tag
   def get_reply(:save_edits, %{slug:        slug,
                                chapterslug: _chapterslug}) do
     _current_tag_msg = Incunabula.Git.get_current_tag_msg(slug)
   end
+
+
+  # handle in messages
+
+  def get_reply(:update_title, topicparams, pushparams, user) do
+    %{slug: slug} = topicparams
+    %{"field" => new_title}= pushparams
+    :ok = Incunabula.Git.update_book_title(slug, new_title, user)
+  end
+
   def get_reply(:save_edits, topicparams, pushparams, user) do
     %{slug:        slug,
       chapterslug: chapterslug} = topicparams
@@ -75,6 +89,10 @@ defmodule Incunabula.BookChannel do
 
   defp parse_route(["get_images", slug]) do
     {:get_images, %{slug: slug}}
+  end
+
+  defp parse_route(["update_title", slug]) do
+    {:update_title, %{slug: slug}}
   end
 
   defp parse_route(["save_edits", slug, "chapter", chapterslug]) do

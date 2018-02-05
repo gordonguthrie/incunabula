@@ -1,0 +1,16 @@
+<div class="<%= @modal %> ui small modal">
+  <div class="content">
+    <div class="ui form">
+      <div id="<%= @id %>" class="ui form">
+        <div class="incunabula-topic field"
+             data-fieldtarget="<%= @fieldbinding %>"
+             topic="<%= @bound_topic %>"
+          <label><%= @label %>
+            <input type="text">
+          </label>
+          <button class="incunabula-field-submit ui primary button"><%= @button_title %></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
