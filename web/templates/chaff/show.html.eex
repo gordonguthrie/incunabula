@@ -1,4 +1,19 @@
-<h2><a href="/books/<%= @slug %>"><%= @title %> - <em class="incunabula-chaff"><%= @chafftitle %></em></h2>
+<h2><a href="/books/<%= @slug %>"><%= @title %></a> -
+  <em class="incunabula-chaff">
+    <span id="book-get_chaff_title"
+          class="incunabula-topic"
+          data-fieldsource="book-get_chaff_title"
+          topic="book:get_chaff_title:<%= @slug %>:chaff:<%= @chaffslug %>">
+      <%= @chafftitle %>
+    </span>
+    &nbsp;
+  <i class="incunabula-show incunabula-bound edit icon"
+     data-fieldbinding="book-get_chaff_title"
+     modal="incunabula-edit_title">
+  </i>
+  </em>
+</h2>
+
 <small><a href='<%= Path.join(["/books", @slug, "chaffs", @chaffslug, "preview"]) %>' target='blank'>Preview this chaff</a></small>
 
 <%= render Incunabula.EditorView, "editor.html",
@@ -9,5 +24,16 @@
     save_edits:    @save_edits,
     contents:      @contents,
     slug:          @slug,
-    topic:         "book:save_chaff_edits:" <> @slug <> ":chaff:" <> @chaffslug
+    topic:         "book:save_chaff_edits:" <> @slug
+    <> ":chaff:" <> @chaffslug
    %>
+
+<%= render Incunabula.FieldModalView, "field.html",
+    id:           "incunabula-edit_title",
+    label:        "Edit chaff title",
+    modal:        "incunabula-edit_title",
+    fieldbinding: "book-get_chaff_title",
+    button_title: "Save new chaff title",
+    bound_topic:  "book:update_chaff_title:"
+    <> @slug <> ":chaff:" <> @chaffslug
+    %>
