@@ -1,4 +1,18 @@
-<h2><a href="/books/<%= @slug %>"><%= @title %></a> - <em><%= @chaptertitle %></em></h2>
+<h2><a href="/books/<%= @slug %>"><%= @title %></a> -
+  <em>
+    <span id="book-get_chapter_title"
+          class="incunabula-topic"
+          data-fieldsource="book-get_chapter_title"
+          topic="book:get_chapter_title:<%= @slug %>:chapter:<%= @chapterslug %>">
+     <%= @chaptertitle %>
+    </span>
+  </em>&nbsp;
+  <i class="incunabula-show incunabula-bound edit icon"
+     data-fieldbinding="book-get_chapter_title"
+     modal="incunabula-edit_title">
+  </i>
+</h2>
+
 <small><a href='<%= Path.join(["/books", @slug, "chapters", @chapterslug, "preview"]) %>' target='blank'>Preview this chapter</a></small>
 
 <%= render Incunabula.EditorView, "editor.html",
@@ -9,5 +23,16 @@
     save_edits:    @save_edits,
     contents:      @contents,
     slug:          @slug,
-    topic:         "book:save_chapter_edits:" <> @slug <> ":chapter:" <> @chapterslug
+    topic:         "book:save_chapter_edits:" <> @slug
+    <> ":chapter:" <> @chapterslug
    %>
+
+<%= render Incunabula.FieldModalView, "field.html",
+    id:           "incunabula-edit_title",
+    label:        "Edit chapter title",
+    modal:        "incunabula-edit_title",
+    fieldbinding: "book-get_chapter_title",
+    button_title: "Save new chapter title",
+    bound_topic:  "book:update_chapter_title:"
+    <> @slug <> ":chapter:" <> @chapterslug
+    %>

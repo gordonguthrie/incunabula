@@ -19,6 +19,16 @@ defmodule Incunabula.BookChannel do
     _dropdown = Incunabula.Git.get_chapters_dropdown(slug)
   end
 
+  def get_reply(:get_chaff_title, %{slug:       slug,
+                                    chaff_slug: chaff_slug}) do
+    _title = Incunabula.Git.get_chaff_title(slug, chaff_slug)
+  end
+
+  def get_reply(:get_chapter_title, %{slug:         slug,
+                                      chapter_slug: chapter_slug}) do
+    _title = Incunabula.Git.get_chapter_title(slug, chapter_slug)
+  end
+
   def get_reply(:get_book_title, %{slug: slug}) do
     _title = Incunabula.Git.get_book_title(slug)
   end
@@ -35,7 +45,17 @@ defmodule Incunabula.BookChannel do
     _images = Incunabula.Git.get_images(slug)
   end
 
-  def get_reply(:update_title, %{slug: slug}) do
+  def get_reply(:update_chaff_title, %{slug:       slug,
+                                       chaff_slug: chaff_slug}) do
+    :okchaff
+  end
+
+  def get_reply(:update_chapter_title, %{slug:         slug,
+                                         chapter_slug: chapter_slug}) do
+    :okchapter
+  end
+
+  def get_reply(:update_book_title, %{slug: slug}) do
     :ok
   end
 
@@ -53,7 +73,22 @@ defmodule Incunabula.BookChannel do
 
   # handle in messages
 
-  def get_reply(:update_title, topicparams, pushparams, user) do
+  def get_reply(:update_chaff_title, topicparams, pushparams, user) do
+    %{slug:       slug,
+      chaff_slug: chaff_slug} = topicparams
+    %{"field" => new_title}= pushparams
+    :ok = Incunabula.Git.update_chaff_title(slug, chaff_slug, new_title, user)
+  end
+
+  def get_reply(:update_chapter_title, topicparams, pushparams, user) do
+    %{slug:         slug,
+      chapter_slug: chapter_slug} = topicparams
+    %{"field" => new_title}= pushparams
+    :ok = Incunabula.Git.update_chapter_title(slug, chapter_slug,
+      new_title, user)
+  end
+
+    def get_reply(:update_book_title, topicparams, pushparams, user) do
     %{slug: slug} = topicparams
     %{"field" => new_title}= pushparams
     :ok = Incunabula.Git.update_book_title(slug, new_title, user)
@@ -92,6 +127,16 @@ defmodule Incunabula.BookChannel do
     {:get_chapters_dropdown, %{slug: slug}}
   end
 
+  defp parse_route(["get_chaff_title", slug, "chaff", chaff_slug]) do
+    {:get_chaff_title, %{slug:       slug,
+                         chaff_slug: chaff_slug}}
+  end
+
+  defp parse_route(["get_chapter_title", slug, "chapter", chapter_slug]) do
+    {:get_chapter_title, %{slug:         slug,
+                           chapter_slug: chapter_slug}}
+  end
+
   defp parse_route(["get_book_title", slug]) do
     {:get_book_title, %{slug: slug}}
   end
@@ -108,8 +153,18 @@ defmodule Incunabula.BookChannel do
     {:get_images, %{slug: slug}}
   end
 
-  defp parse_route(["update_title", slug]) do
-    {:update_title, %{slug: slug}}
+  defp parse_route(["update_chaff_title", slug, "chaff", chaff_slug]) do
+    {:update_chaff_title, %{slug:       slug,
+                            chaff_slug: chaff_slug}}
+  end
+
+  defp parse_route(["update_chapter_title", slug, "chapter", chapter_slug]) do
+    {:update_chapter_title, %{slug:         slug,
+                              chapter_slug: chapter_slug}}
+  end
+
+  defp parse_route(["update_book_title", slug]) do
+    {:update_book_title, %{slug: slug}}
   end
 
   defp parse_route(["save_chaff_edits", slug, "chaff", chaffslug]) do

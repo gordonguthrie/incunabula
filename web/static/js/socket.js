@@ -37,11 +37,16 @@ function make_topic_router(topics) {
     Array.from(topics).forEach((t) => {
         let topic = t.getAttribute("topic")
         let channel = socket.channel(topic, {})
-        console.log(topic)
+        //console.log(topic)
         let key = make_key(topic)
+        //console.log(key)
         let route = router.get(key)
+        //console.log(route)
         channel.join()
             .receive("ok", resp => {
+                //console.log("got response")
+                //console.log(resp)
+                //console.log(route.id)
                 route.draw_fn(route.id, resp)
             })
         .receive("error", resp => {
@@ -84,8 +89,11 @@ router.set("book:get_chapters",
 router.set("book:get_images",
            {id:      "book-get_images",
             draw_fn: function(id, msg) {draw(id, msg)}})
-router.set("book:get_book_title",
-           {id:      "book-get_book_title",
+router.set("book:get_chaff_title",
+           {id:      "book-get_chaff_title",
+            draw_fn: function(id, msg) {draw(id, msg)}})
+router.set("book:get_chapter_title",
+           {id:      "book-get_chapter_title",
             draw_fn: function(id, msg) {draw(id, msg)}})
 router.set("book:get_book_title",
            {id:      "book-get_book_title",
@@ -98,8 +106,17 @@ router.set("book:save_chaff_edits",
 router.set("book:save_chapter_edits",
            {id:      "book-save_edits",
             draw_fn: function(id, msg) {draw(id, msg)}})
+// note that in the chapter and chaff titles we
+// have already 'got them' so we want to update them in-place
+// hence the IDs we call the draw_fn on are different
+router.set("book:update_chapter_title",
+           {id:      "book-get_chapter_title",
+            draw_fn: function(id, msg) {}})
+router.set("book:update_chaff_title",
+           {id:      "book-get_chaff_title",
+            draw_fn: function(id, msg) {}})
 // some updates we do nothing on return
-router.set("book:update_title",
+router.set("book:update_book_title",
            {id:      "book-update_title",
             draw_fn: function(id, msg) {}})
 

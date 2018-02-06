@@ -1,7 +1,7 @@
 <h2><span id="book-get_book_title"
           class="incunabula-topic"
           data-fieldsource="book-get_book_title"
-          topic="book:get_book_title:<%= @slug %>"></span>&nbsp;
+          topic="book:get_book_title:<%= @slug %>"><%= @title %></span>&nbsp;
   <i class="incunabula-show incunabula-bound edit icon"
      data-fieldbinding="book-get_book_title"
      modal="incunabula-edit_title"></i>
@@ -43,8 +43,8 @@
     label:        "Edit book title",
     modal:        "incunabula-edit_title",
     fieldbinding: "book-get_book_title",
-    button_title: "Save new title",
-    bound_topic:  "book:update_title:" <> @slug
+    button_title: "Save new book title",
+    bound_topic:  "book:update_book_title:" <> @slug
     %>
 
 <div class="incunabula-new-chapter ui small modal">
