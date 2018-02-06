@@ -75,10 +75,14 @@ body.pushable {
     display: none;
 }
 
+// tone down the edit buttons a bit
+.incunabula-bound.edit {
+    color: rgba(169, 169, 169, 0.8);
+}
+
 //
 // fade some text back
 //
-
 // this is knicked from the colour of the semantic meta tag in cards
 // should prolly be in their CSS somehow, but halfwit me, yeah?
 .incunabula-grey {
@@ -87,7 +91,7 @@ body.pushable {
 
 // gonnae mark chaff slightly differently
 .incunabula-chaff {
-    color: rgba(75, 0, 130, 0.8)
+    color: rgba(75, 0, 130, 0.5)
 }
 
 /*                         */
