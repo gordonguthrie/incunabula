@@ -743,7 +743,7 @@ defmodule Incunabula.Git do
     ]
     # Bit shit check of return values
     # Rly should be an http request but hey
-    # {_, 0} = System.cmd("curl", args)
+    {_, 0} = System.cmd("curl", args)
     :ok
   end
 
@@ -813,9 +813,10 @@ defmodule Incunabula.Git do
     ])
     args = [
       "push",
-      "--repo=" <> url
+      "--repo=" <> url,
+      "--tags"
     ]
-    # {"", 0} = System.cmd(cmd, args, [cd: dir])
+    {"", 0} = System.cmd(cmd, args, [cd: dir])
     dir
   end
 
