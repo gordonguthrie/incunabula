@@ -6,9 +6,7 @@ defmodule Incunabula.OrderController do
   plug :authenticate_user when action in [:read, :write]
 
   def read(conn, %{"slug" => slug}, user) do
-    IO.inspect "in read"
     chapters = Incunabula.Git.get_chapters_json(slug)
-    IO.inspect chapters
     render(conn, "index.json",
       chapters: chapters)
   end
@@ -22,8 +20,9 @@ defmodule Incunabula.OrderController do
     sorted_list = Enum.sort(list, &(String.to_integer(hd(Tuple.to_list(&1)))
               <= String.to_integer(hd(Tuple.to_list(&2)))))
     chapters = for {_, %{"chapter_slug"  => c_slug,
-                         "chapter_title" => c_title}} <- sorted_list, do: %{chapter_slug:  c_slug,
-                                                                            chapter_title: c_title}
+                         "chapter_title" => c_title}}
+    <- sorted_list, do: %{chapter_slug:  c_slug,
+                          chapter_title: c_title}
     :ok = Incunabula.Git.update_chapter_order(slug, chapters, user)
     conn
     |> send_resp(200, <<"ok">>)
