@@ -664,7 +664,7 @@ defmodule Incunabula.Git do
   defp read_chaff_title(slug, contents) do
     %{chaff_title: title} = read_chaff_entry(slug, contents)
       title
-    end
+  end
 
   defp read_chaff_entry(slug, [%{chaff_slug:  slug,
                                  chaff_title: _chaff_title,
@@ -682,7 +682,7 @@ defmodule Incunabula.Git do
   end
 
   defp read_chapter_title(slug, [_h | t]) do
-    get_chapter_title(slug, t)
+    read_chapter_title(slug, t)
   end
 
   defp do_get_chapters_json(slug) do
@@ -1002,11 +1002,23 @@ defmodule Incunabula.Git do
 
   defp make_html(dir, :chapter, chapter_title, chapter_slug, user) do
     eiderdownfile = Path.join([dir, "chapters",     chapter_slug <> ".eider"])
-    webpage       = Path.join([dir, "preview_html", chapter_slug  <> ".html"])
+    webpage       = Path.join([dir, "preview_html", chapter_slug <> ".html"])
+    summarypage   = Path.join([dir, "preview_html", chapter_slug <>
+                                ".summary.html"])
     {:ok, eiderdown} = File.read(eiderdownfile)
-    body = to_string(:eiderdown.to_html_from_utf8(to_charlist(eiderdown)))
+
+    eiderdown_charlist = to_charlist(eiderdown)
+
+    # first we make the preview
+    body = to_string(:eiderdown.to_html_from_utf8(eiderdown_charlist))
     html = Incunabula.HTMLController.make_preview(chapter_title, user, body)
     :ok = File.write(webpage, html)
+
+    # now we make the summary
+    sum = to_string(:eiderdown.to_summary_from_utf8(eiderdown_charlist))
+    s_html = Incunabula.HTMLController.make_preview(chapter_title, user, sum)
+    :ok = File.write(summarypage, s_html)
+
     dir
   end
 

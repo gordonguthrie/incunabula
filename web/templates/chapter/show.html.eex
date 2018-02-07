@@ -13,7 +13,13 @@
   </i>
 </h2>
 
-<small><a href='<%= Path.join(["/books", @slug, "chapters", @chapterslug, "preview"]) %>' target='blank'>Preview this chapter</a></small>
+<p>
+  <small>
+    <a href='<%= Path.join(["/books", @slug, "chapters", @chapterslug, "preview"]) %>' target='blank'>Preview this chapter</a>
+    -
+    <a href='<%= Path.join(["/books", @slug, "chapters", @chapterslug, "summary"]) %>' target='blank'>See summary of this chapter</a>
+  </small>
+</p>
 
 <%= render Incunabula.EditorView, "editor.html",
     changeset:     @changeset,

@@ -10,8 +10,14 @@ defmodule Incunabula.PreviewController do
     do_show(conn, slug, ch_slug, :chapter)
   end
 
+  def summary(conn, %{"chapterslug" => ch_slug,
+                      "slug"        => slug}, _user) do
+    do_show(conn, slug, ch_slug, :summary)
+  end
+
+
   def show(conn, %{"chaffslug" => ch_slug,
-                           "slug"      => slug}, _user) do
+                   "slug"      => slug}, _user) do
     do_show(conn, slug, ch_slug, :chaff)
   end
 
@@ -19,13 +25,19 @@ defmodule Incunabula.PreviewController do
     booksdir = Incunabula.Git.get_books_dir()
     preview_dir = case type do
                     :chapter -> "preview_html"
+                    :summary -> "preview_html"
                     :chaff   -> "chaff_html"
                   end
+    filename = case type do
+                 :chapter -> ch_slug <> ".html"
+                 :summary -> ch_slug <> ".summary.html"
+                 :chaff   -> ch_slug <> ".html"
+               end
     file = Path.join([
       booksdir,
       slug,
       preview_dir,
-      ch_slug <> ".html"
+      filename
     ])
     {:ok, binary} = File.read(file)
     conn
