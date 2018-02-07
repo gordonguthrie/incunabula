@@ -31,6 +31,8 @@ defmodule Incunabula.Router do
     post "/books/:slug/image/new",                     ImageController,   :create
     get  "/books/:slug/images/:imageslug",             ImageController,   :show
     get  "/books/:slug/chaff",                         ChaffController,   :index
+    get  "/books/:slug/chapter_order",                 OrderController,   :read
+    post "/books/:slug/chapter_order",                 OrderController,   :write
     get  "/admin",                                     AdminController,   :index
     get  "/login",                                     LoginController,   :index
     post "/login",                                     LoginController,   :login

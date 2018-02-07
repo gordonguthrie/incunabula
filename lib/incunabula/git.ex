@@ -64,6 +64,10 @@ defmodule Incunabula.Git do
     GenServer.call(__MODULE__, {:create, {:chapter, slug, chapter_title, user}})
   end
 
+  def update_chapter_order(slug, new_chapters, user) do
+    GenServer.call(__MODULE__, {:update_chapter_order, {slug, new_chapters, user}})
+  end
+
   def update_chaff_title(slug, chaff_slug, new_title, user) do
     GenServer.call(__MODULE__, {:update_title, {:chaff, slug, chaff_slug,
                                                 new_title, user}})
@@ -140,6 +144,10 @@ defmodule Incunabula.Git do
     GenServer.call(__MODULE__, {:get, {:chaffs, slug}})
   end
 
+  def get_chapters_json(slug) do
+    GenServer.call(__MODULE__, {:get_chapters_json, slug})
+  end
+
   def get_chapters(slug) do
     GenServer.call(__MODULE__, {:get, {:chapters, slug}})
   end
@@ -188,6 +196,11 @@ defmodule Incunabula.Git do
 
   def handle_call({:create, {type, slug, chapter_title, user}}, _from, state) do
     {:reply, do_create(type, slug, chapter_title, user), state}
+  end
+
+  def handle_call({:update_chapter_order, {slug, new_chapters, user}},
+    _from, state) do
+    {:reply, do_update_chapter_order(slug, new_chapters, user), state}
   end
 
   def handle_call({:update_title, {type, slug, ch_slug, new_title, user}},
@@ -248,6 +261,10 @@ defmodule Incunabula.Git do
     {:reply, do_get_chapter_title(slug, chapterslug), state}
   end
 
+  def handle_call({:get_chapters_json, slug}, _from, state) do
+    {:reply, do_get_chapters_json(slug), state}
+  end
+
   def handle_call({:get, {type, slug}}, _from, state) do
     {:reply, do_get(type, slug), state}
   end
@@ -301,6 +318,22 @@ defmodule Incunabula.Git do
     dir
   end
 
+  defp do_update_chapter_order(slug, new_chapters, user) do
+    bookdir = get_book_dir(slug)
+    {:ok, title}  = read_file(get_book_dir(slug), "title.txt")
+    commit_msg = "reorder chapters"
+    tag = make_tag(commit_msg, title, slug, user, "")
+    bookdir
+    |> writeDB("chapters.db", new_chapters)
+    |> add_to_git(:all)
+    |> commit_to_git(commit_msg)
+    |> bump_tag(tag, "major", user)
+    |> push_to_github(slug)
+    |> push_to_channel(slug, slug, "book-get_chapters")
+    |> push_to_channel(slug, slug, "book-get_chapters_dropdown")
+    :ok
+  end
+
   defp do_update_title(type, slug, ch_slug, new_title, user) do
     bookdir = get_book_dir(slug)
     {oldtitle,
@@ -332,7 +365,6 @@ defmodule Incunabula.Git do
         |> commit_to_git(commitmsg)
         |> bump_tag(tag, "major", user)
         |> push_to_github(slug)
-        |> log("about to push to channel2")
         |> push_to_channel2(topic, new_title)
         :ok
     end
@@ -472,7 +504,9 @@ defmodule Incunabula.Git do
         |> push_to_channel(slug, slug, channel)
         case type == :chapter do
           true ->
-            bookdir = push_to_channel(bookdir, slug, slug, "book-get_chapters_dropdown")
+            bookdir
+            |> push_to_channel(slug, slug, "book-get_chapters")
+            |> push_to_channel(slug, slug, "book-get_chapters_dropdown")
             :ok
           false ->
             :ok
@@ -649,6 +683,10 @@ defmodule Incunabula.Git do
 
   defp read_chapter_title(slug, [_h | t]) do
     get_chapter_title(slug, t)
+  end
+
+  defp do_get_chapters_json(slug) do
+    _chapters = consult_file(get_book_dir(slug), "chapters.db")
   end
 
   defp do_get(:chaffs, slug) do

@@ -169,3 +169,119 @@ if ($(".tabular.menu").length) {
         $("div[data-tab='chaff']").addClass("active");
     }
 }
+
+//
+// handle chapter order
+//
+
+incunabula.chapters = {};
+incunabula.no_of_chapters = 0;
+
+// get the chapters as json and stash them
+
+incunabula.get_chapters_fn = function () {
+    if ($(".incunabula-show-order-button").length) {
+
+        var book = $(".incunabula-show-order-button").attr("data-book");
+        var url = "/books/" + book + "/chapter_order";
+
+        // get the chapter order
+        $.getJSON(url, function (data) {
+
+            incunabula.chapters = data["chapters"];
+            incunabula.no_of_chapters = Object.keys(incunabula.chapters).length;
+
+            $(".incunabula-show-order-button")
+            if (incunabula.no_of_chapters > 1) {
+                $(".incunabula-show-order-button").on('click', function () {
+
+                    var submit_fn = function () {
+
+                        // there are three other forms on this page
+                        // steal a _csrf token affa wan of them
+                        var url = "/books/" + book + "/chapter_order";
+                        var inputs = $("input[name='_csrf_token']");
+                        var csrf_token = $(inputs[0]).val();
+                        var json = {"_csrf_token": csrf_token,
+                                    "chapters":    incunabula.chapters};
+                        $.post(url,
+                               json,
+                               function (resp) {
+                                   $(".incunabula-chapter-order").modal("hide");
+                               });
+                    };
+                    $(".incunabula-order-submit").on('click', submit_fn);
+                    $(".incunabula-chapter-order-table").on('click',
+                                                            incunabula.on_reorder_click_fn);
+                    incunabula.draw_chapters_table_fn();
+                });
+                $(".incunabula-show-order-button").css("display", "inline-block");
+
+            };
+        });
+    };
+};
+
+incunabula.get_chapters_fn();
+
+// define some functions
+
+incunabula.debug = function () {
+    $.each(incunabula.chapters, function (c) {
+        console.log(incunabula.chapters[c].chapter_title);
+    });
+};
+
+incunabula.on_reorder_click_fn = function (event) {
+
+    var direction = $(event.target).attr("data-direction");
+    var row = $(event.target).attr("data-row");
+
+    incunabula.reorder_chapters_fn(direction, row);
+    incunabula.draw_chapters_table_fn();
+    };
+
+incunabula.draw_chapters_table_fn = function () {
+
+    var row = "";
+    var html = ""
+
+    for (var i = 0; i < incunabula.no_of_chapters; i++) {
+        row += "<tr>"
+            + "<td>"
+            + "<i class='arrow up icon'"
+            + "data-direction='up' data-row='" + String(i) + "'></i>"
+            + "<i class='arrow down icon'"
+            + "data-direction='down' data-row='" + String(i) + "'></i>"
+            + "</td>"
+            + "<td>" + incunabula.chapters[i].chapter_title + "</td>"
+            + "</tr>";
+    };
+
+    html = "<table class='ui striped table'>"
+        + row
+        + "</table>";
+    $(".incunabula-chapter-order-table").html(html);
+};
+
+incunabula.reorder_chapters_fn = function (direction, row) {
+
+    var tmp;
+    var swap;
+    var row_index = parseInt(row, 10);
+
+    tmp = incunabula.chapters[row_index];
+    if (direction == "up") {
+        swap = row_index - 1;
+    } else {
+        swap = row_index + 1;
+    };
+    if (swap < 0) {
+        swap = incunabula.no_of_chapters - 1;
+    } else if (swap >= incunabula.no_of_chapters) {
+        swap = 0;
+    };
+
+    incunabula.chapters[row_index] = incunabula.chapters[swap];
+    incunabula.chapters[swap] = tmp;
+};
