@@ -1004,7 +1004,7 @@ defmodule Incunabula.Git do
     eiderdownfile = Path.join([dir, "chapters",     chapter_slug <> ".eider"])
     webpage       = Path.join([dir, "preview_html", chapter_slug  <> ".html"])
     {:ok, eiderdown} = File.read(eiderdownfile)
-    body = to_string(:eiderdown.conv(to_charlist(eiderdown)))
+    body = to_string(:eiderdown.to_html_from_utf8(to_charlist(eiderdown)))
     html = Incunabula.HTMLController.make_preview(chapter_title, user, body)
     :ok = File.write(webpage, html)
     dir
@@ -1014,7 +1014,7 @@ defmodule Incunabula.Git do
     eiderdownfile = Path.join([dir, "chaff",      chaff_slug <> ".eider"])
     webpage       = Path.join([dir, "chaff_html", chaff_slug <> ".html"])
     {:ok, eiderdown} = File.read(eiderdownfile)
-    body = to_string(:eiderdown.conv(to_charlist(eiderdown)))
+    body = to_string(:eiderdown.to_html_from_utf8(to_charlist(eiderdown)))
     html = Incunabula.ChaffHTMLController.make_preview(chaff_title, user, body)
     :ok = File.write(webpage, html)
     dir
