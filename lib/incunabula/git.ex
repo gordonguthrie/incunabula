@@ -101,7 +101,8 @@ defmodule Incunabula.Git do
   end
 
   def create_book(book_title, author) do
-    GenServer.call(__MODULE__, {:create_book, {book_title, author}})
+    # bump the timeout as creating a book can take a while server side
+    GenServer.call(__MODULE__, {:create_book, {book_title, author}}, 10_000)
   end
 
   def get_chapters_dropdown(slug) do
@@ -607,7 +608,7 @@ defmodule Incunabula.Git do
         |> add_to_git(:all)
         |> commit_to_git("basic setup of directory")
         |> tag_github(0, 1, 1, "initial creation of " <> slug, author)
-        |> push_to_github(slug)
+        |> push_to_github(slug, :without_tags) # don't want tags on first create
         |> push_to_channel("", "", "books-list")
         {:ok, slug}
       true ->
@@ -769,7 +770,8 @@ defmodule Incunabula.Git do
       "-m",
       msg
     ]
-    {_return, 0} = System.cmd(cmd, args, [cd: dir])
+    {return, 0} = System.cmd(cmd, args, [cd: dir])
+    IO.inspect return
     dir
   end
 
@@ -802,7 +804,13 @@ defmodule Incunabula.Git do
     dir
   end
 
+  # we usually want tags (except for book creation)
   defp push_to_github(dir, repo) do
+    push_to_github(dir, repo, :with_tags)
+  end
+
+  defp push_to_github(dir, repo, type) when type == :with_tags
+  or type == :without_tags do
     cmd = "git"
     github_account = get_env(:github_account)
     githubPAT = get_env(:personal_access_token)
@@ -811,11 +819,19 @@ defmodule Incunabula.Git do
       github_account,
       repo <> ".git"
     ])
-    args = [
-      "push",
-      "--repo=" <> url,
-      "--tags"
-    ]
+    args = case type do
+             :with_tags ->
+               [
+                 "push",
+                 "--repo=" <> url,
+                 "--tags"
+               ]
+             :without_tags ->
+               [
+                 "push",
+                 "--repo=" <> url,
+               ]
+           end
     {"", 0} = System.cmd(cmd, args, [cd: dir])
     dir
   end
