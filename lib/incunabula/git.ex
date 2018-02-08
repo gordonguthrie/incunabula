@@ -33,7 +33,7 @@ defmodule Incunabula.Git do
   end
 
   def load_image(slug, image, user) do
-   GenServer.call(__MODULE__, {:load_image, {slug, image, user}})
+   GenServer.call(__MODULE__, {:load_image, {slug, image, user}}, 10_000)
   end
 
   def copy_chapter_to_chaff(_slug, _chapter_slug, "", _user) do
@@ -301,15 +301,26 @@ defmodule Incunabula.Git do
     bookdir = get_book_dir(slug)
     commitmsg = "upload new image: " <> imagename <>
       " - " <> imageslug <> " by " <> user
-    bookdir
-    |> copy_image(imageslug, tmp_image_path)
-    |> append_to_imagesDB(imagename, filename, shortimageslug, ext)
-    |> add_to_git(:all)
-    |> commit_to_git(commitmsg)
-    |> bump_tag("new image loaded " <> imageslug, "major", user)
-    |> push_to_github(slug)
-    |> push_to_channel(slug, slug, "book-get_images")
-    :ok
+    # we might upload 'something.png' with the title of 'bobby dazzler'
+    # and then later upload 'anotherthing.jpg' also with the title
+    # of 'bobby dazzler' - this would result in files called
+    # 'bobby-dazzler.png' and 'bobby-dazzler.jpg' but with the same
+    # slug of 'bobby-dazzler' so lets check for any 'bobby-dazzler.*'
+    wildcard = Path.join([bookdir, "images", shortimageslug <> ".*"])
+    case Path.wildcard(wildcard) do
+      [] ->
+        bookdir
+        |> copy_image(imageslug, tmp_image_path)
+        |> append_to_imagesDB(imagename, filename, shortimageslug, ext)
+        |> add_to_git(:all)
+        |> commit_to_git(commitmsg)
+        |> bump_tag("new image loaded " <> imageslug, "major", user)
+        |> push_to_github(slug)
+        |> push_to_channel(slug, slug, "book-get_images")
+        :ok
+      _ ->
+        {:error, shortimageslug <> ".* already exists"}
+    end
   end
 
   defp copy_image(dir, titleslug, tmp_image_path) do
@@ -467,7 +478,7 @@ defmodule Incunabula.Git do
         |> push_to_github(slug)
         |> push_to_channel(slug, slug, "book-get_chaffs")
         :ok
-        true ->
+      true ->
         {:error, chaff_slug <> " already exists"}
     end
   end
@@ -519,7 +530,7 @@ defmodule Incunabula.Git do
 
   defp append_to_imagesDB(bookdir, image_title, origfilename,
     image_slug, ext) do
-    imagedetails = get_image_details(bookdir, image_slug)
+    imagedetails = get_image_details(bookdir, image_slug, ext)
     newentry = %{title:         image_title,
                  original_name: origfilename,
                  image_slug:    image_slug,
@@ -576,11 +587,13 @@ defmodule Incunabula.Git do
     writeDB(bookdir, db, newcontents)
   end
 
-  defp get_image_details(dir, image_file) do
+  defp get_image_details(dir, image_file, ext) do
     args = [
-      to_string(Path.join([dir, "images", image_file]))
+      to_string(Path.join([dir, "images", image_file <> ext]))
     ]
     workingdir = to_string(Path.join(dir, "images"))
+    IO.inspect args
+    IO.inspect workingdir
     details = System.cmd("file", args, [cd: workingdir])
     :lists.flatten(:io_lib.format("~p", [details]))
   end
