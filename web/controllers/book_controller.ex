@@ -15,17 +15,19 @@ defmodule Incunabula.BookController do
     booktitle     = Incunabula.Git.get_book_title(slug)
     has_chapters? = Incunabula.Git.has_chapters?(slug)
     render conn, "show.html",
-      slug:               slug,
-      title:              booktitle,
-      chapterchangeset:   Incunabula.Chapter.changeset(),
-      imagechangeset:     Incunabula.Image.changeset(),
-      newchaffchangeset:  Incunabula.Chaff.newchangeset(),
-      copychaffchangeset: Incunabula.Chaff.copychangeset(),
-      newchapter:         Path.join(["/books",  slug, "/chapter/new"]),
-      newimage:           Path.join(["/books/", slug, "/image/new"]),
-      newchaff:           Path.join(["/books",  slug, "chaff/new"]),
-      copychaff:          Path.join(["/books",  slug, "chaff/copy"]),
-      showchaff:          has_chapters?
+      slug:                slug,
+      title:               booktitle,
+      chapterchangeset:    Incunabula.Chapter.changeset(),
+      imagechangeset:      Incunabula.Image.changeset(),
+      newchaffchangeset:   Incunabula.Chaff.newchangeset(),
+      copychaffchangeset:  Incunabula.Chaff.copychangeset(),
+      copyreviewchangeset: Incunabula.Review.copychangeset(),
+      newchapter:          Path.join(["/books", slug, "chapter/new"]),
+      newimage:            Path.join(["/books", slug, "image/new"]),
+      newchaff:            Path.join(["/books", slug, "chaff/new"]),
+      copychaff:           Path.join(["/books", slug, "chaff/copy"]),
+      copyreview:          Path.join(["/books", slug, "review/copy"]),
+      has_chapters:        has_chapters?
   end
 
   def create(conn, %{"book" => book} = params, user) do

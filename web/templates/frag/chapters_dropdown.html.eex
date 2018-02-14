@@ -1,5 +1,5 @@
 <%= if @chapters !== [] do %>
-<select id="chaff_chapter_slug" name="chaff[chapter_slug]">
+<select id="chaff_chapter_slug" name="copy[chapter_slug]">
 <%= for c <- @chapters do %>
     <option value="<%= c.chapter_slug %>"><%= c.chapter_title %></option>
     <% end %>

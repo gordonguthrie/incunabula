@@ -33,6 +33,10 @@ defmodule Incunabula.BookChannel do
     _title = Incunabula.Git.get_book_title(slug)
   end
 
+  def get_reply(:get_reviews, %{slug: slug}) do
+    chaff = Incunabula.Git.get_reviews(slug)
+  end
+
   def get_reply(:get_chaffs, %{slug: slug}) do
     chaff = Incunabula.Git.get_chaffs(slug)
   end
@@ -102,7 +106,7 @@ defmodule Incunabula.BookChannel do
       "data"         => data,
       "tag_bump"     => tag_bump} = pushparams
       tag = Incunabula.Git.update_chapter(slug, chapterslug, commit_title,
-        commit_msg, data, tag_bump, user)
+        commit_msg, data, tag_bump, user, :master)
       tag
   end
 
@@ -141,12 +145,20 @@ defmodule Incunabula.BookChannel do
     {:get_book_title, %{slug: slug}}
   end
 
+  defp parse_route(["get_chapters", slug]) do
+    {:get_chapters, %{slug: slug}}
+  end
+
   defp parse_route(["get_chaffs", slug]) do
     {:get_chaffs, %{slug: slug}}
   end
 
-  defp parse_route(["get_chapters", slug]) do
-    {:get_chapters, %{slug: slug}}
+  defp parse_route(["get_chaffs", slug]) do
+    {:get_chaffs, %{slug: slug}}
+  end
+
+  defp parse_route(["get_reviews", slug]) do
+    {:get_reviews, %{slug: slug}}
   end
 
   defp parse_route(["get_images", slug]) do

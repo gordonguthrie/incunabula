@@ -1,6 +1,13 @@
 defmodule Incunabula.FragController do
   use Incunabula.Web, :controller
 
+  def get_reviews(slug, reviews) do
+    conn = make_fresh_conn()
+    make_html conn, "reviews.html",
+      slug:    slug,
+      reviews: reviews
+  end
+
   def get_chaffs(slug, chaffs) do
     conn = make_fresh_conn()
     make_html conn, "chaffs.html",

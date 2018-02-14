@@ -14,6 +14,27 @@ defmodule Incunabula.Git do
   * it subscribes to all the channels and sends them messages when things on disk change
   """
 
+  #
+  # Define the various files and directories
+  #
+
+  @chaptersDB "chapters.db"
+  @imagesDB   "images.db"
+  @chaffDB    "chaff.db"
+  @reviewsDB  "reviews.db"
+
+  @chaptersDir "chapters"
+  @imagesDir   "images"
+  @chaffDir   "chaff"
+  @reviewsDir "reviews"
+
+  @preview_htmlDir "preview_html"
+  @chaff_htmlDir   "chaff_html"
+  @reviews_htmlDir "reviews_html"
+
+  @title  "title.txt"
+  @author "author.txt"
+
   require Logger
 
   #
@@ -36,6 +57,15 @@ defmodule Incunabula.Git do
    GenServer.call(__MODULE__, {:load_image, {slug, image, user}}, 10_000)
   end
 
+  def copy_chapter_to_review(_slug, "", _user) do
+    {:error, "must specify a chapter to copy"}
+  end
+
+  def copy_chapter_to_review(slug, chapter_slug, user) do
+    GenServer.call(__MODULE__, {:copy_chapter_to_review,
+                                {slug, chapter_slug, user}})
+  end
+
   def copy_chapter_to_chaff(_slug, _chapter_slug, "", _user) do
     {:error, "title cannot be blank"}
   end
@@ -45,7 +75,8 @@ defmodule Incunabula.Git do
   end
 
   def copy_chapter_to_chaff(slug, chapter_slug, chaff_title, user) do
-   GenServer.call(__MODULE__, {:copy_chapter_to_chaff, {slug, chapter_slug, chaff_title, user}})
+    GenServer.call(__MODULE__, {:copy_chapter_to_chaff,
+                                {slug, chapter_slug, chaff_title, user}})
   end
 
   def create_chaff(_slug, "", _user) do
@@ -83,10 +114,10 @@ defmodule Incunabula.Git do
   end
 
   def update_chapter(slug, chapter_slug, commit_title,
-    commit_msg, data, tag_bump, user) do
+    commit_msg, data, tag_bump, user, branch) do
     GenServer.call(__MODULE__, {:update_chapter, {slug, chapter_slug,
                                                   commit_title, commit_msg,
-                                                  data, tag_bump, user}})
+                                                  data, tag_bump, user, branch}})
   end
 
   def update_chaff(slug, chaff_slug, commit_title,
@@ -117,6 +148,7 @@ defmodule Incunabula.Git do
     GenServer.call(__MODULE__, :get_books)
   end
 
+  # this call doesn't need to be serialised as it is not under git
   def get_books_dir() do
     _dir = Path.join(get_env(:root_directory), "books")
   end
@@ -125,12 +157,20 @@ defmodule Incunabula.Git do
     GenServer.call(__MODULE__, {:get_book_title, slug})
   end
 
+  def get_review(slug, reviewslug) do
+    GenServer.call(__MODULE__, {:get_review, {slug, reviewslug}})
+  end
+
   def get_chaff(slug, chaffslug) do
     GenServer.call(__MODULE__, {:get_chaff, {slug, chaffslug}})
   end
 
-  def get_chapter(slug, chapterslug) do
-    GenServer.call(__MODULE__, {:get_chapter, {slug, chapterslug}})
+  def get_chapter(slug, chapterslug, branch) do
+    GenServer.call(__MODULE__, {:get_chapter, {slug, chapterslug, branch}})
+  end
+
+  def get_review_title(slug, reviewslug) do
+    GenServer.call(__MODULE__, {:get_review_title, {slug, reviewslug}})
   end
 
   def get_chaff_title(slug, chaffslug) do
@@ -139,6 +179,10 @@ defmodule Incunabula.Git do
 
   def get_chapter_title(slug, chapterslug) do
     GenServer.call(__MODULE__, {:get_chapter_title, {slug, chapterslug}})
+  end
+
+  def get_reviews(slug) do
+    GenServer.call(__MODULE__, {:get, {:reviews, slug}})
   end
 
   def get_chaffs(slug) do
@@ -179,7 +223,7 @@ defmodule Incunabula.Git do
   #
 
   def handle_call({:has_chapters?, slug}, _from, state) do
-    reply = case consult_file(get_book_dir(slug), "chapters.db") do
+    reply = case consult_file(get_book_dir(slug), @chaptersDB) do
       [] -> false
       _  -> true
     end
@@ -190,9 +234,16 @@ defmodule Incunabula.Git do
     {:reply, do_load_image(slug, image, user), state}
   end
 
-  def handle_call({:copy_chapter_to_chaff, {slug, chapter_slug, chaff_title, user}},
+  def handle_call({:copy_chapter_to_review, {slug, chapter_slug, user}},
     _from, state) do
-    {:reply, do_copy_chapter_to_chaff(slug, chapter_slug, chaff_title, user), state}
+    {:reply, do_copy_chapter_to_review(slug, chapter_slug, user), state}
+  end
+
+  def handle_call({:copy_chapter_to_chaff,
+                   {slug, chapter_slug, chaff_title, user}},
+    _from, state) do
+    reply = do_copy_chapter_to_chaff(slug, chapter_slug, chaff_title, user)
+    {:reply, reply, state}
   end
 
   def handle_call({:create, {type, slug, chapter_title, user}}, _from, state) do
@@ -223,9 +274,10 @@ defmodule Incunabula.Git do
 
   def handle_call({:update_chapter, {slug, chapter_slug,
                                      commit_title, commit_msg,
-                                     data, tag_bump, user}}, _from, state) do
+                                     data, tag_bump, user, branch}},
+    _from, state) do
     reply = do_update_chapter(slug, chapter_slug, commit_title, commit_msg,
-      data, tag_bump, user)
+      data, tag_bump, user, branch)
     {:reply, reply, state}
   end
 
@@ -238,7 +290,7 @@ defmodule Incunabula.Git do
   end
 
   def handle_call({:get_book_title, slug}, _from, state) do
-    {:ok, title} = read_file(get_book_dir(slug), "title.txt")
+    {:ok, title} = read_file(get_book_dir(slug), @title)
     {:reply, title, state}
   end
 
@@ -246,12 +298,22 @@ defmodule Incunabula.Git do
     {:reply, do_get_chapters_dropdown(slug), state}
   end
 
-  def handle_call({:get_chaff, {slug, chaffslug}}, _from, state) do
-    {:reply, do_get_text(slug, :chaff, chaffslug), state}
+  def handle_call({:get_review, {slug, reviewslug}}, _from, state) do
+    # reviewss are never on master
+    {:reply, do_get_text(slug, :review, reviewslug, :master), state}
   end
 
-  def handle_call({:get_chapter, {slug, chapterslug}}, _from, state) do
-    {:reply, do_get_text(slug, :chapter, chapterslug), state}
+  def handle_call({:get_chaff, {slug, chaffslug}}, _from, state) do
+    # chaffs are always on master
+    {:reply, do_get_text(slug, :chaff, chaffslug, :master), state}
+  end
+
+  def handle_call({:get_chapter, {slug, chapterslug, branch}}, _from, state) do
+    {:reply, do_get_text(slug, :chapter, chapterslug, branch), state}
+  end
+
+  def handle_call({:get_review_title, {slug, reviewslug}}, _from, state) do
+    {:reply, do_get_review_title(slug, reviewslug), state}
   end
 
   def handle_call({:get_chaff_title, {slug, chaffslug}}, _from, state) do
@@ -306,7 +368,7 @@ defmodule Incunabula.Git do
     # of 'bobby dazzler' - this would result in files called
     # 'bobby-dazzler.png' and 'bobby-dazzler.jpg' but with the same
     # slug of 'bobby-dazzler' so lets check for any 'bobby-dazzler.*'
-    wildcard = Path.join([bookdir, "images", shortimageslug <> ".*"])
+    wildcard = Path.join([bookdir, @imagesDir, shortimageslug <> ".*"])
     case Path.wildcard(wildcard) do
       [] ->
         bookdir
@@ -324,7 +386,7 @@ defmodule Incunabula.Git do
   end
 
   defp copy_image(dir, titleslug, tmp_image_path) do
-    path = Path.join(dir, "images")
+    path = Path.join(dir, @imagesDir)
     to   = Path.join(path, titleslug)
     :ok = File.cp(tmp_image_path, to)
     dir
@@ -332,11 +394,11 @@ defmodule Incunabula.Git do
 
   defp do_update_chapter_order(slug, new_chapters, user) do
     bookdir = get_book_dir(slug)
-    {:ok, title}  = read_file(get_book_dir(slug), "title.txt")
+    {:ok, title}  = read_file(get_book_dir(slug), @title)
     commit_msg = "reorder chapters"
     tag = make_tag(commit_msg, title, slug, user, "")
     bookdir
-    |> writeDB("chapters.db", new_chapters)
+    |> writeDB(@chaptersDB, new_chapters)
     |> add_to_git(:all)
     |> commit_to_git(commit_msg)
     |> bump_tag(tag, "major", user)
@@ -380,16 +442,16 @@ defmodule Incunabula.Git do
         |> push_to_channel2(topic, new_title)
         :ok
     end
-    end
+  end
 
   defp do_update_book_title(slug, new_title, user) do
     bookdir = get_book_dir(slug)
-    {:ok, oldtitle} = read_file(get_book_dir(slug), "title.txt")
+    {:ok, oldtitle} = read_file(get_book_dir(slug), @title)
     commitmsg = "old title was " <> oldtitle <> "new title is "
     <> new_title <> "(" <> slug <> ")"
     tag = make_tag("edit book title", new_title, slug, user, "new book title ")
     bookdir
-    |> write_to_file("title.txt", new_title)
+    |> write_to_file(@title, new_title)
     |> add_to_git(:all)
     |> commit_to_git(commitmsg)
     |> bump_tag(tag, "major", user)
@@ -429,12 +491,30 @@ defmodule Incunabula.Git do
   end
 
   defp do_update_chapter(slug, ch_slug, commit_title, commit_msg,
+    data, tag_bump, user, :master) do
+    do_update_chapter2(slug, ch_slug, commit_title, commit_msg,
+      data, tag_bump, user)
+  end
+
+  # Intercept any commits off the branch master
+  # change to this branch and then do the work
+  defp do_update_chapter(slug, ch_slug, commit_title, commit_msg,
+    data, tag_bump, user, branch) do
+    bookdir  = get_book_dir(slug)
+    bookdir  = checkout_branch(bookdir, branch)
+    return   = do_update_chapter2(slug, ch_slug, commit_title, commit_msg,
+      data, tag_bump, user)
+    bookdir  = checkout_branch(bookdir, :master)
+    return
+  end
+
+  defp do_update_chapter2(slug, ch_slug, commit_title, commit_msg,
     data, tag_bump, user) do
     bookdir  = get_book_dir(slug)
     ch_title =  do_get_chapter_title(slug, ch_slug)
     tag = make_tag("update chapter", ch_title, ch_slug, user, commit_title)
-    chapter  = Path.join("chapters", ch_slug <> ".eider")
-    route    = make_route([slug, "chapter", ch_slug])
+    chapter  = Path.join(@chaptersDir, ch_slug <> ".eider")
+    route    = make_route([slug, @chaptersDir, ch_slug])
     # the user may have pressed save without making any changes
     # so we write the data, check if there is any change
     # and then, and only then, retag etc
@@ -457,14 +537,62 @@ defmodule Incunabula.Git do
     end
   end
 
+  # Reviews are always on branches which are named after the
+  # tag they are copied from
+  defp do_copy_chapter_to_review(slug, chapter_slug, user) do
+    bookdir = get_book_dir(slug)
+    chapter_title = do_get_chapter_title(slug, chapter_slug)
+    currenttag = get_current_tag(bookdir)
+    reviewbranch = currenttag
+    review_title = chapter_title <> " " <> currenttag
+    review_slug = Incunabula.Slug.to_slug(review_title)
+    from = Path.join([bookdir, @chaptersDir, chapter_slug <> ".eider"])
+    to   = Path.join([bookdir, @reviewsDir,  review_slug  <> ".eider"])
+    # Lots happening here
+    # we create the new review in the new branch
+    # which is named after the current tag
+    bookdir
+    |> checkout_branch(reviewbranch)
+
+    case File.exists?(to) do
+      false ->
+        {:ok, _} = File.copy(from, to)
+
+        # add the new file and push it to github
+        # also create the new review copy (not under git)
+        bookdir
+        |> add_to_git(:all)
+        |> push_to_github(slug)
+        |> make_html(:review, review_title, review_slug, user)
+
+        # now we switch back to master
+        prefix = review_slug <> " copied from " <> chapter_slug
+        tag = make_tag(prefix, review_title, review_slug, user)
+        bookdir
+        |> checkout_branch("master")
+        |> append_to_review_DB_annotated(review_title, review_slug, reviewbranch)
+        |> add_to_git(:all)
+        |> commit_to_git(tag)
+        |> bump_tag(tag, "major", user)
+        |> push_to_github(slug)
+        |> push_to_channel(slug, slug, "book-get_reviews")
+        :ok
+      true ->
+        # gotta switch back to master
+        bookdir
+        |> checkout_branch("master")
+        {:error, review_slug <> " already exists"}
+    end
+  end
+
   defp do_copy_chapter_to_chaff(slug, chapter_slug, chaff_title, user) do
     chaff_slug = Incunabula.Slug.to_slug(chaff_title)
     bookdir = get_book_dir(slug)
-    from = Path.join([bookdir, "chapters", chapter_slug <> ".eider"])
-    to   = Path.join([bookdir, "chaff",    chaff_slug   <> ".eider"])
+    from = Path.join([bookdir, @chaptersDir, chapter_slug <> ".eider"])
+    to   = Path.join([bookdir, @chaffDir,    chaff_slug   <> ".eider"])
     case File.exists?(to) do
       false ->
-        {:ok, 0} = File.copy(from, to)
+        {:ok, _} = File.copy(from, to)
         prefix = chaff_slug <> " copied from " <> chapter_slug
         tag = make_tag(prefix, chaff_title, chaff_slug, user)
         currenttag = get_current_tag(bookdir)
@@ -487,8 +615,9 @@ defmodule Incunabula.Git do
     title_slug = Incunabula.Slug.to_slug(title)
     bookdir = get_book_dir(slug)
     subdir = case type do
-               :chapter -> "chapters"
-               :chaff   -> "chaff"
+               :chapter -> @chaptersDir
+               :chaff   -> @chaffDir
+               :review  -> @reviewsDir
              end
     fileroot = Path.join([bookdir, subdir, title_slug])
     file     = Path.join([bookdir, subdir, title_slug <> ".eider"])
@@ -500,10 +629,12 @@ defmodule Incunabula.Git do
         prefix = case type do
                    :chapter -> "create new chapter"
                    :chaff   -> "create new chaff"
+                   :review  -> "create new review"
                  end
         channel = case type do
-                   :chapter -> "book-get_chapters"
-                   :chaff   -> "book-get_chaffs"
+                    :chapter -> "book-get_chapters"
+                    :chaff   -> "book-get_chaffs"
+                    :review  -> "book-get_reviews"
                  end
         tag = make_tag(prefix, title, title_slug, user)
         bookdir
@@ -536,23 +667,32 @@ defmodule Incunabula.Git do
                  image_slug:    image_slug,
                  image_details: imagedetails,
                  extension:     ext}
-    old_images = consult_file(bookdir, "images.db")
+    old_images = consult_file(bookdir, @imagesDB)
     new_images = old_images ++ [newentry]
-    writeDB(bookdir, "images.db", new_images)
+    writeDB(bookdir, @imagesDB, new_images)
+  end
+
+  defp append_to_review_DB_annotated(bookdir, title, slug, branch) do
+    newentry =  %{review_slug:   slug,
+                  review_title:  title,
+                  branch:        branch,
+                  review_status: "in review"}
+    db = @reviewsDB
+    do_append_to_DB(bookdir, db, newentry)
   end
 
   defp append_to_chaff_DB_annotated(bookdir, title, slug, msg) do
     newentry =  %{chaff_slug:   slug,
                   chaff_title: title,
                   creation:     msg}
-    db =  "chaff.db"
+    db = @chaffDB
     do_append_to_DB(bookdir, db, newentry)
   end
 
   defp append_to_DB(bookdir, :chapter, title, slug) do
     newentry =  %{chapter_slug:   slug,
                   chapter_title: title}
-    db = "chapters.db"
+    db = @chaptersDB
     do_append_to_DB(bookdir, db, newentry)
   end
 
@@ -560,8 +700,8 @@ defmodule Incunabula.Git do
     currenttag = get_current_tag(bookdir)
     newentry =  %{chaff_slug:  slug,
                   chaff_title: title,
-                  creation:    "ex novo at " <> currenttag}
-    db =  "chaff.db"
+                  creation:    "de novo at " <> currenttag}
+    db = @chaffDB
     do_append_to_DB(bookdir, db, newentry)
   end
 
@@ -572,7 +712,7 @@ defmodule Incunabula.Git do
   end
 
   defp update_DB(bookdir, :chaff, new_title, chaff_slug) do
-    db = "chaff.db"
+    db = @chaffDB
     contents = consult_file(bookdir, db)
     oldentry = read_chaff_entry(chaff_slug, contents)
     %{creation: creation} = oldentry
@@ -581,7 +721,7 @@ defmodule Incunabula.Git do
   end
 
   defp update_DB(bookdir, :chapter, new_title, chapter_slug) do
-    db = "chapters.db"
+    db = @chaptersDB
     contents = consult_file(bookdir, db)
     newcontents = replace_chapter(contents, chapter_slug, new_title, [])
     writeDB(bookdir, db, newcontents)
@@ -589,11 +729,9 @@ defmodule Incunabula.Git do
 
   defp get_image_details(dir, image_file, ext) do
     args = [
-      to_string(Path.join([dir, "images", image_file <> ext]))
+      to_string(Path.join([dir, @imagesDir, image_file <> ext]))
     ]
-    workingdir = to_string(Path.join(dir, "images"))
-    IO.inspect args
-    IO.inspect workingdir
+    workingdir = to_string(Path.join(dir, @imagesDir))
     details = System.cmd("file", args, [cd: workingdir])
     :lists.flatten(:io_lib.format("~p", [details]))
   end
@@ -607,20 +745,23 @@ defmodule Incunabula.Git do
         bookdir
         |> make_dir
         |> do_git_init
-        |> write_to_file("title.txt",    book_title)
-        |> write_to_file("author.txt",   author)
-        |> write_to_file(".gitignore",  standard_gitignore())
-        |> writeDB("chapters.db", [])
-        |> writeDB("chaff.db",    [])
-        |> writeDB("images.db",   [])
-        |> make_component_dirs("chapters")
-        |> make_component_dirs("images")
-        |> make_component_dirs("preview_html")
-        |> make_component_dirs("chaff")
-        |> make_component_dirs("chaff_html")
+        |> write_to_file(@title,       book_title)
+        |> write_to_file(@author,      author)
+        |> write_to_file(".gitignore", standard_gitignore())
+        |> writeDB(@chaptersDB, [])
+        |> writeDB(@imagesDB,   [])
+        |> writeDB(@chaffDB,    [])
+        |> writeDB(@reviewsDB,  [])
+        |> make_component_dirs(@chaptersDir)
+        |> make_component_dirs(@preview_htmlDir)
+        |> make_component_dirs(@imagesDir)
+        |> make_component_dirs(@chaffDir)
+        |> make_component_dirs(@chaff_htmlDir)
+        |> make_component_dirs(@reviewsDir)
+        |> make_component_dirs(@reviews_htmlDir)
         |> add_to_git(:all)
         |> commit_to_git("basic setup of directory")
-        |> tag_github(0, 1, 1, "initial creation of " <> slug, author)
+        |> tag_github(0, 0, 1, 1, "initial creation of " <> slug, author)
         |> push_to_github(slug, :without_tags) # don't want tags on first create
         |> push_to_channel("", "", "books-list")
         {:ok, slug}
@@ -650,29 +791,63 @@ defmodule Incunabula.Git do
   end
 
   defp do_get_chapters_dropdown(slug) do
-    chapters = consult_file(get_book_dir(slug), "chapters.db")
+    chapters = consult_file(get_book_dir(slug), @chaptersDB)
     _dropdown = Incunabula.FragController.get_chapters_dropdown(slug, chapters)
   end
 
-  defp do_get_text(slug, type, textslug) do
+  defp do_get_text(slug, type, textslug, :master) do
+    do_get_text2(slug, type, textslug)
+  end
+
+  # Intercept any commits off the branch master
+  # change to this branch and then do the work
+  defp do_get_text(slug, type, textslug, branch) do
+    bookdir  = get_book_dir(slug)
+    bookdir  = checkout_branch(bookdir, branch)
+    return   = do_get_text2(slug, type, textslug)
+    bookdir  = checkout_branch(bookdir, :master)
+    return
+  end
+
+  defp do_get_text2(slug, type, textslug) do
     bookdir = get_book_dir(slug)
     tag = do_get_current_tag_msg(bookdir)
     path = case type do
-             :chapter -> Path.join([get_book_dir(slug), "chapters"])
-             :chaff   -> Path.join([get_book_dir(slug), "chaff"])
+             :chapter -> Path.join([get_book_dir(slug), @chaptersDir])
+             :chaff   -> Path.join([get_book_dir(slug), @chaffDir])
+             :review  -> Path.join([get_book_dir(slug), @reviewsDir])
            end
     {:ok, contents} = read_file(path, textslug <> ".eider")
     {tag, contents}
   end
 
+  defp do_get_review_title(slug, reviewslug) do
+    review  = consult_file(get_book_dir(slug), @reviewsDB)
+    _title = read_review_title(reviewslug, review)
+  end
+
+
   defp do_get_chaff_title(slug, chaffslug) do
-    chaff  = consult_file(get_book_dir(slug), "chaff.db")
+    chaff  = consult_file(get_book_dir(slug), @chaffDB)
     _title = read_chaff_title(chaffslug, chaff)
   end
 
   defp do_get_chapter_title(slug, chapterslug) do
-    chapters = consult_file(get_book_dir(slug), "chapters.db")
+    chapters = consult_file(get_book_dir(slug), @chaptersDB)
     _title   = read_chapter_title(chapterslug, chapters)
+  end
+
+  defp read_review_title(slug, contents) do
+    %{review_title: title} = read_review_entry(slug, contents)
+      title
+  end
+
+  defp read_review_entry(slug, [%{review_slug:  slug} = h | _t]) do
+    h
+  end
+
+  defp read_review_entry(slug, [_h | t]) do
+    read_review_entry(slug, t)
   end
 
   defp read_chaff_title(slug, contents) do
@@ -700,21 +875,26 @@ defmodule Incunabula.Git do
   end
 
   defp do_get_chapters_json(slug) do
-    _chapters = consult_file(get_book_dir(slug), "chapters.db")
+    _chapters = consult_file(get_book_dir(slug), @chaptersDB)
+  end
+
+  defp do_get(:reviews, slug) do
+    reviews = consult_file(get_book_dir(slug), @reviewsDB)
+    _html   = Incunabula.FragController.get_reviews(slug, reviews)
   end
 
   defp do_get(:chaffs, slug) do
-    chapters = consult_file(get_book_dir(slug), "chaff.db")
-    _html    = Incunabula.FragController.get_chaffs(slug, chapters)
+    chaffs = consult_file(get_book_dir(slug), @chaffDB)
+    _html  = Incunabula.FragController.get_chaffs(slug, chaffs)
   end
 
   defp do_get(:chapters, slug) do
-    chapters = consult_file(get_book_dir(slug), "chapters.db")
+    chapters = consult_file(get_book_dir(slug), @chaptersDB)
     _html    = Incunabula.FragController.get_chapters(slug, chapters)
   end
 
   defp do_get(:images, slug) do
-    images = consult_file(get_book_dir(slug), "images.db")
+    images = consult_file(get_book_dir(slug), @imagesDB)
     _html  = Incunabula.FragController.get_images(slug, images)
   end
 
@@ -733,8 +913,9 @@ defmodule Incunabula.Git do
   defp get_books(rootdir, files) do
     subs  = for f <- files, File.dir?(Path.join([rootdir, f])), do: f
     slugs = for d <- subs,  File.dir?(Path.join([rootdir, d, "/.git"])), do: d
-    books = for s <- slugs, {:ok, t} = File.read(Path.join([rootdir, s, "title.txt"])) do
-      {t, s}
+    books = for s <- slugs,
+      {:ok, t} = File.read(Path.join([rootdir, s, @title])) do
+        {t, s}
     end
     Incunabula.FragController.get_books(Enum.sort(books))
   end
@@ -790,26 +971,35 @@ defmodule Incunabula.Git do
 
   defp bump_tag(dir, msg, type, person) when type == "major"
   or type == "minor"
-  or type == "release" do
+  or type == "release"
+  or type == "publication" do
     tag = get_current_tag(dir)
-    [i, j, k] = String.split(tag, ".")
-    {release, major, minor} = case type do
-                                "major" ->
-                                  {i, to_string(String.to_integer(j) + 1), "0"}
-                                "minor" ->
-                                  {i, j, to_string(String.to_integer(k) + 1)}
-                                "release" ->
-                                  {to_string(String.to_integer(i) + 1), 0, 0}
-                     end
-    tag_github(dir, release, major, minor, msg, person)
+    [i, j, k, l] = String.split(tag, ".")
+    {publication, release, major, minor}
+    = case type do
+        "publication" ->
+          newi = to_string(String.to_integer(i) + 1)
+          {newi, 0, 0, 0}
+        "release" ->
+          newj = to_string(String.to_integer(j) + 1)
+          {i, newj, 0, 0}
+        "major" ->
+          newk = to_string(String.to_integer(k) + 1)
+          {i, j, newk, "0"}
+        "minor" ->
+          newl = to_string(String.to_integer(l) + 1)
+          {i, j, k, newl}
+      end
+    tag_github(dir, publication, release, major, minor, msg, person)
     dir
   end
 
-  defp tag_github(dir, release, major, minor, msg, person) do
+  defp tag_github(dir, publication, release, major, minor, msg, person) do
     args = [
       "tag",
       "-a",
-      to_string(release) <> "." <> to_string(major) <> "." <> to_string(minor),
+      to_string(publication) <> "." <> to_string(release) <> "." <>
+        to_string(major) <> "." <> to_string(minor),
       "-m",
       msg <> "\ncommited by " <> person
     ]
@@ -845,7 +1035,9 @@ defmodule Incunabula.Git do
                  "--repo=" <> url,
                ]
            end
-    {"", 0} = System.cmd(cmd, args, [cd: dir])
+    {"", return} = System.cmd(cmd, args, [cd: dir])
+    IO.inspect "in push to github"
+    IO.inspect return
     dir
   end
 
@@ -863,13 +1055,23 @@ defmodule Incunabula.Git do
   end
 
   defp push_to_channel(dir, slug, route, "book-get_book_title") do
-    {:ok, title} = read_file(get_book_dir(slug), "title.txt")
+    {:ok, title} = read_file(get_book_dir(slug), @title)
     # No I don't understand why the event and the message associated with it
     # have to be called books neither
     Incunabula.Endpoint.broadcast "book:get_book_title:" <> route,
       "books", %{books: title}
     dir
   end
+
+    defp push_to_channel(dir, slug, route, "book-get_reviews") do
+    reviews = do_get(:reviews, slug)
+    # No I don't understand why the event and the message associated with it
+    # have to be called books neither
+    Incunabula.Endpoint.broadcast "book:get_chaffs:" <> route,
+      "books", %{books: reviews}
+    dir
+  end
+
 
   defp push_to_channel(dir, slug, route, "book-get_chaffs") do
     chaffs = do_get(:chaffs, slug)
@@ -971,8 +1173,7 @@ defmodule Incunabula.Git do
   def consult_file(dir, file) do
     path = Path.join(dir, file)
     {:ok, terms} = :file.consult(path)
-    # make terms a proper list, yikes!
-    terms ++ []
+    terms
   end
 
   defp standard_gitignore() do
@@ -1030,31 +1231,41 @@ defmodule Incunabula.Git do
     end
   end
 
-  defp make_html(dir, :chapter, chapter_title, chapter_slug, user) do
-    eiderdownfile = Path.join([dir, "chapters",     chapter_slug <> ".eider"])
-    webpage       = Path.join([dir, "preview_html", chapter_slug <> ".html"])
-    summarypage   = Path.join([dir, "preview_html", chapter_slug <>
-                                ".summary.html"])
+  defp make_html(dir, type, title, slug, user)
+  when type == :chapter
+  or   type == :review do
+    IO.inspect dir
+    IO.inspect type
+    IO.inspect title
+    IO.inspect slug
+    IO.inspect user
+    {sourcedir, outputdir} = case type do
+                               :chapter -> {@chaptersDir, @preview_htmlDir}
+                               :review  -> {@reviewsDir,  @reviews_htmlDir}
+                             end
+    eiderdownfile = Path.join([dir, sourcedir, slug <> ".eider"])
+    webpage       = Path.join([dir, outputdir, slug <> ".html"])
+    summarypage   = Path.join([dir, outputdir, slug <> ".summary.html"])
     {:ok, eiderdown} = File.read(eiderdownfile)
 
     eiderdown_charlist = to_charlist(eiderdown)
 
     # first we make the preview
     body = to_string(:eiderdown.to_html_from_utf8(eiderdown_charlist))
-    html = Incunabula.HTMLController.make_preview(chapter_title, user, body)
+    html = Incunabula.HTMLController.make_preview(title, user, body)
     :ok = File.write(webpage, html)
 
     # now we make the summary
     sum = to_string(:eiderdown.to_summary_from_utf8(eiderdown_charlist))
-    s_html = Incunabula.HTMLController.make_preview(chapter_title, user, sum)
+    s_html = Incunabula.HTMLController.make_preview(title, user, sum)
     :ok = File.write(summarypage, s_html)
 
     dir
   end
 
   defp make_html(dir, :chaff, chaff_title, chaff_slug, user) do
-    eiderdownfile = Path.join([dir, "chaff",      chaff_slug <> ".eider"])
-    webpage       = Path.join([dir, "chaff_html", chaff_slug <> ".html"])
+    eiderdownfile = Path.join([dir, @chaffDir,      chaff_slug <> ".eider"])
+    webpage       = Path.join([dir, @chaff_htmlDir, chaff_slug <> ".html"])
     {:ok, eiderdown} = File.read(eiderdownfile)
     body = to_string(:eiderdown.to_html_from_utf8(to_charlist(eiderdown)))
     html = Incunabula.ChaffHTMLController.make_preview(chaff_title, user, body)
@@ -1098,6 +1309,18 @@ defmodule Incunabula.Git do
 
   defp replace_chapter([h | t], chapter_slug, new_title, acc) do
     replace_chapter(t, chapter_slug, new_title, [h | acc])
+  end
+
+  defp checkout_branch(dir, branch) do
+    args = [
+      "checkout",
+      to_string(branch)
+    ]
+    {"", 0} = System.cmd("git", args, [cd: dir])
+  end
+
+  defp get_review_branch(slug, review_slug) do
+    bookdir = get_book_dir(slug)
   end
 
 end

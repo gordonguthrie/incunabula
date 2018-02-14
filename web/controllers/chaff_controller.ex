@@ -21,9 +21,10 @@ defmodule Incunabula.ChaffController do
   end
 
   def copy(conn, %{"chaff" => chaff,
+                   "copy"  => copy,
                    "slug"  => slug}, user) do
+    %{"chapter_slug" => chapter_slug} = copy
     %{"chaff_title"  => chaff_title,
-      "chapter_slug" => chapter_slug,
       "copy?"        => "true"} = chaff
     case Incunabula.Git.copy_chapter_to_chaff(slug, chapter_slug, chaff_title, user) do
       :ok ->

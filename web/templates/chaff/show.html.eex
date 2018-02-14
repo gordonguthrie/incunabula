@@ -1,3 +1,4 @@
+<div id="incunabula-affect" data-role="chaff"></div>
 <h2><a href="/books/<%= @slug %>"><%= @title %></a> -
   <em class="incunabula-chaff">
     <span id="book-get_chaff_title"

@@ -27,6 +27,11 @@ function draw(id, msg) {
     $("#" + id).html(msg)
 }
 
+function draw_many(klass, msg) {
+    console.log("got new thing to draw", klass, msg)
+    $("." + klass).html(msg)
+}
+
 function make_key(str) {
     var components = str.split(":")
     return components[0] + ":" + components[1]
@@ -77,12 +82,15 @@ router.set("books:list",
             draw_fn: function(id, msg) {draw(id, msg)}})
 
 // router for a particular book
+router.set("book:get_reviews",
+           {id:      "book-get_reviews",
+            draw_fn: function(id, msg) {draw(id, msg)}})
 router.set("book:get_chaffs",
            {id:      "book-get_chaffs",
             draw_fn: function(id, msg) {draw(id, msg)}})
 router.set("book:get_chapters_dropdown",
            {id:      "book-get_chapters_dropdown",
-            draw_fn: function(id, msg) {draw(id, msg)}})
+            draw_fn: function(id, msg) {draw_many(id, msg)}})
 router.set("book:get_chapters",
            {id:      "book-get_chapters",
             draw_fn: function(id, msg) {draw(id, msg)}})

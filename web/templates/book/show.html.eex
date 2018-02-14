@@ -11,6 +11,7 @@
   <a class="active item" data-tab="chapters">Chapters</a>
   <a class="item" data-tab="images">Images</a>
   <a class="item" data-tab="chaff">Chaff</a>
+  <a class="item" data-tab="reviews">Reviews</a>
 </div>
 
 <div class="ui bottom attached active tab segment" data-tab="chapters">
@@ -33,11 +34,19 @@
   <div id="book-get_chaffs" class="incunabula-topic" topic="book:get_chaffs:<%= @slug %>">
   </div>
   <div class="content">
-    <button class="incunabula-show ui primary button" modal="incunabula-new-chaff">Create new Chaff</button>
-  <%= if @showchaff do %>
+    <button class="incunabula-show ui primary button" modal="incunabula-new-chaff">Create New Chaff</button>
+  <%= if @has_chapters do %>
   <button class="incunabula-show ui primary button" modal="incunabula-copy-chaff">Copy A Chapter</button>
   <% end %>
   </div>
+</div>
+
+<div class="ui bottom attached tab segment" data-tab="reviews">
+  <div id="book-get_reviews" class="incunabula-topic" topic="book:get_reviews:<%= @slug %>">
+  </div>
+  <%= if @has_chapters do %>
+  <button class="incunabula-show ui primary button" modal="incunabula-new-review">Release A Chapter For Review</button>
+  <% end %>
 </div>
 
 <%= render Incunabula.FieldModalView, "field.html",
@@ -131,7 +140,7 @@
       </div>
       <div class="field">
         <label>Pick a chapter to copy over to the chaff
-            <div id="book-get_chapters_dropdown" class="incunabula-topic" topic="book:get_chapters_dropdown:<%= @slug %>"></div>
+            <div class="book-get_chapters_dropdown incunabula-topic" topic="book:get_chapters_dropdown:<%= @slug %>"></div>
         </label>
       </div>
       <div class="incunabula-edits-hidden">
@@ -140,6 +149,24 @@
       <%= error_tag f, :caption %>
     </div>
     <%= submit("Copy chapter", [class: "ui primary button"]) %>
+    <% end %>
+  </div>
+  </div>
+</div>
+
+<div class="incunabula-new-review ui small modal">
+  <div class="content">
+    <div class="ui form">
+      <%= form_for @copyreviewchangeset, @copyreview, [class: "ui form"], fn f -> %>
+      <div class="field">
+      <div class="field">
+        <label>Pick a chapter to issue for review
+            <div class="book-get_chapters_dropdown incunabula-topic" topic="book:get_chapters_dropdown:<%= @slug %>"></div>
+        </label>
+      </div>
+      <%= error_tag f, :caption %>
+    </div>
+    <%= submit("Create Review", [class: "ui primary button"]) %>
     <% end %>
   </div>
   </div>

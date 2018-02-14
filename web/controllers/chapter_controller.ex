@@ -25,7 +25,7 @@ defmodule Incunabula.ChapterController do
     chaptertitle = Incunabula.Git.get_chapter_title(slug, chapterslug)
     changeset    = Incunabula.SaveEdit.changeset()
     savepath     = Path.join(["/books", slug, "chapters", chapterslug, "save"])
-    {_tag, contents} = Incunabula.Git.get_chapter(slug, chapterslug)
+    {_tag, contents} = Incunabula.Git.get_chapter(slug, chapterslug, :master)
     render conn, "show.html",
       changeset:    changeset,
       title:        booktitle,
