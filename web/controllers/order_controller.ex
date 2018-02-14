@@ -18,7 +18,7 @@ defmodule Incunabula.OrderController do
     # but a wise head don't trust that sort of thang and resorts the data
     # on the indexes before saving it
     sorted_list = Enum.sort(list, &(String.to_integer(hd(Tuple.to_list(&1)))
-              <= String.to_integer(hd(Tuple.to_list(&2)))))
+          <= String.to_integer(hd(Tuple.to_list(&2)))))
     chapters = for {_, %{"chapter_slug"  => c_slug,
                          "chapter_title" => c_title}}
     <- sorted_list, do: %{chapter_slug:  c_slug,
