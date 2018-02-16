@@ -7,7 +7,7 @@
      modal="incunabula-edit_title"></i>
 </h2>
 
-<div class="ui top attached tabular menu">
+<div class="ui top attached tabular stackable menu">
   <a class="active item" data-tab="chapters">Chapters</a>
   <a class="item" data-tab="images">Images</a>
   <a class="item" data-tab="chaff">Chaff</a>
