@@ -1,4 +1,4 @@
-<table class="ui striped table">
+<table class="ui striped unstackable table">
   <%= if @reviews == [] do %>
   <tr>
     <td>There are no reviews to show</td>
@@ -7,9 +7,11 @@
   <%= for r <- @reviews do %>
       <tr>
         <td>
-          <a href="/books/<%= @slug %>/reviews/<%= r.review_slug %>"><%= r.review_title %></a>
+          <%= raw(make_review_link(@slug, r.review_slug, r.review_title, r.review_status)) %>
         </td>
-        <td><%= r.review_status %></td>
+        <td>
+          <%= raw(make_review_control(r.review_status)) %>
+        </td>
       </tr>
       <% end %>
    <% end %>

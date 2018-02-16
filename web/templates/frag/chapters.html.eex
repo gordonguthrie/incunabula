@@ -1,4 +1,4 @@
-<table class="ui striped table">
+<table class="ui striped unstackable table">
   <%= if @chapters == [] do %>
   <tr>
     <td>There are no chapters to show
@@ -9,7 +9,11 @@
       <tr>
         <%= if c.status == :locked do %>
         <td><div><%= c.chapter_title %></div></td>
-        <td><i class="lock icon"></i><small>under review</small></td>
+        <td>
+          <button class="circular ui disabled basic right floated mini icon button">
+            <i class="lock icon"></i><small>under review</small>
+            </button>
+        </td>
         <% else %>
         <td><div><a href="/books/<%= @slug %>/chapters/<%= c.chapter_slug %>"><%= c.chapter_title %></a></div></td>
         <td></td>

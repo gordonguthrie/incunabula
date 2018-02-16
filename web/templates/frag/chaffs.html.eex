@@ -1,4 +1,4 @@
-<table class="ui striped table">
+<table class="ui striped unstackable table">
   <%= if @chaffs == [] do %>
   <tr>
     <td>There are no chaffs to show</td>
