@@ -413,7 +413,7 @@ defmodule Incunabula.Git do
         |> commit_to_git(commitmsg)
         |> bump_tag("new image loaded " <> imageslug, "major", user)
         |> push_to_github(slug)
-        |> push_to_channel(slug, slug, "book-get_images")
+        |> push_to_channel(slug, slug, "book:get_images:")
         :ok
       _ ->
         {:error, shortimageslug <> ".* already exists"}
@@ -439,8 +439,8 @@ defmodule Incunabula.Git do
     |> commit_to_git(commit_msg)
     |> bump_tag(tag, "major", user)
     |> push_to_github(slug)
-    |> push_to_channel(slug, slug, "book-get_chapters")
-    |> push_to_channel(slug, slug, "book-get_chapters_dropdown")
+    |> push_to_channel(slug, slug, "book:get_chapters:")
+    |> push_to_channel(slug, slug, "book:get_chapters_dropdown:")
     :ok
   end
 
@@ -497,8 +497,8 @@ defmodule Incunabula.Git do
     |> commit_to_git(commitmsg)
     |> bump_tag(tag, "major", user)
     |> push_to_github(slug)
-    |> push_to_channel(slug, slug, "books-list")
-    |> push_to_channel(slug, slug, "book-get_book_title")
+    |> push_to_channel(slug, slug, "books:list")
+    |> push_to_channel(slug, slug, "book:get_book_title:")
     :ok
   end
 
@@ -617,7 +617,7 @@ defmodule Incunabula.Git do
         |> make_html(:review, review_title, review_slug, user)
         |> Incunabula.DB.appendDB(@reviewsDB, newrecord)
         |> push_to_github(slug)
-        |> push_to_channel(slug, slug, "book-get_reviews")
+        |> push_to_channel(slug, slug, "book:get_reviews:")
         :ok
       true ->
         # gotta switch back to master anyhoo
@@ -645,7 +645,7 @@ defmodule Incunabula.Git do
         |> commit_to_git(tag)
         |> bump_tag(tag, "major", user)
         |> push_to_github(slug)
-        |> push_to_channel(slug, slug, "book-get_chaffs")
+        |> push_to_channel(slug, slug, "book:get_chaffs:")
         :ok
       true ->
         {:error, chaff_slug <> " already exists"}
@@ -672,8 +672,8 @@ defmodule Incunabula.Git do
                    :chaff   -> "create new chaff"
                  end
         channel = case type do
-                    :chapter -> "book-get_chapters"
-                    :chaff   -> "book-get_chaffs"
+                    :chapter -> "book:get_chapters:"
+                    :chaff   -> "book:get_chaffs:"
                   end
         tag = make_tag(prefix, title, title_slug, user)
         {db, newrecord} = case type do
@@ -696,8 +696,8 @@ defmodule Incunabula.Git do
         case type == :chapter do
           true ->
             bookdir
-            |> push_to_channel(slug, slug, "book-get_chapters")
-            |> push_to_channel(slug, slug, "book-get_chapters_dropdown")
+            |> push_to_channel(slug, slug, "book:get_chapters:")
+            |> push_to_channel(slug, slug, "book:get_chapters_dropdown:")
             :ok
           false ->
             :ok
@@ -1003,13 +1003,13 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp push_to_channel(dir, _slug, _route, "books-list") do
+  defp push_to_channel(dir, _slug, _route, "books:list") do
     books = do_get_books()
     Incunabula.Endpoint.broadcast "books:list", "books", %{books: books}
     dir
   end
 
-  defp push_to_channel(dir, slug, route, "book-get_book_title") do
+  defp push_to_channel(dir, slug, route, "book:get_book_title:") do
     {:ok, title} = read_file(get_book_dir(slug), @title)
     # No I don't understand why the event and the message associated with it
     # have to be called books neither
@@ -1018,16 +1018,16 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp push_to_channel(dir, slug, route, "book-get_reviews") do
+  defp push_to_channel(dir, slug, route, "book:get_reviews:") do
     reviews = do_get(:reviews, slug)
     # No I don't understand why the event and the message associated with it
     # have to be called books neither
-    Incunabula.Endpoint.broadcast "book:get_chaffs:" <> route,
+    Incunabula.Endpoint.broadcast "book:get_reviews:" <> route,
       "books", %{books: reviews}
     dir
   end
 
-  defp push_to_channel(dir, slug, route, "book-get_chaffs") do
+  defp push_to_channel(dir, slug, route, "book:get_chaffs:") do
     chaffs = do_get(:chaffs, slug)
     # No I don't understand why the event and the message associated with it
     # have to be called books neither
@@ -1036,7 +1036,7 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp push_to_channel(dir, slug, route, "book-get_chapters_dropdown") do
+  defp push_to_channel(dir, slug, route, "book:get_chapters_dropdown:") do
     chapters = do_get(:chapters, slug)
     # No I don't understand why the event and the message associated with it
     # have to be called books neither
@@ -1045,7 +1045,7 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp push_to_channel(dir, slug, route, "book-get_chapters") do
+  defp push_to_channel(dir, slug, route, "book:get_chapters:") do
     chapters = do_get(:chapters, slug)
     # No I don't understand why the event and the message associated with it
     # have to be called books neither
@@ -1054,7 +1054,7 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp push_to_channel(dir, slug, route, "book-get_images") do
+  defp push_to_channel(dir, slug, route, "book:get_images:") do
     images = do_get(:images, slug)
     # No I don't understand why the event and the message associated with it
     # have to be called books neither
@@ -1077,9 +1077,9 @@ defmodule Incunabula.Git do
   end
 
   defp direct_push_to_channel(route, type, msg) when
-  type == "book-save_review_edits"  or
-  type == "book-save_chaff_edits"   or
-  type == "book-save_chapter_edits" do
+  type == "book:save_review_edits:"  or
+  type == "book:save_chaff_edits:"   or
+  type == "book:save_chapter_edits:" do
     # No I don't understand why the event and the message associated with it
     # have to be called books neither
     Incunabula.Endpoint.broadcast type <> route,
