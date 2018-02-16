@@ -167,6 +167,11 @@ if ($(".tabular.menu").length) {
         $("a[data-tab='chaff']").addClass("active");
         $(".active.segment").removeClass("active");
         $("div[data-tab='chaff']").addClass("active");
+    } else if (window.location.hash == "#reviews") {
+        $(".active.item").removeClass("active");
+        $("a[data-tab='reviews']").addClass("active");
+        $(".active.segment").removeClass("active");
+        $("div[data-tab='reviews']").addClass("active");
     }
 }
 
