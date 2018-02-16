@@ -1,6 +1,8 @@
 defmodule Incunabula.UserSocket do
   use Phoenix.Socket
 
+  @max_age 10_000
+
   ## Channels
   channel "book:*",  Incunabula.BookChannel
   channel "books:*", Incunabula.BooksChannel
