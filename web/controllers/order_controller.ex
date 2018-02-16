@@ -5,7 +5,7 @@ defmodule Incunabula.OrderController do
 
   plug :authenticate_user when action in [:read, :write]
 
-  def read(conn, %{"slug" => slug}, user) do
+  def read(conn, %{"slug" => slug}, _user) do
     chapters = Incunabula.Git.get_chapters_json(slug)
     render(conn, "index.json",
       chapters: chapters)

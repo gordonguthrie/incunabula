@@ -38,7 +38,7 @@ defmodule Incunabula.ChaffController do
   end
 
   def show(conn, %{"chaffslug" => chaffslug,
-                   "slug"      => slug}, user) do
+                   "slug"      => slug}, _user) do
     booktitle  = Incunabula.Git.get_book_title(slug)
     chafftitle = Incunabula.Git.get_chaff_title(slug, chaffslug)
     changeset  = Incunabula.SaveEdit.changeset()

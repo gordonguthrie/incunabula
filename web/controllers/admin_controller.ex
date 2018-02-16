@@ -5,7 +5,7 @@ defmodule Incunabula.AdminController do
 
   plug :authenticate_user when action in [:index]
 
-  def index(conn, _params, user) do
+  def index(conn, _params, _user) do
     dir       = Incunabula.Git.get_books_dir()
     users     = IncunabulaUtilities.Users.get_users()
     render conn, "index.html",

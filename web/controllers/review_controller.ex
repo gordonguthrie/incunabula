@@ -20,7 +20,7 @@ defmodule Incunabula.ReviewController do
   end
 
   def show(conn, %{"reviewslug" => reviewslug,
-                   "slug"       => slug}, user) do
+                   "slug"       => slug}, _user) do
     booktitle  = Incunabula.Git.get_book_title(slug)
     reviewtitle = Incunabula.Git.get_review_title(slug, reviewslug)
     changeset  = Incunabula.SaveEdit.changeset()

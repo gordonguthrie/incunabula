@@ -10,12 +10,6 @@ defmodule Incunabula.PreviewController do
     do_show(conn, slug, ch_slug, :chapter)
   end
 
-  def summary(conn, %{"chapterslug" => ch_slug,
-                      "slug"        => slug}, _user) do
-    do_show(conn, slug, ch_slug, :summary)
-  end
-
-
   def show(conn, %{"chaffslug" => ch_slug,
                    "slug"      => slug}, _user) do
     do_show(conn, slug, ch_slug, :chaff)
@@ -43,6 +37,11 @@ defmodule Incunabula.PreviewController do
     conn
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> send_resp(200, binary)
+  end
+
+  def summary(conn, %{"chapterslug" => ch_slug,
+                      "slug"        => slug}, _user) do
+    do_show(conn, slug, ch_slug, :summary)
   end
 
 end

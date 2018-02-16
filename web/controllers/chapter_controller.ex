@@ -6,7 +6,7 @@ defmodule Incunabula.ChapterController do
   plug :authenticate_user when action in [:create, :show]
 
   def create(conn, %{"chapter" => chapter,
-                     "slug"    => slug} = params, user) do
+                     "slug"    => slug}, user) do
     %{"chapter_title" => chapter_title} = chapter
     case Incunabula.Git.create_chapter(slug, chapter_title, user) do
       :ok ->
@@ -25,7 +25,7 @@ defmodule Incunabula.ChapterController do
     chaptertitle = Incunabula.Git.get_chapter_title(slug, chapterslug)
     changeset    = Incunabula.SaveEdit.changeset()
     savepath     = Path.join(["/books", slug, "chapters", chapterslug, "save"])
-    {_tag, contents} = Incunabula.Git.get_chapter(slug, chapterslug, :master)
+    {_tag, contents} = Incunabula.Git.get_chapter(slug, chapterslug)
     render conn, "show.html",
       changeset:    changeset,
       title:        booktitle,

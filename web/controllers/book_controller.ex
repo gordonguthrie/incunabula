@@ -30,7 +30,7 @@ defmodule Incunabula.BookController do
       has_chapters:        has_chapters?
   end
 
-  def create(conn, %{"book" => book} = params, user) do
+  def create(conn, %{"book" => book}, user) do
     %{"book_title" => book_title} = book
     case Incunabula.Git.create_book(book_title, user) do
       {:ok, slug} ->
