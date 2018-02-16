@@ -30,7 +30,7 @@ defmodule Incunabula.Git do
 
   @preview_htmlDir "preview_html"
   @chaff_htmlDir   "chaff_html"
-  @reviews_htmlDir "reviews_html"
+  @reviews_htmlDir "review_html"
 
   @title  "title.txt"
   @author "author.txt"
