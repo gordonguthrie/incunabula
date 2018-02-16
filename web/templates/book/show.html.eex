@@ -54,7 +54,7 @@
     label:        "Edit book title",
     modal:        "incunabula-edit_title",
     fieldbinding: "book-get_book_title",
-    button_title: "Save new book title",
+    button_title: "Save New Book Title",
     bound_topic:  "book:update_book_title:" <> @slug
     %>
 

@@ -34,7 +34,7 @@
     label:        "Edit chaff title",
     modal:        "incunabula-edit_title",
     fieldbinding: "book-get_chaff_title",
-    button_title: "Save new chaff title",
+    button_title: "Save New Chaff Title",
     bound_topic:  "book:update_chaff_title:"
     <> @slug <> ":chaff:" <> @chaffslug
     %>

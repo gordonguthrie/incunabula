@@ -39,7 +39,7 @@
     label:        "Edit chapter title",
     modal:        "incunabula-edit_title",
     fieldbinding: "book-get_chapter_title",
-    button_title: "Save new chapter title",
+    button_title: "Save New Chapter Title",
     bound_topic:  "book:update_chapter_title:"
     <> @slug <> ":chapter:" <> @chapterslug
     %>
