@@ -6,7 +6,15 @@
   </tr>
   <% else %>
   <%= for c <- @chapters do %>
-      <tr><td><div><a href="/books/<%= @slug %>/chapters/<%= c.chapter_slug %>"><%= c.chapter_title %></a></div></td></tr>
+      <tr>
+        <%= if c.status == :locked do %>
+        <td><div><%= c.chapter_title %></div></td>
+        <td><i class="lock icon"></i><small>under review</small></td>
+        <% else %>
+        <td><div><a href="/books/<%= @slug %>/chapters/<%= c.chapter_slug %>"><%= c.chapter_title %></a></div></td>
+        <td></td>
+        <% end %>
+      </tr>
       <% end %>
   <% end %>
 </table>

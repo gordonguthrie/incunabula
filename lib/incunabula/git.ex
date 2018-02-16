@@ -595,7 +595,6 @@ defmodule Incunabula.Git do
     bookdir       = get_book_dir(slug)
     chapter_title = do_get_chapter_title(slug, chapter_slug)
     currenttag    = get_current_tag(bookdir)
-    reviewbranch  = currenttag
     review_title  = chapter_title <> " " <> currenttag
     review_slug = Incunabula.Slug.to_slug(review_title)
     from    = Path.join([bookdir, @chaptersDir, chapter_slug <> ".eider"])
@@ -608,7 +607,7 @@ defmodule Incunabula.Git do
         {:ok, _} = File.copy(from, to)
         msg = "initial creation of " <> slug
         prefix = review_slug <> " copied from " <> chapter_slug
-        newrecord = new_review_record(review_title, reviewbranch)
+        newrecord = new_review_record(review_title, chapter_slug, currenttag)
         msg = "initial creation of " <> slug
         bookdir
         |> add_to_git(:all)
@@ -735,7 +734,7 @@ defmodule Incunabula.Git do
         |> commit_to_git("basic setup of directory")
         |> tag_git(0, 0, 1, 1, "initial creation of " <> slug, author)
         |> push_to_github(slug, :without_tags) # don't want tags on first create
-        |> push_to_channel("", "", "books-list")
+        |> push_to_channel("", "", "books:list")
         {:ok, slug}
       true ->
         {:error, "The book " <> slug <> " exists already"}
@@ -837,22 +836,47 @@ defmodule Incunabula.Git do
   end
 
   defp do_get(:reviews, slug) do
-    reviews = consult_file(get_book_dir(slug), @reviewsDB)
+    reviews = Incunabula.DB.getDB(get_book_dir(slug), @reviewsDB)
     _html   = Incunabula.FragController.get_reviews(slug, reviews)
   end
 
   defp do_get(:chaffs, slug) do
-    chaffs = consult_file(get_book_dir(slug), @chaffDB)
+    chaffs = Incunabula.DB.getDB(get_book_dir(slug), @chaffDB)
     _html  = Incunabula.FragController.get_chaffs(slug, chaffs)
   end
 
   defp do_get(:chapters, slug) do
-    chapters = consult_file(get_book_dir(slug), @chaptersDB)
-    _html    = Incunabula.FragController.get_chapters(slug, chapters)
+    chapters = Incunabula.DB.getDB(get_book_dir(slug), @chaptersDB)
+    reviews  = Incunabula.DB.getDB(get_book_dir(slug), @reviewsDB)
+    marked   = mark_review_status(chapters, reviews, [])
+    _html    = Incunabula.FragController.get_chapters(slug, marked)
+  end
+
+  defp mark_review_status([], _, acc), do: Enum.reverse(acc)
+
+  defp mark_review_status([h | t], reviews, acc) do
+    chapter_slug = Map.get(h, :chapter_slug)
+    review_status = get_status(reviews, chapter_slug, :unlocked)
+    newacc = Map.put(h, :status, review_status)
+    mark_review_status(t, reviews, [newacc| acc])
+  end
+
+  defp get_status([], _chapter_slug, acc), do: acc
+
+  defp get_status([h | t], chapter_slug, acc) do
+    case Map.get(h, :chapter_slug) do
+      ^chapter_slug ->
+        status = Map.get(h, :review_status)
+        case status do
+          "review closed" -> get_status(t, chapter_slug, acc)
+          _               -> :locked
+        end
+      _other -> get_status(t, chapter_slug, acc)
+    end
   end
 
   defp do_get(:images, slug) do
-    images = consult_file(get_book_dir(slug), @imagesDB)
+    images = Incunabula.DB.getDB(get_book_dir(slug), @imagesDB)
     _html  = Incunabula.FragController.get_images(slug, images)
   end
 
@@ -1237,11 +1261,12 @@ defmodule Incunabula.Git do
       creation:    creation}
   end
 
-  defp new_review_record(title, branch) do
+  defp new_review_record(title, chapter_slug, tag) do
     slug = Incunabula.Slug.to_slug(title)
     %{review_slug:   slug,
       review_title:  title,
-      branch:        branch,
+      chapter_slug:  chapter_slug,
+      tag:           tag,
       review_status: "in review"}
   end
 
