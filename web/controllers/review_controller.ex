@@ -5,6 +5,13 @@ defmodule Incunabula.ReviewController do
 
   plug :authenticate_user when action in [:index, :copy, :show]
 
+  def reconcile(conn, params, user) do
+    IO.inspect params
+    conn
+    |> put_flash(:error, "reconciliation is not built yet")
+    |> redirect(to: "/")
+  end
+
   def copy(conn, %{"copy" => review,
                    "slug" => slug}, user) do
     %{"chapter_slug" => chapter_slug} = review

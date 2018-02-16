@@ -17,31 +17,32 @@ defmodule Incunabula.Router do
   scope "/", Incunabula do
     pipe_through :browser # Use the default browser stack
 
-    get  "/",                                          PageController,    :index
-    get  "/books",                                     BookController,    :index
-    post "/book/new",                                  BookController,    :create
-    get  "/books/:slug",                               BookController,    :show
-    post "/books/:slug/chapter/new",                   ChapterController, :create
-    post "/books/:slug/chaff/new",                     ChaffController,   :new
-    post "/books/:slug/chaff/copy",                    ChaffController,   :copy
-    get  "/books/:slug/chaffs/:chaffslug",             ChaffController,   :show
-    post "/books/:slug/review/copy",                   ReviewController,  :copy
-    get  "/books/:slug/reviews/:reviewslug",           ReviewController,  :show
-    get  "/books/:slug/chapters/:chapterslug",         ChapterController, :show
-    get  "/books/:slug/chaffs/:chaffslug/preview",     PreviewController, :show
-    get  "/books/:slug/reviews/:reviewslug/preview",   PreviewController, :show
-    get  "/books/:slug/chapters/:chapterslug/preview", PreviewController, :show
-    get  "/books/:slug/chapters/:chapterslug/summary", PreviewController, :summary
-    post "/books/:slug/image/new",                     ImageController,   :create
-    get  "/books/:slug/images/:imageslug",             ImageController,   :show
-    get  "/books/:slug/chaff",                         ChaffController,   :index
-    get  "/books/:slug/reviews",                       ReviewController,  :index
-    get  "/books/:slug/chapter_order",                 OrderController,   :read
-    post "/books/:slug/chapter_order",                 OrderController,   :write
-    get  "/admin",                                     AdminController,   :index
-    get  "/login",                                     LoginController,   :index
-    post "/login",                                     LoginController,   :login
-    get  "/logout",                                    LoginController,   :logout
+    get  "/",                                               PageController,    :index
+    get  "/books",                                          BookController,    :index
+    post "/book/new",                                       BookController,    :create
+    get  "/books/:slug",                                    BookController,    :show
+    post "/books/:slug/chapter/new",                        ChapterController, :create
+    post "/books/:slug/chaff/new",                          ChaffController,   :new
+    post "/books/:slug/chaff/copy",                         ChaffController,   :copy
+    get  "/books/:slug/chaffs/:chaffslug",                  ChaffController,   :show
+    post "/books/:slug/review/copy",                        ReviewController,  :copy
+    get  "/books/:slug/reviews/:reviewslug",                ReviewController,  :show
+    get  "/books/:slug/chapters/:chapterslug",              ChapterController, :show
+    get  "/books/:slug/chaffs/:chaffslug/preview",          PreviewController, :show
+    get  "/books/:slug/reviews/:reviewslug/preview",        PreviewController, :show
+    get  "/books/:slug/reviews/:reviewslug/reconciliation", ReviewController,  :reconcile
+    get  "/books/:slug/chapters/:chapterslug/preview",      PreviewController, :show
+    get  "/books/:slug/chapters/:chapterslug/summary",      PreviewController, :summary
+    post "/books/:slug/image/new",                          ImageController,   :create
+    get  "/books/:slug/images/:imageslug",                  ImageController,   :show
+    get  "/books/:slug/chaff",                              ChaffController,   :index
+    get  "/books/:slug/reviews",                            ReviewController,  :index
+    get  "/books/:slug/chapter_order",                      OrderController,   :read
+    post "/books/:slug/chapter_order",                      OrderController,   :write
+    get  "/admin",                                          AdminController,   :index
+    get  "/login",                                          LoginController,   :index
+    post "/login",                                          LoginController,   :login
+    get  "/logout",                                         LoginController,   :logout
   end
 
   # Other scopes may use custom stacks.
