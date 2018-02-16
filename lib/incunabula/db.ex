@@ -101,15 +101,15 @@ defmodule Incunabula.DB do
   end
 
   defp filter([], _, _, _) do
-    exit(:no_match_of_key)
+    {:error, :no_match_of_key}
   end
 
   defp filter([h | t], returntype, fieldname, fieldvalue) do
     case Map.has_key?(h, fieldname) do
       false -> exit(:non_existant_fetch_key)
-      true ->  case Map.get(h, fieldname) do
-                 fieldvalue -> get_return(returntype, h)
-                 _          -> filter(t, returntype, fieldname, fieldvalue)
+      true  -> case Map.get(h, fieldname) do
+                 ^fieldvalue -> {:ok, get_return(returntype, h)}
+                 _           -> filter(t, returntype, fieldname, fieldvalue)
                end
     end
   end
