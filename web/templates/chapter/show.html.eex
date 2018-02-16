@@ -1,3 +1,4 @@
+<div id="incunabula-affect" data-role="chapter">
 <h2><a href="/books/<%= @slug %>"><%= @title %></a> -
   <em>
     <span id="book-get_chapter_title"
@@ -42,3 +43,4 @@
     bound_topic:  "book:update_chapter_title:"
     <> @slug <> ":chapter:" <> @chapterslug
     %>
+</div>

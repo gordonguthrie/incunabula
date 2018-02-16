@@ -16,27 +16,37 @@ defmodule Incunabula.DB do
   * the number of chaffs created
   * if any of these get > 100 I would be very surprised
   The databases here are all designed to be stored under git - hence the format
+  It is designed to be used in pipes so the update, replace, create fns
+  return the DB dir
   """
 
   def getDB(dir, file) do
     readDB(dir, file)
   end
 
+  def replaceDB(dir, file, terms) when is_list(terms) do
+    path = Path.join(dir, file)
+    contents = for t <- terms, do: :io_lib.format("~p.~n", [t])
+    :ok = File.write(path, contents)
+    dir
+  end
+
   def createDB(dir, file) do
-    writeDB(dir, file, [])
+    replaceDB(dir, file, [])
+    dir
   end
 
   def appendDB(dir, file, newrecord) do
     old = readDB(dir, file)
     new = old ++ [newrecord]
-    writeDB(dir, file, new)
+    replaceDB(dir, file, new)
   end
 
   def update_value(dir, file, keyfield, keyval, valfield, newval) do
     db = readDB(dir, file)
     case update(db, {:field, {valfield, newval}}, keyfield, keyval, @acc) do
       {:error, error} -> exit(error)
-      newdb           -> writeDB(dir, file, newdb)
+      newdb           -> replaceDB(dir, file, newdb)
     end
   end
 
@@ -44,7 +54,7 @@ defmodule Incunabula.DB do
     db = readDB(dir, file)
     case update(db, {:record, newrecord}, keyfield, keyval, @acc) do
       {:error, error} -> exit(error)
-      newdb           -> writeDB(dir, file, newdb)
+      newdb           -> replaceDB(dir, file, newdb)
     end
   end
 
@@ -113,10 +123,5 @@ defmodule Incunabula.DB do
     end
   end
 
-  defp writeDB(dir, file, terms) when is_list(terms) do
-    path = Path.join(dir, file)
-    contents = for t <- terms, do: :io_lib.format("~p.~n", [t])
-    :ok = File.write(path, contents)
-  end
 
 end

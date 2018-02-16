@@ -1,6 +1,7 @@
 defmodule Incunabula.BookChannel do
   use Incunabula.Web, :channel
 
+
   def join("book:" <> bookslug, _params, socket) do
     {route, topicparams} = parse_topic(bookslug)
     reply = get_reply(route, topicparams)
@@ -64,6 +65,12 @@ defmodule Incunabula.BookChannel do
   end
 
   # this is a push channel so we only reply the current tag
+  def get_reply(:save_review_edits, %{slug:        slug,
+                                      reviewslug: reviewslug}) do
+    _current_tag_msg = Incunabula.Git.get_current_tag_msg(slug)
+  end
+
+  # this is a push channel so we only reply the current tag
   def get_reply(:save_chapter_edits, %{slug:        slug,
                                        chapterslug: _chapterslug}) do
     _current_tag_msg = Incunabula.Git.get_current_tag_msg(slug)
@@ -98,6 +105,18 @@ defmodule Incunabula.BookChannel do
     :ok = Incunabula.Git.update_book_title(slug, new_title, user)
   end
 
+  def get_reply(:save_review_edits, topicparams, pushparams, user) do
+    %{slug:       slug,
+      reviewslug: reviewslug} = topicparams
+    %{"commit_title" => commit_title,
+      "commit_msg"   => commit_msg,
+      "data"         => data,
+      "tag_bump"     => tag_bump} = pushparams
+    tag = Incunabula.Git.update_review(slug, reviewslug, commit_title,
+      commit_msg, data, tag_bump, user)
+    tag
+  end
+
   def get_reply(:save_chapter_edits, topicparams, pushparams, user) do
     %{slug:        slug,
       chapterslug: chapterslug} = topicparams
@@ -106,7 +125,7 @@ defmodule Incunabula.BookChannel do
       "data"         => data,
       "tag_bump"     => tag_bump} = pushparams
       tag = Incunabula.Git.update_chapter(slug, chapterslug, commit_title,
-        commit_msg, data, tag_bump, user, :master)
+        commit_msg, data, tag_bump, user)
       tag
   end
 
@@ -177,6 +196,11 @@ defmodule Incunabula.BookChannel do
 
   defp parse_route(["update_book_title", slug]) do
     {:update_book_title, %{slug: slug}}
+  end
+
+  defp parse_route(["save_review_edits", slug, "review", reviewslug]) do
+    {:save_review_edits, %{slug:       slug,
+                           reviewslug: reviewslug}}
   end
 
   defp parse_route(["save_chaff_edits", slug, "chaff", chaffslug]) do

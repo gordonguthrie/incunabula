@@ -1,4 +1,4 @@
-<div id="incunabula-affect" data-role="chaff"></div>
+<div id="incunabula-affect" data-role="chaff">
 <h2><a href="/books/<%= @slug %>"><%= @title %></a> -
   <em class="incunabula-chaff">
     <span id="book-get_chaff_title"
@@ -38,3 +38,4 @@
     bound_topic:  "book:update_chaff_title:"
     <> @slug <> ":chaff:" <> @chaffslug
     %>
+</div>

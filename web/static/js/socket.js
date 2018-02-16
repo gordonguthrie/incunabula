@@ -23,12 +23,12 @@ var topic_router = []
 function sanitize(html){return $("div/>").text(html).html()}
 
 function draw(id, msg) {
-    //console.log("got new thing to draw", id, msg)
+    // console.log("got new thing to draw", id, msg)
     $("#" + id).html(msg)
 }
 
 function draw_many(klass, msg) {
-    console.log("got new thing to draw", klass, msg)
+    // console.log("got new thing to draw", klass, msg)
     $("." + klass).html(msg)
 }
 
@@ -42,16 +42,17 @@ function make_topic_router(topics) {
     Array.from(topics).forEach((t) => {
         let topic = t.getAttribute("topic")
         let channel = socket.channel(topic, {})
-        //console.log(topic)
+        // console.log(topic)
         let key = make_key(topic)
         //console.log(key)
         let route = router.get(key)
         //console.log(route)
         channel.join()
             .receive("ok", resp => {
-                //console.log("got response")
-                //console.log(resp)
-                //console.log(route.id)
+                // console.log("got response back")
+                // console.log(topic)
+                // console.log(resp)
+                // console.log(route.id)
                 route.draw_fn(route.id, resp)
             })
         .receive("error", resp => {
@@ -108,6 +109,9 @@ router.set("book:get_book_title",
             draw_fn: function(id, msg) {draw(id, msg)}})
 
 // some update routes
+router.set("book:save_review_edits",
+           {id:      "book-save_edits",
+            draw_fn: function(id, msg) {draw(id, msg)}})
 router.set("book:save_chaff_edits",
            {id:      "book-save_edits",
             draw_fn: function(id, msg) {draw(id, msg)}})

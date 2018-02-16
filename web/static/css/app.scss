@@ -89,7 +89,22 @@ body.pushable {
     color: rgba(0, 0, 0, 0.4);
 }
 
+//
+// do affect for different editors and shit
+//
 
+#incunabula-affect[data-role="chapter"] textarea {
+    box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.5);
+}
+
+
+#incunabula-affect[data-role="chaff"] textarea {
+    box-shadow: 3px 3px 3px rgba(128, 0, 128, 0.5);
+}
+
+#incunabula-affect[data-role="review"] textarea {
+    box-shadow: 3px 3px 3px rgba(0, 0, 255, 0.5);
+}
 
 
 /*                         */

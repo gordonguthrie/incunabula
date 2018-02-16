@@ -159,15 +159,13 @@
     <div class="ui form">
       <%= form_for @copyreviewchangeset, @copyreview, [class: "ui form"], fn f -> %>
       <div class="field">
-      <div class="field">
         <label>Pick a chapter to issue for review
-            <div class="book-get_chapters_dropdown incunabula-topic" topic="book:get_chapters_dropdown:<%= @slug %>"></div>
+          <div class="book-get_chapters_dropdown incunabula-topic" topic="book:get_chapters_dropdown:<%= @slug %>"></div>
         </label>
+        <%= error_tag f, :caption %>
       </div>
-      <%= error_tag f, :caption %>
+      <%= submit("Create Review", [class: "ui primary button"]) %>
+      <% end %>
     </div>
-    <%= submit("Create Review", [class: "ui primary button"]) %>
-    <% end %>
-  </div>
   </div>
 </div>
