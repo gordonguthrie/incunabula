@@ -1,7 +1,9 @@
-<%= if @reviews == [] do %>
-<p>There are no reviews to show</p>
-<% else %>
 <table class="ui striped table">
+  <%= if @reviews == [] do %>
+  <tr>
+    <td>There are no reviews to show</td>
+  </tr>
+  <% else %>
   <%= for r <- @reviews do %>
       <tr>
         <td>
@@ -10,5 +12,5 @@
         <td><%= r.review_status %></td>
       </tr>
       <% end %>
+   <% end %>
 </table>
-<% end %>
