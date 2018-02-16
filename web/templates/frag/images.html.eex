@@ -1,5 +1,9 @@
 <%= if @images == [] do %>
-<p>There are no images to show</p>
+<table class="ui striped table">
+  <tr>
+    <td>There are no images to show</td>
+  </tr>
+</table>
 <% else %>
     <div class="ui two stackable cards">
 <%= for i <- @images do %>
