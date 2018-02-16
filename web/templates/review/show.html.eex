@@ -1,12 +1,15 @@
 <div id="incunabula-affect" data-role="review">
-<h2><a href="/books/<%= @slug %>"><%= @title %></a> -
+<h2>
   <em>
       <%= @reviewtitle %>
   </em>
 </h2>
-
-<small><a href='<%= Path.join(["/books", @slug, "reviews", @reviewslug, "preview"]) %>' target='blank'>Preview this review</a></small>
-
+<p>
+  a review of a chapter for the book <a href="/books/<%= @slug %>"><%= @title %></a>
+</p>
+<p>
+  <small><a href='<%= Path.join(["/books", @slug, "reviews", @reviewslug, "preview"]) %>' target='blank'>Preview this review</a></small>
+</p>
 <%= render Incunabula.EditorView, "editor.html",
     changeset:     @changeset,
     title:         @title,

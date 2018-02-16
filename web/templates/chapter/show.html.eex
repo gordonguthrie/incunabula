@@ -1,5 +1,5 @@
 <div id="incunabula-affect" data-role="chapter">
-<h2><a href="/books/<%= @slug %>"><%= @title %></a> -
+<h2></a>
   <em>
     <span id="book-get_chapter_title"
           class="incunabula-topic"
@@ -13,7 +13,9 @@
      modal="incunabula-edit_title">
   </i>
 </h2>
-
+<p>
+  a chapter in the book <em><a href="/books/<%= @slug %>"><%= @title %></em>
+</p>
 <p>
   <small>
     <a href='<%= Path.join(["/books", @slug, "chapters", @chapterslug, "preview"]) %>' target='blank'>Preview this chapter</a>

@@ -1,5 +1,5 @@
 <div id="incunabula-affect" data-role="chaff">
-<h2><a href="/books/<%= @slug %>"><%= @title %></a> -
+<h2>
   <em class="incunabula-chaff">
     <span id="book-get_chaff_title"
           class="incunabula-topic"
@@ -15,8 +15,12 @@
   </em>
 </h2>
 
+<p>
+ chaff for the book  <a href="/books/<%= @slug %>"><%= @title %></a>
+</p>
+<p>
 <small><a href='<%= Path.join(["/books", @slug, "chaffs", @chaffslug, "preview"]) %>' target='blank'>Preview this chaff</a></small>
-
+</p>
 <%= render Incunabula.EditorView, "editor.html",
     changeset:     @changeset,
     title:         @title,
