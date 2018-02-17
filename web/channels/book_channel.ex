@@ -35,11 +35,11 @@ defmodule Incunabula.BookChannel do
   end
 
   def get_reply(:get_reviews, %{slug: slug}) do
-    chaff = Incunabula.Git.get_reviews(slug)
+    _reviews = Incunabula.Git.get_reviews(slug)
   end
 
   def get_reply(:get_chaffs, %{slug: slug}) do
-    chaff = Incunabula.Git.get_chaffs(slug)
+    _chaff = Incunabula.Git.get_chaffs(slug)
   end
 
   def get_reply(:get_chapters, %{slug: slug}) do
@@ -50,23 +50,23 @@ defmodule Incunabula.BookChannel do
     _images = Incunabula.Git.get_images(slug)
   end
 
-  def get_reply(:update_chaff_title, %{slug:       slug,
-                                       chaff_slug: chaff_slug}) do
-    :okchaff
+  def get_reply(:update_chaff_title, %{slug:       _slug,
+                                       chaff_slug: _chaff_slug}) do
+    :ok
   end
 
-  def get_reply(:update_chapter_title, %{slug:         slug,
-                                         chapter_slug: chapter_slug}) do
-    :okchapter
+  def get_reply(:update_chapter_title, %{slug:         _slug,
+                                         chapter_slug: _chapter_slug}) do
+    :ok
   end
 
-  def get_reply(:update_book_title, %{slug: slug}) do
+  def get_reply(:update_book_title, %{slug: _slug}) do
     :ok
   end
 
   # this is a push channel so we only reply the current tag
-  def get_reply(:save_review_edits, %{slug:        slug,
-                                      reviewslug: reviewslug}) do
+  def get_reply(:save_review_edits, %{slug:       slug,
+                                      reviewslug: _reviewslug}) do
     _current_tag_msg = Incunabula.Git.get_current_tag_msg(slug)
   end
 
@@ -166,10 +166,6 @@ defmodule Incunabula.BookChannel do
 
   defp parse_route(["get_chapters", slug]) do
     {:get_chapters, %{slug: slug}}
-  end
-
-  defp parse_route(["get_chaffs", slug]) do
-    {:get_chaffs, %{slug: slug}}
   end
 
   defp parse_route(["get_chaffs", slug]) do
