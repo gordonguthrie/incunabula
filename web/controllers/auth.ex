@@ -3,13 +3,32 @@ defmodule Incunabula.Auth do
   import Phoenix.Controller
 
   def init([]) do
-    users = IncunabulaUtilities.Users.get_users()
-    users
   end
 
   def call(conn, _opts) do
     user_id = get_session(conn, :user_id)
     put_current_user(conn, user_id)
+  end
+
+  def authenticate_admin(conn, _opts) do
+    cond do
+      user = conn.assigns.current_user ->
+        case user do
+          "admin" ->
+            conn
+            |> put_current_user(user)
+          _other ->
+            conn
+            |> put_flash(:error, "You must be admin to peform this action")
+            |> redirect(to: "/")
+            |> halt()
+        end
+      true ->
+        conn
+        |> put_flash(:error, "You must be logged in as admin to access that page")
+        |> redirect(to: "/")
+        |> halt()
+    end
   end
 
   def authenticate_user(conn, _opts) do
@@ -31,4 +50,5 @@ defmodule Incunabula.Auth do
     |> assign(:current_user, user)
     |> assign(:user_token, token)
   end
+
 end

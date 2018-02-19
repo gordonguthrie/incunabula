@@ -7,7 +7,7 @@ defmodule Incunabula.Mixfile do
      elixir: "~> 1.2",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
-     build_embedded: Mix.env == :prod,
+     build_embedded:  Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps()]
   end
@@ -24,7 +24,8 @@ defmodule Incunabula.Mixfile do
        :cowboy,
        :logger,
        :gettext,
-       :phoenix_ecto
+       :phoenix_ecto,
+       :incunabula_utilities
      ]]
   end
 
@@ -36,19 +37,17 @@ defmodule Incunabula.Mixfile do
   #
   # Type `mix help deps` for examples and options.
   defp deps do
-    [{:phoenix,             "~> 1.2.1"},
-     {:phoenix_pubsub,      "~> 1.0"},
-     {:phoenix_ecto,        "~> 3.0"},
-     {:phoenix_html,        "~> 2.6"},
-     {:phoenix_live_reload, "~> 1.0", only: :dev},
-     {:gettext,             "~> 0.11"},
-     {:cowboy,              "~> 1.0"},
+    [{:phoenix,              "~> 1.2.1"},
+     {:phoenix_pubsub,       "~> 1.0"},
+     {:phoenix_ecto,         "~> 3.0"},
+     {:phoenix_html,         "~> 2.6"},
+     {:phoenix_live_reload,  "~> 1.0", only: :dev},
+     {:gettext,              "~> 0.11"},
+     {:cowboy,               "~> 1.0"},
      # {:diff,                git: "https://github.com/gordonguthrie/diff.git"},
-     # add_users is messy because it builds an escript as well as providing
-     # functionality - so the app has the escripts name
-     {:add_users,           git: "https://github.com/gordonguthrie/incunabula_utilities.git"},
-     {:pbkdf2_elixir,       "~> 0.12.3"},
-     {:eiderdown,           git: "https://github.com/gordonguthrie/eiderdown.git"}
+     {:incunabula_utilities, git: "https://github.com/gordonguthrie/incunabula_utilities.git"},
+     {:pbkdf2_elixir,        "~> 0.12.3"},
+     {:eiderdown,            git: "https://github.com/gordonguthrie/eiderdown.git"}
     ]
   end
 

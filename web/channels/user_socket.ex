@@ -6,6 +6,7 @@ defmodule Incunabula.UserSocket do
   ## Channels
   channel "book:*",  Incunabula.BookChannel
   channel "books:*", Incunabula.BooksChannel
+  channel "admin:*", Incunabula.AdminChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket

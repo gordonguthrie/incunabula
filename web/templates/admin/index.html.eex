@@ -1,18 +1,60 @@
-<h2 class="ui header">Admin</h2>
+<h2>Users</h2>
+  <div id="admin-get_users" class="incunabula-topic" topic="admin:get_users"></div>
+  <button class="incunabula-show ui primary button" modal="incunabula-add-user">
+    Add A User
+  </button>
+  <button class="incunabula-show ui primary button" modal="incunabula-change-password">
+    Change A Users Password
+  </button>
 
-<table class="ui striped table">
-  <tr>
-    <td><strong>Users</strong></td>
-    <td>
-      <%= hd(@users) %>
-    </td>
-  </tr>
-  <%= for u <- tl(@users) do %>
-      <tr>
-        <td></td>
-        <td>
-          <%= u %>
-        </td>
-      </tr>
+<div class="incunabula-add-user ui small modal">
+  <div class="content">
+    <div class="ui form">
+      <%= form_for @adduserchangeset, @adduser, [class: "ui form"], fn f -> %>
+      <div class="field">
+        <label>Create a user
+          <%= text_input(f, :username,
+            [class: :field,
+            placeholder: "User Name"]) %>
+        </label>
+        <%= error_tag f, :caption %>
+      </div>
+      <div class="field">
+        <label>Password (must be 12 characters or more)
+          <%= password_input(f, :password,
+            [class: :field,
+            placeholder: "Password"]) %>
+        </label>
+        <%= error_tag f, :caption %>
+      </div>
+      <%= submit("Create User", [class: "ui primary button"]) %>
       <% end %>
-</table>
+    </div>
+  </div>
+</div>
+
+<div class="incunabula-change-password ui small modal">
+  <div class="content">
+    <div class="ui form">
+      <%= form_for @adduserchangeset, @changepassword, [class: "ui form"], fn f -> %>
+      <div class="field"
+        <label>User
+          <%= text_input(f, :username,
+            [class: :field,
+            placeholder: "User Name"]) %>
+        </label>
+        <%= error_tag f, :caption %>
+      </div>
+      <div class="field">
+        <label>New Password (must be 12 characters or more)
+          <%= password_input(f, :password,
+            [class: :field,
+            placeholder: "Password"]) %>
+        </label>
+        <%= error_tag f, :caption %>
+      </div>
+      <%= submit("Change Password", [class: "ui primary button"]) %>
+      <% end %>
+    </div>
+  </div>
+</div>

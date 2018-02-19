@@ -19,7 +19,7 @@ import $ from "jquery"
 // Local files can be imported directly using relative
 // paths "./socket" or full ones "web/static/js/socket".
 
-import {socket, socket_push} from "./socket"
+import {socket, socket_push, socket_init} from "./socket"
 
 var incunabula = {};
 
@@ -51,7 +51,7 @@ incunabula.setup_modals = function() {
     // for bound field modals we need to copy the value
     // that we are editing over to the modal dialog box
     // we do this at open dialog time because the value we wish
-    // to edit is - by defintion - coming via a channel and won't be here
+    // to edit is - by definition - coming via a channel and won't be here
     // at load time
     $(".incunabula-show").on('click', function () {
         var modalclass = $(this).attr("modal");
@@ -290,3 +290,26 @@ incunabula.reorder_chapters_fn = function (direction, row) {
     incunabula.chapters[row_index] = incunabula.chapters[swap];
     incunabula.chapters[swap] = tmp;
 };
+
+//
+// set up delete buttons for users
+//
+
+incunabula.bind_delete_icons = function () {
+    $("[data-post]").on('click', function () {
+        var url = $(this).attr("data-post");
+        // gotta steal a CSRF token
+        var inputs = $("input[name='_csrf_token']");
+        var csrf_token = $(inputs[0]).val();
+        var json = {"_csrf_token": csrf_token}
+        $.post(url,
+               json,
+               function (resp) {
+               });
+    });
+};
+
+//
+// now setup the socket to have access to what we have defined
+//
+socket_init(incunabula);

@@ -1,0 +1,14 @@
+<table class="ui striped unstackable table">
+<%= for u <- @users do %>
+   <tr>
+     <td><%= u %></td>
+     <td class="right aligned">
+       <%= if u != "admin" do %>
+       <div data-post="/admin/deleteuser/<%= u %>">
+         <i class="trash outline icon"></i>
+       </div>
+         <% end %>
+     </td>
+   </tr>
+<% end %>
+</table>

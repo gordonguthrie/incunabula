@@ -12,7 +12,7 @@ defmodule Incunabula.LoginController do
   def login(conn, %{"login" => login}, _user) do
     %{"username" => username,
       "password" => password} = login
-    case IncunabulaUtilities.Users.is_login_valid(username, password) do
+    case IncunabulaUtilities.Users.is_login_valid?(username, password) do
       true ->
         conn
         |> put_session(:user_id, username)

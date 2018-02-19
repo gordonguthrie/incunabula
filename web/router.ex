@@ -40,6 +40,9 @@ defmodule Incunabula.Router do
     get  "/books/:slug/chapter_order",                      OrderController,   :read
     post "/books/:slug/chapter_order",                      OrderController,   :write
     get  "/admin",                                          AdminController,   :index
+    post "/admin/adduser",                                  AdminController,   :adduser
+    post "/admin/changepassword",                           AdminController,   :changepassword
+    post "/admin/deleteuser/:username",                     AdminController,   :deleteuser
     get  "/login",                                          LoginController,   :index
     post "/login",                                          LoginController,   :login
     get  "/logout",                                         LoginController,   :logout

@@ -5,6 +5,8 @@
 // and connect at the socket path in "lib/my_app/endpoint.ex":
 import {Socket} from "phoenix"
 
+let incunabula = {}
+
 // Create our socket
 let socket = new Socket("/socket", {params: {token: window.userToken}})
 
@@ -22,8 +24,16 @@ var topic_router = []
 //
 function sanitize(html){return $("div/>").text(html).html()}
 
+function draw_users(id, msg) {
+    // need to set up modals
+    // draw them first, then bind functions
+    draw(id, msg)
+    incunabula.bind_delete_icons()
+    incunabula.setup_modals()
+}
+
 function draw(id, msg) {
-    // console.log("got new thing to draw", id, msg)
+    //console.log("got new thing to draw", id, msg)
     $("#" + id).html(msg)
 }
 
@@ -44,9 +54,9 @@ function make_topic_router(topics) {
         let channel = socket.channel(topic, {})
         // console.log(topic)
         let key = make_key(topic)
-        //console.log(key)
+        // console.log(key)
         let route = router.get(key)
-        //console.log(route)
+        // console.log(route)
         channel.join()
             .receive("ok", resp => {
                 // console.log("got response back")
@@ -81,6 +91,11 @@ function make_topic_router(topics) {
 router.set("books:list",
            {id:      "books-list",
             draw_fn: function(id, msg) {draw(id, msg)}})
+
+// router for admin
+router.set("admin:get_users",
+           {id: "admin-get_users",
+            draw_fn: function(id, msg) {draw_users(id, msg)}})
 
 // router for a particular book
 router.set("book:get_reviews",
@@ -137,10 +152,17 @@ socket.connect()
 topic_router = make_topic_router(topics)
 
 export function socket_push(topic, msg) {
+    // console.log("pushing on socket")
+    // console.log(topic)
     let key = make_key(topic)
+    // console.log(key)
     topic_router[key].push(topic, msg)
         .receive("ok", resp => {console.log("got ok")})
         .receive("error", e => console.log(e))
+}
+
+export function socket_init(external_object) {
+    incunabula = external_object
 }
 
 export default socket
