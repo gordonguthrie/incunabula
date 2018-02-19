@@ -21,6 +21,7 @@ defmodule Incunabula.Router do
     get  "/books",                                          BookController,    :index
     post "/book/new",                                       BookController,    :create
     get  "/books/:slug",                                    BookController,    :show
+    get  "/books/:slug/history",                            BookController,    :history
     post "/books/:slug/chapter/new",                        ChapterController, :create
     post "/books/:slug/chaff/new",                          ChaffController,   :new
     post "/books/:slug/chaff/copy",                         ChaffController,   :copy

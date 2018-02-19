@@ -44,4 +44,13 @@ defmodule Incunabula.BookController do
     end
   end
 
+  def history(conn, %{"slug" => slug}, user) do
+    history   = Incunabula.Git.get_history(slug)
+    booktitle = Incunabula.Git.get_book_title(slug)
+    render conn, "history.html",
+      bookslug:    slug,
+      booktitle:   booktitle,
+      history:     history
+  end
+
 end

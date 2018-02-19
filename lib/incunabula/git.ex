@@ -153,6 +153,10 @@ defmodule Incunabula.Git do
     GenServer.call(__MODULE__, {:create_book, {book_title, author}}, @timeout)
   end
 
+  def get_history(slug) do
+    GenServer.call(__MODULE__, {:get_history, slug}, @timeout)
+  end
+
   def get_chapters_dropdown(slug) do
     GenServer.call(__MODULE__, {:get_chapters_dropdown, slug}, @timeout)
   end
@@ -241,6 +245,11 @@ defmodule Incunabula.Git do
   #
   # call backs
   #
+
+  def handle_call({:get_history, slug}, _from, state) do
+    reply = do_get_history(slug)
+    {:reply, reply, state}
+  end
 
   def handle_call({:has_chapters?, slug}, _from, state) do
     reply = case consult_file(get_book_dir(slug), @chaptersDB) do
@@ -380,6 +389,43 @@ defmodule Incunabula.Git do
   # for the message channel via a controller/view
   def handle_info({ref, {200, _, _}}, socket) when is_reference(ref) do
     {:noreply, socket}
+  end
+
+  defp do_get_history(slug) do
+    bookdir = get_book_dir(slug)
+    args = [
+      "tag",
+      "-n"
+    ]
+    {rawhistory, 0} = System.cmd("git", args, [cd: bookdir])
+    process_raw_history(rawhistory)
+  end
+
+  defp process_raw_history(rawhistory) do
+    lines = String.split(rawhistory, "\n")
+    newlines = for l <- lines, do: process_line(l)
+    parsed_lines = Enum.reverse(Enum.sort(newlines))
+    for {{npub, nrel, nmajor, nminor}, msg} <- parsed_lines do
+      %{version: %{publication: npub,
+                   release:     nrel,
+                   major:       nmajor,
+                   minor:       nminor},
+        msg: msg}
+    end
+  end
+
+  defp process_line(""), do: ""
+
+  defp process_line(line) do
+    [publication, release, major | rest] = String.split(line, ".")
+    newrest = Enum.join(rest, ".")
+    [minor | newrest2] = String.split(newrest, " ")
+    newrest3 = String.strip(Enum.join(newrest2, " "))
+    npub   = String.to_integer(publication)
+    nrel   = String.to_integer(release)
+    nmajor = String.to_integer(major)
+    nminor = String.to_integer(minor)
+    {{npub, nrel, nmajor, nminor}, newrest3}
   end
 
   defp do_load_image(slug, %{"image_title"    => image_title,

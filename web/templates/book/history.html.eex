@@ -1,0 +1,23 @@
+<h2> History of <a href="/books/<%= @bookslug %>"><%= @booktitle %></a></h2>
+
+<table class="ui striped stackable definition table">
+  <%= if @history == [] do %>
+  <tr>
+    <td>There is no history</td>
+  </tr>
+  <% else %>
+  <tr>
+    <thead>
+      <tr>
+        <th>Version</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+  <%= for h <- @history do %>
+      <tr>
+        <td><%= h.version.publication %>.<%= h.version.release %>.<%= h.version.major %>.<%= h.version.minor %></td>
+        <td><%= h.msg %></td>
+      </tr>
+      <% end %>
+      <% end %>
+</table>
