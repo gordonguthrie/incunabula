@@ -34,7 +34,7 @@ incunabula.setup_modals = function() {
                 .attr("topic");
             $(button).on('click', function () {
                 var val = $("[data-fieldtarget='" + inputbinding
-                               + "'] input").val();
+                            + "'] input").val();
                 socket_push(topic, {field: val});
                 // no, even I do not think this is elegant
                 $(this).
@@ -167,11 +167,11 @@ if ($(".tabular.menu").length) {
         $("a[data-tab='chaff']").addClass("active");
         $(".active.segment").removeClass("active");
         $("div[data-tab='chaff']").addClass("active");
-    } else if (window.location.hash == "#reviews") {
+    } else if (window.location.hash == "#reviewing") {
         $(".active.item").removeClass("active");
-        $("a[data-tab='reviews']").addClass("active");
+        $("a[data-tab='reviewing']").addClass("active");
         $(".active.segment").removeClass("active");
-        $("div[data-tab='reviews']").addClass("active");
+        $("div[data-tab='reviewing']").addClass("active");
     }
 }
 

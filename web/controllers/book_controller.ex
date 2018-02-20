@@ -12,8 +12,9 @@ defmodule Incunabula.BookController do
   end
 
   def show(conn, %{"slug"  => slug}, _user) do
-    booktitle     = Incunabula.Git.get_book_title(slug)
-    has_chapters? = Incunabula.Git.has_chapters?(slug)
+    booktitle      = Incunabula.Git.get_book_title(slug)
+    has_chapters?  = Incunabula.Git.has_chapters?(slug)
+    has_reviewers? = Incunabula.Git.has_reviewers?(slug)
     render conn, "show.html",
       slug:                slug,
       title:               booktitle,
@@ -22,12 +23,15 @@ defmodule Incunabula.BookController do
       newchaffchangeset:   Incunabula.Chaff.newchangeset(),
       copychaffchangeset:  Incunabula.Chaff.copychangeset(),
       copyreviewchangeset: Incunabula.Review.copychangeset(),
+      reviewerchangeset:   Incunabula.Reviewer.changeset(),
       newchapter:          Path.join(["/books", slug, "chapter/new"]),
       newimage:            Path.join(["/books", slug, "image/new"]),
       newchaff:            Path.join(["/books", slug, "chaff/new"]),
       copychaff:           Path.join(["/books", slug, "chaff/copy"]),
       copyreview:          Path.join(["/books", slug, "review/copy"]),
-      has_chapters:        has_chapters?
+      newreviewer:         Path.join(["/books", slug, "newreviewer"]),
+      has_chapters:        has_chapters?,
+      has_reviewers:       has_reviewers?
   end
 
   def create(conn, %{"book" => book}, user) do

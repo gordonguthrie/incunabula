@@ -1,0 +1,7 @@
+<%= if @users != [] do %>
+<select id="insunabula-users" name="new_reviewer[username]">
+  <%= for u <- @users do %>
+      <option value="<%= u %>"><%= u %></option>
+      <% end %>
+</select>
+<% end %>

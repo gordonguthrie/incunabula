@@ -18,10 +18,11 @@ defmodule Incunabula.Git do
   # Define the various files and directories
   #
 
-  @chaptersDB "chapters.db"
-  @imagesDB   "images.db"
-  @chaffDB    "chaff.db"
-  @reviewsDB  "reviews.db"
+  @chaptersDB  "chapters.db"
+  @imagesDB    "images.db"
+  @chaffDB     "chaff.db"
+  @reviewsDB   "reviews.db"
+  @reviewersDB "reviewers.db"
 
   @chaptersDir "chapters"
   @imagesDir   "images"
@@ -51,6 +52,18 @@ defmodule Incunabula.Git do
     {:ok, []}
   end
 
+  def add_reviewer(slug, username, user) do
+    GenServer.call(__MODULE__, {:add_reviewer, {slug, username, user}}, @timeout)
+  end
+
+  def remove_reviewer(slug, username, user) do
+    GenServer.call(__MODULE__, {:remove_reviewer, {slug, username, user}}, @timeout)
+  end
+
+  def has_reviewers?(slug) do
+    GenServer.call(__MODULE__, {:has_reviewers?, slug}, @timeout)
+  end
+
   def has_chapters?(slug) do
     GenServer.call(__MODULE__, {:has_chapters?, slug}, @timeout)
   end
@@ -59,13 +72,15 @@ defmodule Incunabula.Git do
    GenServer.call(__MODULE__, {:load_image, {slug, image, user}}, @timeout)
   end
 
-  def copy_chapter_to_review(_slug, "", _user) do
-    {:error, "must specify a chapter to copy"}
+  def copy_chapter_to_review(_slug, chapter, reviewer, _user)
+  when chapter == "" or
+    reviewer   == "" do
+    {:error, "must specify a chapter to copy and a reviewer"}
   end
 
-  def copy_chapter_to_review(slug, chapter_slug, user) do
+  def copy_chapter_to_review(slug, chapter_slug, reviewer, user) do
     GenServer.call(__MODULE__, {:copy_chapter_to_review,
-                                {slug, chapter_slug, user}}, @timeout)
+                                {slug, chapter_slug, reviewer, user}}, @timeout)
   end
 
   def copy_chapter_to_chaff(_slug, _chapter_slug, "", _user) do
@@ -178,6 +193,14 @@ defmodule Incunabula.Git do
     GenServer.call(__MODULE__, {:get_book_title, slug}, @timeout)
   end
 
+  def get_raw_reviewers(slug) do
+    GenServer.call(__MODULE__, {:get_reviewers, :raw, slug}, @timeout)
+  end
+
+  def get_reviewers(slug) do
+    GenServer.call(__MODULE__, {:get_reviewers, :html, slug}, @timeout)
+  end
+
   def get_review(slug, reviewslug) do
     GenServer.call(__MODULE__, {:get_review, {slug, reviewslug}}, @timeout)
   end
@@ -246,138 +269,102 @@ defmodule Incunabula.Git do
   # call backs
   #
 
-  def handle_call({:get_history, slug}, _from, state) do
-    reply = do_get_history(slug)
+  def handle_call(call, _from, state) do
+    reply = case call do
+              {:get_history, slug} ->
+                do_get_history(slug)
+
+              {:add_reviewer,  {slug, username, user}} ->
+                do_add_reviewer(slug, username, user)
+
+              {:remove_reviewer,  {slug, username, user}} ->
+                do_remove_reviewer(slug, username, user)
+
+              {:has_reviewers?,   slug} ->
+                has(@reviewersDB, slug)
+
+              {:has_chapters?,   slug} ->
+                has(@chaptersDB, slug)
+
+              {:load_image,  {slug, image, user}} ->
+                do_load_image(slug, image, user)
+
+              {:copy_chapter_to_review,  {slug, chapter_slug, reviewer, user}} ->
+                do_copy_chapter_to_review(slug, chapter_slug, reviewer, user)
+
+              {:copy_chapter_to_chaff,  {slug, chapter_slug, chaff_title, user}} ->
+                do_copy_chapter_to_chaff(slug, chapter_slug, chaff_title, user)
+
+              {:create,  {type, slug, chapter_title, user}} ->
+                do_create(type, slug, chapter_title, user)
+
+              {:update_chapter_order,  {slug, new_chapters, user}} ->
+                do_update_chapter_order(slug, new_chapters, user)
+
+              {:update_title,  {type, slug, ch_slug, new_title, user}} ->
+                do_update_title(type, slug, ch_slug, new_title, user)
+
+              {:update_book_title,  {slug, new_title, user}} ->
+                do_update_book_title(slug, new_title, user)
+
+              {:update_review,  {slug, review_slug, commit_title, commit_msg, data, tag_bump, user}} ->
+                do_update_review(slug, review_slug, commit_title, commit_msg, data, tag_bump, user)
+
+              {:update_chaff,  {slug, chaff_slug, commit_title, commit_msg, data, tag_bump, user}} ->
+                do_update_chaff(slug, chaff_slug, commit_title, commit_msg, data, tag_bump, user)
+
+              {:update_chapter,  {slug, chapter_slug, commit_title, commit_msg, data, tag_bump, user}} ->
+                do_update_chapter(slug, chapter_slug, commit_title, commit_msg, data, tag_bump, user)
+
+              {:create_book,  {book_title, author}} ->
+                do_create_book(book_title, author)
+
+              {:get_tag_msg, slug} ->
+                do_get_tag_msg(get_book_dir(slug))
+
+              {:get_book_title, slug} ->
+                {:ok, title} = read_file(get_book_dir(slug), @title)
+                title
+
+              {:get_chapters_dropdown, slug} ->
+                do_get_chapters_dropdown(slug)
+
+              {:get_reviewers, format, slug} ->
+                do_get_reviewers(format, slug)
+
+              {:get_review, {slug, reviewslug}} ->
+                do_get_text(slug, :review, reviewslug)
+
+              {:get_chaff, {slug, chaffslug}} ->
+                do_get_text(slug, :chaff, chaffslug)
+
+              {:get_chapter, {slug, chapterslug}} ->
+                do_get_text(slug, :chapter, chapterslug)
+
+              {:get_review_title, {slug, reviewslug}} ->
+                do_get_review_title(slug, reviewslug)
+
+              {:get_chaff_title, {slug, chaffslug}} ->
+                do_get_chaff_title(slug, chaffslug)
+
+              {:get_chapter_title, {slug, chapterslug}} ->
+                do_get_chapter_title(slug, chapterslug)
+
+              {:get_chapters_json, slug} ->
+                do_get_chapters_json(slug)
+
+              {:get, {type, slug}} ->
+                do_get(type, slug)
+
+              :get_books ->
+                do_get_books()
+
+              {:read, {slug, file}} ->
+                read_file(get_book_dir(slug), file)
+            end
     {:reply, reply, state}
   end
 
-  def handle_call({:has_chapters?, slug}, _from, state) do
-    reply = case consult_file(get_book_dir(slug), @chaptersDB) do
-      [] -> false
-      _  -> true
-    end
-    {:reply, reply, state}
-  end
-
-  def handle_call({:load_image, {slug, image, user}}, _from, state) do
-    {:reply, do_load_image(slug, image, user), state}
-  end
-
-  def handle_call({:copy_chapter_to_review, {slug, chapter_slug, user}},
-    _from, state) do
-    {:reply, do_copy_chapter_to_review(slug, chapter_slug, user), state}
-  end
-
-  def handle_call({:copy_chapter_to_chaff,
-                   {slug, chapter_slug, chaff_title, user}},
-    _from, state) do
-    reply = do_copy_chapter_to_chaff(slug, chapter_slug, chaff_title, user)
-    {:reply, reply, state}
-  end
-
-  def handle_call({:create, {type, slug, chapter_title, user}}, _from, state) do
-    {:reply, do_create(type, slug, chapter_title, user), state}
-  end
-
-  def handle_call({:update_chapter_order, {slug, new_chapters, user}},
-    _from, state) do
-    {:reply, do_update_chapter_order(slug, new_chapters, user), state}
-  end
-
-  def handle_call({:update_title, {type, slug, ch_slug, new_title, user}},
-    _from, state) do
-    {:reply, do_update_title(type, slug, ch_slug, new_title, user), state}
-  end
-
-  def handle_call({:update_book_title, {slug, new_title, user}},
-    _from, state) do
-    {:reply, do_update_book_title(slug, new_title, user), state}
-  end
-
-  def handle_call({:update_review, {slug, review_slug,
-                                   commit_title, commit_msg,
-                                    data, tag_bump, user}}, _from, state) do
-    reply = do_update_review(slug, review_slug, commit_title, commit_msg,
-      data, tag_bump, user)
-    {:reply, reply, state}
-  end
-
-
-  def handle_call({:update_chaff, {slug, chaff_slug,
-                                   commit_title, commit_msg,
-                                   data, tag_bump, user}}, _from, state) do
-    reply = do_update_chaff(slug, chaff_slug, commit_title, commit_msg,
-      data, tag_bump, user)
-    {:reply, reply, state}
-  end
-
-  def handle_call({:update_chapter, {slug, chapter_slug,
-                                     commit_title, commit_msg,
-                                     data, tag_bump, user}},
-    _from, state) do
-    reply = do_update_chapter(slug, chapter_slug, commit_title, commit_msg,
-      data, tag_bump, user)
-    {:reply, reply, state}
-  end
-
-  def handle_call({:create_book, {book_title, author}}, _from, state) do
-    {:reply, do_create_book(book_title, author), state}
-  end
-
-  def handle_call({:get_tag_msg, slug}, _from, state) do
-    {:reply, do_get_tag_msg(get_book_dir(slug)), state}
-  end
-
-  def handle_call({:get_book_title, slug}, _from, state) do
-    {:ok, title} = read_file(get_book_dir(slug), @title)
-    {:reply, title, state}
-  end
-
-  def handle_call({:get_chapters_dropdown, slug}, _from, state) do
-    {:reply, do_get_chapters_dropdown(slug), state}
-  end
-
-  def handle_call({:get_review, {slug, reviewslug}}, _from, state) do
-    # reviews are never on master
-    {:reply, do_get_text(slug, :review, reviewslug), state}
-  end
-
-  def handle_call({:get_chaff, {slug, chaffslug}}, _from, state) do
-    # chaffs are always on master
-    {:reply, do_get_text(slug, :chaff, chaffslug), state}
-  end
-
-  def handle_call({:get_chapter, {slug, chapterslug}}, _from, state) do
-    {:reply, do_get_text(slug, :chapter, chapterslug), state}
-  end
-
-  def handle_call({:get_review_title, {slug, reviewslug}}, _from, state) do
-    {:reply, do_get_review_title(slug, reviewslug), state}
-  end
-
-  def handle_call({:get_chaff_title, {slug, chaffslug}}, _from, state) do
-    {:reply, do_get_chaff_title(slug, chaffslug), state}
-  end
-
-  def handle_call({:get_chapter_title, {slug, chapterslug}}, _from, state) do
-    {:reply, do_get_chapter_title(slug, chapterslug), state}
-  end
-
-  def handle_call({:get_chapters_json, slug}, _from, state) do
-    {:reply, do_get_chapters_json(slug), state}
-  end
-
-  def handle_call({:get, {type, slug}}, _from, state) do
-    {:reply, do_get(type, slug), state}
-  end
-
-  def handle_call(:get_books, _from, state) do
-    {:reply, do_get_books(), state}
-  end
-
-  def handle_call({:read, {slug, file}}, _from, state) do
-    {:reply, read_file(get_book_dir(slug), file), state}
-  end
 
   # this clause handles an info message we get sent when we render HTML
   # for the message channel via a controller/view
@@ -426,6 +413,46 @@ defmodule Incunabula.Git do
     nmajor = String.to_integer(major)
     nminor = String.to_integer(minor)
     {{npub, nrel, nmajor, nminor}, newrest3}
+  end
+
+  defp do_add_reviewer(slug, username, user) do
+    bookdir = get_book_dir(slug)
+    # only add the user if they are not allready a reviewer
+    case IncunabulaUtilities.DB.lookup_value(bookdir, @reviewersDB, :reviewer, username, :reviewer) do
+      {:error, :no_match_of_key} ->
+        newrecord = new_reviewers_record(username)
+        {:ok, title}  = read_file(get_book_dir(slug), @title)
+        tag = make_tag("add reviewer", title, slug, user, "adding " <> username)
+        bookdir
+        |> IncunabulaUtilities.DB.appendDB(@reviewersDB, newrecord)
+        |> add_to_git(:all)
+        |> commit_to_git(tag)
+        |> bump_tag(tag, "major", user)
+        |> push_to_github(slug)
+        |> push_to_channel(slug, slug, "book:get_reviewers:")
+        :ok
+      _ ->
+        {:error, "reviewer already added"}
+    end
+  end
+
+  defp do_remove_reviewer(slug, username, user) do
+    bookdir = get_book_dir(slug)
+    case IncunabulaUtilities.DB.lookup_value(bookdir, @reviewersDB, :reviewer, username, :reviewer) do
+      {:ok, _username} ->
+        {:ok, title}  = read_file(get_book_dir(slug), @title)
+        tag = make_tag("remove reviewer", title, slug, user, "removing " <> username)
+        bookdir
+        |> IncunabulaUtilities.DB.delete_records(@reviewersDB, :reviewer, username)
+        |> add_to_git(:all)
+        |> commit_to_git(tag)
+        |> bump_tag(tag, "major", user)
+        |> push_to_github(slug)
+        |> push_to_channel(slug, slug, "book:get_reviewers:")
+        :ok
+      {:error, :no_match_of_key} ->
+        {:error, "not a reviewer"}
+    end
   end
 
   defp do_load_image(slug, %{"image_title"    => image_title,
@@ -545,7 +572,7 @@ defmodule Incunabula.Git do
     |> commit_to_git(commitmsg)
     |> bump_tag(tag, "major", user)
     |> push_to_github(slug)
-    |> push_to_channel(slug, slug, "books:list")
+    |> push_to_channel("books:list")
     |> push_to_channel(slug, slug, "book:get_book_title:")
     :ok
   end
@@ -639,7 +666,7 @@ defmodule Incunabula.Git do
     end
   end
 
-  defp do_copy_chapter_to_review(slug, chapter_slug, user) do
+  defp do_copy_chapter_to_review(slug, chapter_slug, reviewer, user) do
     bookdir       = get_book_dir(slug)
     chapter_title = do_get_chapter_title(slug, chapter_slug)
     currenttag    = get_current_tag(bookdir)
@@ -654,8 +681,8 @@ defmodule Incunabula.Git do
         :ok = File.mkdir_p(to_path)
         {:ok, _} = File.copy(from, to)
         prefix = review_slug <> " copied from " <> chapter_slug
-        newrecord = new_review_record(review_title, chapter_slug, currenttag)
-        msg = "initial creation of " <> slug
+        newrecord = new_review_record(review_title, reviewer, chapter_slug, currenttag)
+        msg = "initial creation of " <> slug <> " assgined to " <> reviewer
         tag = make_tag(prefix, review_title, slug, user, msg)
         bookdir
         |> add_to_git(:all)
@@ -778,11 +805,12 @@ defmodule Incunabula.Git do
         |> IncunabulaUtilities.DB.createDB(@imagesDB)
         |> IncunabulaUtilities.DB.createDB(@chaffDB)
         |> IncunabulaUtilities.DB.createDB(@reviewsDB)
+        |> IncunabulaUtilities.DB.createDB(@reviewersDB)
         |> add_to_git(:all)
         |> commit_to_git("basic setup of directory")
         |> tag_git(0, 0, 1, 1, "initial creation of " <> slug, author)
         |> push_to_github(slug, :without_tags) # don't want tags on first create
-        |> push_to_channel("", "", "books:list")
+        |> push_to_channel("books:list")
         {:ok, slug}
       true ->
         {:error, "The book " <> slug <> " exists already"}
@@ -810,8 +838,18 @@ defmodule Incunabula.Git do
   end
 
   defp do_get_chapters_dropdown(slug) do
-    chapters = consult_file(get_book_dir(slug), @chaptersDB)
+    chapters  = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @chaptersDB)
     _dropdown = Incunabula.FragController.get_chapters_dropdown(slug, chapters)
+  end
+
+  defp do_get_reviewers(format, slug) do
+    reviewers = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @reviewersDB)
+    case format do
+      :html ->
+        _html = Incunabula.FragController.get_reviewers(reviewers, slug)
+      :raw ->
+        for %{reviewer: r} <- reviewers, do: r
+    end
   end
 
   defp do_get_text(slug, type, textslug) do
@@ -827,60 +865,27 @@ defmodule Incunabula.Git do
   end
 
   defp do_get_review_title(slug, reviewslug) do
-    review  = consult_file(get_book_dir(slug), @reviewsDB)
-    _title = read_review_title(reviewslug, review)
+    dir = get_book_dir(slug)
+    _title = IncunabulaUtilities.DB.lookup_value(dir, @reviewsDB,
+      :review_slug, reviewslug, :review_title)
   end
 
-
   defp do_get_chaff_title(slug, chaffslug) do
-    chaff  = consult_file(get_book_dir(slug), @chaffDB)
-    _title = read_chaff_title(chaffslug, chaff)
+    dir = get_book_dir(slug)
+    {:ok, title} = IncunabulaUtilities.DB.lookup_value(dir, @chaffDB,
+      :chaff_slug, chaffslug, :chaff_title)
+    title
   end
 
   defp do_get_chapter_title(slug, chapterslug) do
-    chapters = consult_file(get_book_dir(slug), @chaptersDB)
-    _title   = read_chapter_title(chapterslug, chapters)
-  end
-
-  defp read_review_title(slug, contents) do
-    %{review_title: title} = read_review_entry(slug, contents)
-      title
-  end
-
-  defp read_review_entry(slug, [%{review_slug:  slug} = h | _t]) do
-    h
-  end
-
-  defp read_review_entry(slug, [_h | t]) do
-    read_review_entry(slug, t)
-  end
-
-  defp read_chaff_title(slug, contents) do
-    %{chaff_title: title} = read_chaff_entry(slug, contents)
-      title
-  end
-
-  defp read_chaff_entry(slug, [%{chaff_slug:  slug,
-                                 chaff_title: _chaff_title,
-                                 creation:    _creation} = h | _t]) do
-    h
-  end
-
-  defp read_chaff_entry(slug, [_h | t]) do
-    read_chaff_entry(slug, t)
-  end
-
-  defp read_chapter_title(slug, [%{chapter_slug:  slug,
-                                   chapter_title: chapter_title} | _t]) do
-    chapter_title
-  end
-
-  defp read_chapter_title(slug, [_h | t]) do
-    read_chapter_title(slug, t)
+    dir = get_book_dir(slug)
+    {:ok, title} = IncunabulaUtilities.DB.lookup_value(dir, @chaptersDB,
+      :chapter_slug, chapterslug, :chapter_title)
+    title
   end
 
   defp do_get_chapters_json(slug) do
-    _chapters = consult_file(get_book_dir(slug), @chaptersDB)
+    _chapters = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @chaptersDB)
   end
 
   defp do_get(:reviews, slug) do
@@ -1075,76 +1080,50 @@ defmodule Incunabula.Git do
     dir
   end
 
-  defp push_to_channel(dir, _slug, _route, "books:list") do
-    books = do_get_books()
-    Incunabula.Endpoint.broadcast "books:list", "books", %{books: books}
+  defp push_to_channel(dir, "books:list") do
+    response = do_get_books()
+    Incunabula.Endpoint.broadcast "books:list", "books", %{books: response}
     dir
   end
 
-  defp push_to_channel(dir, slug, route, "book:get_book_title:") do
-    {:ok, title} = read_file(get_book_dir(slug), @title)
-    # No I don't understand why the event and the message associated with it
-    # have to be called books neither
-    Incunabula.Endpoint.broadcast "book:get_book_title:" <> route,
-      "books", %{books: title}
-    dir
-  end
+  defp push_to_channel(dir, slug, route, topic) do
+    response = case topic do
+                 "books:list" ->
+                   do_get_books()
 
-  defp push_to_channel(dir, slug, route, "book:get_reviews:") do
-    reviews = do_get(:reviews, slug)
-    # No I don't understand why the event and the message associated with it
-    # have to be called books neither
-    Incunabula.Endpoint.broadcast "book:get_reviews:" <> route,
-      "books", %{books: reviews}
-    dir
-  end
+                   "book:get_book_title:" ->
+                   {:ok, title} = read_file(get_book_dir(slug), @title)
+                   title
 
-  defp push_to_channel(dir, slug, route, "book:get_chaffs:") do
-    chaffs = do_get(:chaffs, slug)
-    # No I don't understand why the event and the message associated with it
-    # have to be called books neither
-    Incunabula.Endpoint.broadcast "book:get_chaffs:" <> route,
-      "books", %{books: chaffs}
-    dir
-  end
+                   "book:get_reviewers:" ->
+                   do_get_reviewers(:html, slug)
 
-  defp push_to_channel(dir, slug, route, "book:get_chapters_dropdown:") do
-    chapters = do_get(:chapters, slug)
-    # No I don't understand why the event and the message associated with it
-    # have to be called books neither
-    Incunabula.Endpoint.broadcast "book:get_chapters_dropdown:" <> route,
-      "books", %{books: chapters}
-    dir
-  end
+                   "book:get_reviews:" ->
+                   do_get(:reviews, slug)
 
-  defp push_to_channel(dir, slug, route, "book:get_chapters:") do
-    chapters = do_get(:chapters, slug)
-    # No I don't understand why the event and the message associated with it
-    # have to be called books neither
-    Incunabula.Endpoint.broadcast "book:get_chapters:" <> route,
-      "books", %{books: chapters}
-    dir
-  end
+                   "book:get_chaffs:" ->
+                   do_get(:chaffs, slug)
 
-  defp push_to_channel(dir, slug, route, "book:get_images:") do
-    images = do_get(:images, slug)
-    # No I don't understand why the event and the message associated with it
-    # have to be called books neither
-    Incunabula.Endpoint.broadcast "book:get_images:" <> route,
-      "books", %{books: images}
-    dir
-  end
+                   "book:get_chapters_dropdown:" ->
+                   do_get(:chapters, slug)
 
-  defp push_to_channel(dir, slug, route, type) when
-  type == "book:save_review_edits:"  or
-  type == "book:save_chaff_edits:"   or
-  type == "book:save_chapter_edits:" do
-    bookdir = get_book_dir(slug)
-    tag = do_get_tag_msg(bookdir)
-    # No I don't understand why the event and the message associated with it
-    # have to be called books neither
-    Incunabula.Endpoint.broadcast type <> route,
-      "books", %{books: tag}
+                   "book:get_chapters:" ->
+                   do_get(:chapters, slug)
+
+                   "book:get_images:" ->
+                   do_get(:images, slug)
+
+                   "book:save_review_edits:" ->
+                   do_get_tag_msg(get_book_dir(slug))
+
+                   "book:save_chaff_edits:" ->
+                   do_get_tag_msg(get_book_dir(slug))
+
+                   "book:save_chapter_edits:"  ->
+                   do_get_tag_msg(get_book_dir(slug))
+
+      end
+    Incunabula.Endpoint.broadcast topic <> route, "books", %{books: response}
     dir
   end
 
@@ -1182,12 +1161,6 @@ defmodule Incunabula.Git do
 
   def read_file(dir, file) do
     File.read(Path.join([dir, file]))
-  end
-
-  def consult_file(dir, file) do
-    path = Path.join(dir, file)
-    {:ok, terms} = :file.consult(path)
-    terms
   end
 
   defp standard_gitignore() do
@@ -1309,13 +1282,26 @@ defmodule Incunabula.Git do
       creation:    creation}
   end
 
-  defp new_review_record(title, chapter_slug, tag) do
+  defp new_reviewers_record(username) do
+    %{reviewer: username}
+  end
+
+  defp new_review_record(title, reviewer, chapter_slug, tag) do
     slug = Incunabula.Slug.to_slug(title)
     %{review_slug:   slug,
+      reviewer:      reviewer,
       review_title:  title,
       chapter_slug:  chapter_slug,
       tag:           tag,
       review_status: "in review"}
+  end
+
+  defp has(db, slug) do
+    records = IncunabulaUtilities.DB.getDB(get_book_dir(slug), db)
+    _reply  = case records do
+                [] -> false
+                _  -> true
+              end
   end
 
 end

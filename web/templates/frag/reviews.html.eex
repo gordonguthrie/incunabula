@@ -10,6 +10,9 @@
           <%= raw(make_review_link(@slug, r.review_slug, r.review_title, r.review_status)) %>
         </td>
         <td>
+          <small><%= r.reviewer %></small>
+        </td>
+        <td>
           <%= raw(make_review_control(r.review_status)) %>
         </td>
       </tr>

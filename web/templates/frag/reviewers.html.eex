@@ -1,0 +1,18 @@
+<table class="ui striped unstackable table">
+  <%= if @reviewers == [] do  %>
+  <tr>
+    <td>There are no reviewers yet</td>
+  </tr>
+  <% else %>
+  <%= for r <- @reviewers do %>
+      <tr>
+        <td><%= r.reviewer %></td>
+        <td class="right aligned">
+          <div data-post="/books/<%= @bookslug %>/removereviewer/<%= r.reviewer %>">
+            <i class="trash outline icon"></i>
+          </div>
+        </td>
+      </tr>
+      <% end %>
+      <% end %>
+</table>

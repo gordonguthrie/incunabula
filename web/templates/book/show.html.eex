@@ -16,7 +16,7 @@
   <a class="active item" data-tab="chapters">Chapters</a>
   <a class="item" data-tab="images">Images</a>
   <a class="item" data-tab="chaff">Chaff</a>
-  <a class="item" data-tab="reviews">Reviews</a>
+  <a class="item" data-tab="reviewing">Reviewing</a>
 </div>
 
 <div class="ui bottom attached active tab segment" data-tab="chapters">
@@ -46,10 +46,15 @@
   </div>
 </div>
 
-<div class="ui bottom attached tab segment" data-tab="reviews">
+<div class="ui bottom attached tab segment" data-tab="reviewing">
+  <h3>Reviewers</h3>
+  <div id="book-get_reviewers" class="incunabula-topic" topic="book:get_reviewers:<%= @slug %>">
+  </div>
+  <button class="incunabula-show ui primary button" modal="incunabula-new-reviewer">Add A Reviewer</button>
+  <h3>Reviews</h3>
   <div id="book-get_reviews" class="incunabula-topic" topic="book:get_reviews:<%= @slug %>">
   </div>
-  <%= if @has_chapters do %>
+  <%= if @has_chapters and @has_reviewers do %>
   <button class="incunabula-show ui primary button" modal="incunabula-new-review">Release A Chapter For Review</button>
   <% end %>
 </div>
@@ -159,6 +164,22 @@
   </div>
 </div>
 
+<div class="incunabula-new-reviewer ui small modal">
+  <div class="content">
+    <div class="ui form">
+      <%= form_for @reviewerchangeset, @newreviewer, [class: "ui form"], fn f -> %>
+      <div class="field">
+        <label>Add a reviewer
+          <div id="book-get_possible_reviewers_dropdown" class="incunabula-topic" topic="book:get_possible_reviewers_dropdown:<%= @slug %>"></div>
+        </label>
+        <%= error_tag f, :caption %>
+      </div>
+      <%= submit("Add Reviewer", [class: "ui primary button"]) %>
+      <% end %>
+    </div>
+  </div>
+</div>
+
 <div class="incunabula-new-review ui small modal">
   <div class="content">
     <div class="ui form">
@@ -167,6 +188,9 @@
         <label>Pick a chapter to issue for review
           <div class="book-get_chapters_dropdown incunabula-topic" topic="book:get_chapters_dropdown:<%= @slug %>"></div>
         </label>
+        <label>Pick a reviewer
+          <div id="book-get_reviewers_dropdown" class="incunabula-topic" topic="book:get_reviewers_dropdown:<%= @slug %>"></div>
+          </label>
         <%= error_tag f, :caption %>
       </div>
       <%= submit("Create Review", [class: "ui primary button"]) %>

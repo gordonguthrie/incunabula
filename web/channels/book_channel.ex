@@ -1,7 +1,6 @@
 defmodule Incunabula.BookChannel do
   use Incunabula.Web, :channel
 
-
   def join("book:" <> bookslug, _params, socket) do
     {route, topicparams} = parse_topic(bookslug)
     reply = get_reply(route, topicparams)
@@ -16,6 +15,23 @@ defmodule Incunabula.BookChannel do
   end
 
   @doc "get_reply/2 is the reply on joining"
+
+  def get_reply(:get_reviewers_dropdown, %{slug: slug}) do
+    reviewers = Incunabula.Git.get_raw_reviewers(slug)
+    _html = Incunabula.FragController.get_users_dropdown(reviewers)
+  end
+
+  def get_reply(:get_possible_reviewers_dropdown, %{slug: slug}) do
+    users = IncunabulaUtilities.Users.get_users()
+    reviewers = Incunabula.Git.get_raw_reviewers(slug)
+    possiblereviewers = remove_reviewers_and_admin(users, reviewers)
+    _html = Incunabula.FragController.get_users_dropdown(possiblereviewers)
+  end
+
+  def get_reply(:get_reviewers, %{slug: slug}) do
+    _reviewers = Incunabula.Git.get_reviewers(slug)
+  end
+
   def get_reply(:get_chapters_dropdown, %{slug: slug}) do
     _dropdown = Incunabula.Git.get_chapters_dropdown(slug)
   end
@@ -146,6 +162,18 @@ defmodule Incunabula.BookChannel do
     parse_route(route)
   end
 
+  defp parse_route(["get_reviewers_dropdown", slug]) do
+    {:get_reviewers_dropdown, %{slug: slug}}
+  end
+
+  defp parse_route(["get_possible_reviewers_dropdown", slug]) do
+    {:get_possible_reviewers_dropdown, %{slug: slug}}
+  end
+
+  defp parse_route(["get_reviewers", slug]) do
+    {:get_reviewers, %{slug: slug}}
+  end
+
   defp parse_route(["get_chapters_dropdown", slug]) do
     {:get_chapters_dropdown, %{slug: slug}}
   end
@@ -207,6 +235,12 @@ defmodule Incunabula.BookChannel do
   defp parse_route(["save_chapter_edits", slug, "chapter", chapterslug]) do
     {:save_chapter_edits, %{slug:        slug,
                             chapterslug: chapterslug}}
+  end
+
+  defp remove_reviewers_and_admin(users, reviewers) do
+    # if you are already a reviewer (or if you are admin) we are gonnae wheech you out
+   possible_reviewers = Enum.reduce(reviewers ++ ["admin"], users, fn(x, acc) -> List.delete(acc, x) end)
+   Enum.sort(possible_reviewers)
   end
 
 end

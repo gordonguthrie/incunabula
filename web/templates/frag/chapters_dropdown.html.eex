@@ -3,5 +3,5 @@
   <%= for c <- @chapters do %>
       <option value="<%= c.chapter_slug %>"><%= c.chapter_title %></option>
       <% end %>
-      <% end %>
 </select>
+<% end %>

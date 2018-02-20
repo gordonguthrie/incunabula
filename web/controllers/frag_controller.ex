@@ -1,6 +1,19 @@
 defmodule Incunabula.FragController do
   use Incunabula.Web, :controller
 
+  def get_users_dropdown(users) do
+    conn = make_fresh_conn()
+    make_html conn, "users_dropdown.html",
+      users:     users
+  end
+
+  def get_reviewers(reviewers, bookslug) do
+    conn = make_fresh_conn()
+    make_html conn, "reviewers.html",
+      reviewers: reviewers,
+      bookslug:  bookslug
+  end
+
   def get_users(users) do
     conn = make_fresh_conn()
     make_html conn, "users.html",

@@ -24,6 +24,13 @@ var topic_router = []
 //
 function sanitize(html){return $("div/>").text(html).html()}
 
+function draw_reviewers(id, msg) {
+    // need to set up modals
+    // draw them first, then bind functions
+    draw(id, msg)
+    incunabula.bind_delete_icons()
+}
+
 function draw_users(id, msg) {
     // need to set up modals
     // draw them first, then bind functions
@@ -33,7 +40,7 @@ function draw_users(id, msg) {
 }
 
 function draw(id, msg) {
-    //console.log("got new thing to draw", id, msg)
+    // console.log("got new thing to draw", id, msg)
     $("#" + id).html(msg)
 }
 
@@ -96,11 +103,23 @@ router.set("books:list",
 router.set("admin:get_users",
            {id: "admin-get_users",
             draw_fn: function(id, msg) {draw_users(id, msg)}})
+router.set("admin:get_users_dropdown",
+           {id: "admin-get_users_dropdown",
+            draw_fn: function(id, msg) {draw(id, msg)}})
 
 // router for a particular book
 router.set("book:get_reviews",
            {id:      "book-get_reviews",
             draw_fn: function(id, msg) {draw(id, msg)}})
+router.set("book:get_reviewers",
+           {id:      "book-get_reviewers",
+            draw_fn: function(id, msg) {draw_reviewers(id, msg)}})
+router.set("book:get_possible_reviewers_dropdown",
+           {id:      "book-get_possible_reviewers_dropdown",
+            draw_fn: function(id, msg) {draw_reviewers(id, msg)}})
+router.set("book:get_reviewers_dropdown",
+           {id:      "book-get_reviewers_dropdown",
+            draw_fn: function(id, msg) {draw_reviewers(id, msg)}})
 router.set("book:get_chaffs",
            {id:      "book-get_chaffs",
             draw_fn: function(id, msg) {draw(id, msg)}})

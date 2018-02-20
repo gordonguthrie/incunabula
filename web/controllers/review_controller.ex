@@ -3,26 +3,32 @@ defmodule Incunabula.ReviewController do
 
   use Incunabula.Controller
 
-  plug :authenticate_user when action in [:index, :copy, :show]
+  plug :authenticate_user when action in [
+    :index,
+    :copy,
+    :show,
+    :reconcile
+  ]
 
   def reconcile(conn, params, _user) do
-    IO.inspect params
     conn
     |> put_flash(:error, "reconciliation is not built yet")
     |> redirect(to: "/")
   end
 
-  def copy(conn, %{"copy" => review,
-                   "slug" => slug}, user) do
+  def copy(conn, %{"copy"         => review,
+                   "new_reviewer" => newreviewer,
+                   "slug"         => slug} = params, user) do
     %{"chapter_slug" => chapter_slug} = review
-    case Incunabula.Git.copy_chapter_to_review(slug, chapter_slug, user) do
+    %{"username" => reviewer} = newreviewer
+    case Incunabula.Git.copy_chapter_to_review(slug, chapter_slug, reviewer, user) do
       :ok ->
         conn
-        |> redirect(to: Path.join(["/books", slug, "#reviews"]))
+        |> redirect(to: Path.join(["/books", slug, "#reviewing"]))
       {:error, error} ->
         conn
         |> put_flash(:error, error)
-        |> redirect(to: Path.join(["/books", slug, "#reviews"]))
+        |> redirect(to: Path.join(["/books", slug, "#reviewing"]))
     end
   end
 
