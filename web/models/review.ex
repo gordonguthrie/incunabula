@@ -17,14 +17,14 @@ defmodule Incunabula.Review do
 
   # This fn would normally be automagiced by various macro's and shit
   def __changeset__() do
-    %{id:           Incubula.Chaff,
-      review_title:  :string,
-      chapter_slug: :string,
+    %{id:           Incubula.Review,
+      review_title: :string,
+      chapter_slug: :string
     }
   end
 
   def copychangeset() do
-    Elixir.Ecto.Changeset.cast(%Incunabula.Chaff{copy?: true}, %{}, [])
+    Elixir.Ecto.Changeset.cast(%Incunabula.Review{}, %{}, [])
   end
 
 end
