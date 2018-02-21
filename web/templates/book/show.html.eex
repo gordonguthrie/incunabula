@@ -54,7 +54,7 @@
 
 <div class="ui bottom attached tab segment" data-tab="reviewing">
   <h3>Reviewers</h3>
-  <div id="book-get_reviewers" class="incunabula-topic" topic="book:get_reviewers:<%= @slug %>">
+  <div id="book-get_reviewers" class="incunabula-topic" topic="book:get_reviewers:<%= @slug %>:<%= @role %>">
   </div>
   <% if @role == "author" do %>
   <button class="incunabula-show ui primary button" modal="incunabula-new-reviewer">Add A Reviewer</button>
