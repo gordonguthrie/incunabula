@@ -4,7 +4,7 @@
      <td><%= u %></td>
      <td class="right aligned">
        <%= if u != "admin" do %>
-       <div data-post="/admin/deleteuser/<% u %>">
+       <div data-post="/admin/deleteuser/<%= u %>">
          <i class="trash outline icon"></i>
        </div>
          <% end %>

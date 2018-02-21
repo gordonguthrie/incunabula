@@ -168,6 +168,11 @@ defmodule Incunabula.Git do
     GenServer.call(__MODULE__, {:create_book, {book_title, author}}, @timeout)
   end
 
+  def get_author(slug) do
+    GenServer.call(__MODULE__, {:get_author, slug}, @timeout)
+  end
+
+
   def get_history(slug) do
     GenServer.call(__MODULE__, {:get_history, slug}, @timeout)
   end
@@ -195,6 +200,10 @@ defmodule Incunabula.Git do
 
   def get_raw_reviewers(slug) do
     GenServer.call(__MODULE__, {:get_reviewers, :raw, slug}, @timeout)
+  end
+
+  def get_reviewer(slug, reviewslug) do
+    GenServer.call(__MODULE__, {:get_reviewer, slug, reviewslug}, @timeout)
   end
 
   def get_reviewers(slug) do
@@ -271,6 +280,9 @@ defmodule Incunabula.Git do
 
   def handle_call(call, _from, state) do
     reply = case call do
+              {:get_author, slug} ->
+                do_get_author(slug)
+
               {:get_history, slug} ->
                 do_get_history(slug)
 
@@ -329,6 +341,9 @@ defmodule Incunabula.Git do
               {:get_chapters_dropdown, slug} ->
                 do_get_chapters_dropdown(slug)
 
+              {:get_reviewer, slug, reviewslug} ->
+                do_get_reviewer(slug, reviewslug)
+
               {:get_reviewers, format, slug} ->
                 do_get_reviewers(format, slug)
 
@@ -361,6 +376,7 @@ defmodule Incunabula.Git do
 
               {:read, {slug, file}} ->
                 read_file(get_book_dir(slug), file)
+
             end
     {:reply, reply, state}
   end
@@ -376,6 +392,12 @@ defmodule Incunabula.Git do
   # for the message channel via a controller/view
   def handle_info({ref, {200, _, _}}, socket) when is_reference(ref) do
     {:noreply, socket}
+  end
+
+  defp do_get_author(slug) do
+    bookdir = get_book_dir(slug)
+    {:ok, author} = read_file(bookdir, @author)
+    author
   end
 
   defp do_get_history(slug) do
@@ -842,6 +864,12 @@ defmodule Incunabula.Git do
     _dropdown = Incunabula.FragController.get_chapters_dropdown(slug, chapters)
   end
 
+  defp do_get_reviewer(slug, reviewslug) do
+    {:ok, reviewer} = IncunabulaUtilities.DB.lookup_value(get_book_dir(slug),
+      @reviewsDB, :review_slug, reviewslug, :reviewer)
+    reviewer
+  end
+
   defp do_get_reviewers(format, slug) do
     reviewers = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @reviewersDB)
     case format do
@@ -866,8 +894,9 @@ defmodule Incunabula.Git do
 
   defp do_get_review_title(slug, reviewslug) do
     dir = get_book_dir(slug)
-    _title = IncunabulaUtilities.DB.lookup_value(dir, @reviewsDB,
+    {:ok, title} = IncunabulaUtilities.DB.lookup_value(dir, @reviewsDB,
       :review_slug, reviewslug, :review_title)
+    title
   end
 
   defp do_get_chaff_title(slug, chaffslug) do

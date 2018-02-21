@@ -3,7 +3,10 @@ defmodule Incunabula.PreviewController do
 
   use Incunabula.Controller
 
-  plug :authenticate_user when action in [:show]
+  plug :authenticate_author_or_reviewer when action in [
+    :show,
+    :summary
+  ]
 
   def show(conn, %{"reviewslug" => review_slug,
                    "slug"       => slug}, _user) do

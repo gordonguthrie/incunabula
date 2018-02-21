@@ -3,11 +3,17 @@ defmodule Incunabula.ReviewController do
 
   use Incunabula.Controller
 
-  plug :authenticate_user when action in [
-    :index,
+  plug :authenticate_author when action in [
     :copy,
-    :show,
     :reconcile
+  ]
+
+  plug :authenticate_author_or_reviewer when action in [
+    :index,
+  ]
+
+  plug :authenticate_reviewer when action in [
+    :show,
   ]
 
   def reconcile(conn, params, _user) do
@@ -34,10 +40,10 @@ defmodule Incunabula.ReviewController do
 
   def show(conn, %{"reviewslug" => reviewslug,
                    "slug"       => slug}, _user) do
-    booktitle  = Incunabula.Git.get_book_title(slug)
+    booktitle   = Incunabula.Git.get_book_title(slug)
     reviewtitle = Incunabula.Git.get_review_title(slug, reviewslug)
-    changeset  = Incunabula.SaveEdit.changeset()
-    savepath   = Path.join(["/books", slug, "review", reviewslug, "save"])
+    changeset   = Incunabula.SaveEdit.changeset()
+    savepath    = Path.join(["/books", slug, "review", reviewslug, "save"])
     {_tag, contents} = Incunabula.Git.get_review(slug, reviewslug)
     render conn, "show.html",
       changeset:   changeset,

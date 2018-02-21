@@ -3,7 +3,8 @@ defmodule Incunabula.BookController do
 
   use Incunabula.Controller
 
-  plug :authenticate_user when action in [:index, :show, :create]
+  plug :authenticate_user               when action in [:index, :create]
+  plug :authenticate_author_or_reviewer when action in [ :show ]
 
   def index(conn, _params, _user) do
     changeset = Incunabula.Book.changeset()

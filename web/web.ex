@@ -28,7 +28,13 @@ defmodule Incunabula.Web do
 
       import Incunabula.Router.Helpers
       import Incunabula.Gettext
-      import Incunabula.Auth, only: [authenticate_user: 2, authenticate_admin: 2]
+      import Incunabula.Auth, only: [
+        authenticate_user:               2,
+        authenticate_author:             2,
+        authenticate_author_or_reviewer: 2,
+        authenticate_reviewer:           2,
+        authenticate_admin:              2
+      ]
     end
   end
 

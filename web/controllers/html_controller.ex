@@ -1,6 +1,7 @@
 defmodule Incunabula.HTMLController do
   use Incunabula.Web, :controller
 
+  # there is no authentication because this is called from Incunabula.Git only
   def make_preview(title, author, body) do
     conn = make_fresh_conn()
     args = %{title:  title,

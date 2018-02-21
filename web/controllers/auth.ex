@@ -10,6 +10,60 @@ defmodule Incunabula.Auth do
     put_current_user(conn, user_id)
   end
 
+  def authenticate_reviewer(conn, _opts) do
+    %{"slug"       => slug,
+      "reviewslug" => reviewslug} = conn.params
+    reviewer = Incunabula.Git.get_reviewer(slug, reviewslug)
+    user = conn.assigns.current_user
+    is_valid? = true
+    case user do
+      ^reviewer ->
+        conn
+        |> put_current_user(user)
+      _other ->
+        conn
+        |> put_flash(:error, "You must be the reviewer to peform this action")
+        |> redirect(to: "/")
+        |> halt()
+    end
+  end
+
+  def authenticate_author_or_reviewer(conn, _opts) do
+    %{"slug" => slug} = conn.params
+    author = Incunabula.Git.get_author(slug)
+    reviewers = Incunabula.Git.get_raw_reviewers(slug)
+    user = conn.assigns.current_user
+    is_valid? = Enum.member?([author] ++ reviewers, user)
+    case is_valid? do
+      true ->
+        conn
+        |> put_current_user(user)
+      false ->
+        conn
+        |> put_flash(:error, "You must be the author or a reviewer to peform this action")
+        |> redirect(to: "/")
+        |> halt()
+    end
+  end
+
+  def authenticate_author(conn, opts) do
+    %{"slug" => slug} = conn.params
+    author = Incunabula.Git.get_author(slug)
+    cond do
+      user = conn.assigns.current_user ->
+        case user do
+          ^author ->
+            conn
+            |> put_current_user(user)
+          _other ->
+            conn
+            |> put_flash(:error, "You must be the author to peform this action")
+            |> redirect(to: "/")
+            |> halt()
+        end
+    end
+  end
+
   def authenticate_admin(conn, _opts) do
     cond do
       user = conn.assigns.current_user ->

@@ -3,7 +3,7 @@ defmodule Incunabula.ReviewerController do
 
   use Incunabula.Controller
 
-  plug :authenticate_user when action in [
+  plug :authenticate_author when action in [
     :newreviewer,
     :removereviewer
   ]

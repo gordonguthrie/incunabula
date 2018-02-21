@@ -3,7 +3,8 @@ defmodule Incunabula.ImageController do
 
   use Incunabula.Controller
 
-  plug :authenticate_user when action in [:show, :create, :index]
+  plug :authenticate_author_or_reviewer when action in [:show, :index]
+  plug :authenticate_author             when action in [:create]
 
   def show(conn, %{"imageslug" => image,
                    "slug"      => slug}, _user) do
