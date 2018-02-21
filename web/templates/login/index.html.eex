@@ -5,8 +5,8 @@
   <div class="field">
     <label>
       Username: <%= text_input(f, :username,
-                    [class:       :field,
-                    placeholder: "Username"]) %>
+                    [class:       "incunabula-focus field",
+                    placeholder:  "Username"]) %>
     </label>
   </div>
   <div class="field">

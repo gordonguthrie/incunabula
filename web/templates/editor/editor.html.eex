@@ -3,7 +3,7 @@
     <!-- rows are given as 4 to disable CSS that styles it when rows aren't set
          the box is resized by javascript -->
     <!-- IMPORTANT to keep this on one line otherwise you inject white space -->
-    <textarea rows="4" dirty="false"><%= @contents %></textarea>
+    <textarea class="incunabula-focus" rows="4" dirty="false"><%= @contents %></textarea>
     <!-- IMPORTANT -->
   </div>
 </div>

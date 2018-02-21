@@ -310,6 +310,11 @@ incunabula.bind_delete_icons = function () {
 };
 
 //
+// set the focus (if possible)
+//
+$(".incunabula-focus").focus()
+
+//
 // now setup the socket to have access to what we have defined
 //
 socket_init(incunabula);
