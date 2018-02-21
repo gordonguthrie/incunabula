@@ -16,15 +16,14 @@ defmodule Incunabula.ReviewController do
     :show,
   ]
 
-  def reconcile(conn, params, _user) do
-    conn
+  def reconcile(conn, _params, _user) do    conn
     |> put_flash(:error, "reconciliation is not built yet")
     |> redirect(to: "/")
   end
 
   def copy(conn, %{"copy"         => review,
                    "new_reviewer" => newreviewer,
-                   "slug"         => slug} = params, user) do
+                   "slug"         => slug}, user) do
     %{"chapter_slug" => chapter_slug} = review
     %{"username" => reviewer} = newreviewer
     case Incunabula.Git.copy_chapter_to_review(slug, chapter_slug, reviewer, user) do

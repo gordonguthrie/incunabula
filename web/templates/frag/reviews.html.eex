@@ -13,7 +13,7 @@
           <small><%= r.reviewer %></small>
         </td>
         <td>
-          <%= raw(make_review_control(r.review_status)) %>
+          <%= raw(make_review_control(r.review_status, @role)) %>
         </td>
       </tr>
       <% end %>

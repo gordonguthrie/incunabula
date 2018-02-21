@@ -8,9 +8,11 @@
       <tr>
         <td><%= r.reviewer %></td>
         <td class="right aligned">
+          <% if @role == :author do %>
           <div data-post="/books/<%= @bookslug %>/removereviewer/<%= r.reviewer %>">
             <i class="trash outline icon"></i>
           </div>
+          <% end %>
         </td>
       </tr>
       <% end %>

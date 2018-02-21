@@ -168,10 +168,13 @@ defmodule Incunabula.Git do
     GenServer.call(__MODULE__, {:create_book, {book_title, author}}, @timeout)
   end
 
+  def get_role(slug, user) do
+    GenServer.call(__MODULE__, {:get_role, slug, user}, @timeout)
+  end
+
   def get_author(slug) do
     GenServer.call(__MODULE__, {:get_author, slug}, @timeout)
   end
-
 
   def get_history(slug) do
     GenServer.call(__MODULE__, {:get_history, slug}, @timeout)
@@ -199,15 +202,15 @@ defmodule Incunabula.Git do
   end
 
   def get_raw_reviewers(slug) do
-    GenServer.call(__MODULE__, {:get_reviewers, :raw, slug}, @timeout)
+    GenServer.call(__MODULE__, {:get_reviewers, :raw, slug, "author"}, @timeout)
+  end
+
+  def get_reviewers(slug, role) do
+    GenServer.call(__MODULE__, {:get_reviewers, :html, slug, role}, @timeout)
   end
 
   def get_reviewer(slug, reviewslug) do
     GenServer.call(__MODULE__, {:get_reviewer, slug, reviewslug}, @timeout)
-  end
-
-  def get_reviewers(slug) do
-    GenServer.call(__MODULE__, {:get_reviewers, :html, slug}, @timeout)
   end
 
   def get_review(slug, reviewslug) do
@@ -237,24 +240,24 @@ defmodule Incunabula.Git do
       @timeout)
   end
 
-  def get_reviews(slug) do
-    GenServer.call(__MODULE__, {:get, {:reviews, slug}}, @timeout)
+  def get_reviews(slug, role) do
+    GenServer.call(__MODULE__, {:get, {:reviews, slug, role}}, @timeout)
   end
 
-  def get_chaffs(slug) do
-    GenServer.call(__MODULE__, {:get, {:chaffs, slug}}, @timeout)
+  def get_chaffs(slug, role) do
+    GenServer.call(__MODULE__, {:get, {:chaffs, slug, role}}, @timeout)
   end
 
   def get_chapters_json(slug) do
     GenServer.call(__MODULE__, {:get_chapters_json, slug}, @timeout)
   end
 
-  def get_chapters(slug) do
-    GenServer.call(__MODULE__, {:get, {:chapters, slug}}, @timeout)
+  def get_chapters(slug, role) do
+    GenServer.call(__MODULE__, {:get, {:chapters, slug, role}}, @timeout)
   end
 
-  def get_images(slug) do
-    GenServer.call(__MODULE__, {:get, {:images, slug}}, @timeout)
+  def get_images(slug, role) do
+    GenServer.call(__MODULE__, {:get, {:images, slug, role}}, @timeout)
   end
 
   @doc "a shell command to check that the github token and stuff is correct"
@@ -280,6 +283,9 @@ defmodule Incunabula.Git do
 
   def handle_call(call, _from, state) do
     reply = case call do
+              {:get_role, slug, user} ->
+                do_get_role(slug, user)
+
               {:get_author, slug} ->
                 do_get_author(slug)
 
@@ -344,8 +350,8 @@ defmodule Incunabula.Git do
               {:get_reviewer, slug, reviewslug} ->
                 do_get_reviewer(slug, reviewslug)
 
-              {:get_reviewers, format, slug} ->
-                do_get_reviewers(format, slug)
+              {:get_reviewers, format, slug, role} ->
+                do_get_reviewers(format, slug, role)
 
               {:get_review, {slug, reviewslug}} ->
                 do_get_text(slug, :review, reviewslug)
@@ -368,8 +374,8 @@ defmodule Incunabula.Git do
               {:get_chapters_json, slug} ->
                 do_get_chapters_json(slug)
 
-              {:get, {type, slug}} ->
-                do_get(type, slug)
+              {:get, {type, slug, role}} ->
+                do_get(type, slug, role)
 
               :get_books ->
                 do_get_books()
@@ -392,6 +398,23 @@ defmodule Incunabula.Git do
   # for the message channel via a controller/view
   def handle_info({ref, {200, _, _}}, socket) when is_reference(ref) do
     {:noreply, socket}
+  end
+
+  defp do_get_role(slug, user) do
+    bookdir = get_book_dir(slug)
+    {:ok, author} = read_file(bookdir, @author)
+    case author do
+      ^user  ->
+        "author"
+      _other ->
+        reviewers = do_get_reviewers(:raw, slug, "author")
+        case Enum.member?(reviewers, user) do
+          true ->
+            "reviewer"
+          false->
+            "none"
+        end
+    end
   end
 
   defp do_get_author(slug) do
@@ -451,7 +474,7 @@ defmodule Incunabula.Git do
         |> commit_to_git(tag)
         |> bump_tag(tag, "major", user)
         |> push_to_github(slug)
-        |> push_to_channel(slug, slug, "book:get_reviewers:")
+        |> push_to_roles_in_channels(slug, slug, "book:get_reviewers:")
         :ok
       _ ->
         {:error, "reviewer already added"}
@@ -470,7 +493,7 @@ defmodule Incunabula.Git do
         |> commit_to_git(tag)
         |> bump_tag(tag, "major", user)
         |> push_to_github(slug)
-        |> push_to_channel(slug, slug, "book:get_reviewers:")
+        |> push_to_roles_in_channels(slug, slug, "book:get_reviewers:")
         :ok
       {:error, :no_match_of_key} ->
         {:error, "not a reviewer"}
@@ -509,7 +532,7 @@ defmodule Incunabula.Git do
         |> commit_to_git(commitmsg)
         |> bump_tag("new image loaded " <> imageslug, "major", user)
         |> push_to_github(slug)
-        |> push_to_channel(slug, slug, "book:get_images:")
+        |> push_to_roles_in_channels(slug, slug, "book:get_images:")
         :ok
       _ ->
         {:error, shortimageslug <> ".* already exists"}
@@ -535,7 +558,7 @@ defmodule Incunabula.Git do
     |> commit_to_git(commit_msg)
     |> bump_tag(tag, "major", user)
     |> push_to_github(slug)
-    |> push_to_channel(slug, slug, "book:get_chapters:")
+    |> push_to_roles_in_channels(slug, slug, "book:get_chapters:")
     |> push_to_channel(slug, slug, "book:get_chapters_dropdown:")
     :ok
   end
@@ -713,7 +736,7 @@ defmodule Incunabula.Git do
         |> make_html(:review, review_title, review_slug, user)
         |> IncunabulaUtilities.DB.appendDB(@reviewsDB, newrecord)
         |> push_to_github(slug)
-        |> push_to_channel(slug, slug, "book:get_reviews:")
+        |> push_to_roles_in_channels(slug, slug, "book:get_reviews:")
         :ok
       true ->
         # gotta switch back to master anyhoo
@@ -741,7 +764,7 @@ defmodule Incunabula.Git do
         |> commit_to_git(tag)
         |> bump_tag(tag, "major", user)
         |> push_to_github(slug)
-        |> push_to_channel(slug, slug, "book:get_chaffs:")
+        |> push_to_roles_in_channels(slug, slug, "book:get_chaffs:")
         :ok
       true ->
         {:error, chaff_slug <> " already exists"}
@@ -792,7 +815,7 @@ defmodule Incunabula.Git do
         case type == :chapter do
           true ->
             bookdir
-            |> push_to_channel(slug, slug, "book:get_chapters:")
+            |> push_to_roles_in_channels(slug, slug, type)
             |> push_to_channel(slug, slug, "book:get_chapters_dropdown:")
             :ok
           false ->
@@ -870,11 +893,11 @@ defmodule Incunabula.Git do
     reviewer
   end
 
-  defp do_get_reviewers(format, slug) do
+  defp do_get_reviewers(format, slug, role) do
     reviewers = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @reviewersDB)
     case format do
       :html ->
-        _html = Incunabula.FragController.get_reviewers(reviewers, slug)
+        _html = Incunabula.FragController.get_reviewers(reviewers, slug, role)
       :raw ->
         for %{reviewer: r} <- reviewers, do: r
     end
@@ -917,26 +940,34 @@ defmodule Incunabula.Git do
     _chapters = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @chaptersDB)
   end
 
-  defp do_get(:reviews, slug) do
+  defp do_get(:reviews, slug, role)
+  when role == "author"
+  or   role == "reviewer" do
     reviews = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @reviewsDB)
-    _html   = Incunabula.FragController.get_reviews(slug, reviews)
+    _html   = Incunabula.FragController.get_reviews(slug, reviews, role)
   end
 
-  defp do_get(:chaffs, slug) do
+  defp do_get(:chaffs, slug, role)
+  when role == "author"
+  or   role == "reviewer" do
     chaffs = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @chaffDB)
-    _html  = Incunabula.FragController.get_chaffs(slug, chaffs)
+    _html  = Incunabula.FragController.get_chaffs(slug, chaffs, role)
   end
 
-  defp do_get(:chapters, slug) do
+  defp do_get(:chapters, slug, role)
+  when role == "author"
+  or   role == "reviewer" do
     chapters = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @chaptersDB)
     reviews  = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @reviewsDB)
     marked   = mark_review_status(chapters, reviews, [])
-    _html    = Incunabula.FragController.get_chapters(slug, marked)
+    _html    = Incunabula.FragController.get_chapters(slug, marked, role)
   end
 
-  defp do_get(:images, slug) do
+  defp do_get(:images, slug, role)
+  when role == "author"
+  or   role == "reviewer" do
     images = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @imagesDB)
-    _html  = Incunabula.FragController.get_images(slug, images)
+      _html  = Incunabula.FragController.get_images(slug, images)
   end
 
   defp mark_review_status([], _, acc), do: Enum.reverse(acc)
@@ -978,9 +1009,11 @@ defmodule Incunabula.Git do
     subs  = for f <- files, File.dir?(Path.join([rootdir, f])), do: f
     slugs = for d <- subs,  File.dir?(Path.join([rootdir, d, "/.git"])), do: d
     books = for s <- slugs,
-      {:ok, t} = File.read(Path.join([rootdir, s, @title])) do
-        {t, s}
+      {:ok, t} = File.read(Path.join([rootdir, s, @title])),
+    {:ok, a} = File.read(Path.join([rootdir, s, @author])) do
+        {t, a, s}
     end
+    IO.inspect books
     Incunabula.FragController.get_books(Enum.sort(books))
   end
 
@@ -1115,6 +1148,48 @@ defmodule Incunabula.Git do
     dir
   end
 
+  defp push_to_roles_in_channels(dir, slug, subroute, topic) do
+    responses = case topic do
+                  "book:get_reviews:" ->
+                    [
+                      do_get(:reviews, slug, "author"),
+                      do_get(:reviews, slug, "reviewer")
+                    ]
+
+                    "book:get_chaffs:" ->
+                    [
+                      do_get(:chaffs, slug, "author"),
+                      do_get(:chaffs, slug, "reviewer")
+                    ]
+
+                    "book:get_chapters:" ->
+                    [
+                      do_get(:chapters, slug, "author"),
+                      do_get(:chapters, slug, "reviewer")
+                    ]
+
+                    "book:get_images:" ->
+                    [
+                      do_get(:images, slug, "author"),
+                      do_get(:images, slug, "reviewer")
+                    ]
+
+                    "book:get_reviewers:" ->
+                    [
+                      do_get_reviewers(:html, slug, "author"),
+                      do_get_reviewers(:html, slug, "reviewer")
+                    ]
+
+                end
+    route1 = subroute <> ":author"
+    resp1  = hd(responses)
+    route2 = subroute <> ":reviewer"
+    resp2  = hd(tl(responses))
+    Incunabula.Endpoint.broadcast topic <> route1, "books", %{books: resp1}
+    Incunabula.Endpoint.broadcast topic <> route2, "books", %{books: resp2}
+    dir
+  end
+
   defp push_to_channel(dir, slug, route, topic) do
     response = case topic do
                  "books:list" ->
@@ -1124,23 +1199,8 @@ defmodule Incunabula.Git do
                    {:ok, title} = read_file(get_book_dir(slug), @title)
                    title
 
-                   "book:get_reviewers:" ->
-                   do_get_reviewers(:html, slug)
-
-                   "book:get_reviews:" ->
-                   do_get(:reviews, slug)
-
-                   "book:get_chaffs:" ->
-                   do_get(:chaffs, slug)
-
                    "book:get_chapters_dropdown:" ->
-                   do_get(:chapters, slug)
-
-                   "book:get_chapters:" ->
-                   do_get(:chapters, slug)
-
-                   "book:get_images:" ->
-                   do_get(:images, slug)
+                   do_get(:chapters, slug, "author")
 
                    "book:save_review_edits:" ->
                    do_get_tag_msg(get_book_dir(slug))
@@ -1287,16 +1347,6 @@ defmodule Incunabula.Git do
   defp make_route(list) do
     Enum.join(list, ":")
   end
-
-#  defp checkout_branch(dir, branch) do
-#    args = [
-#      "checkout",
-#      to_string(branch)
-#    ]
-#    {_, 0} = System.cmd("git", args, [cd: dir])
-#    # return dir to pipe
-#    dir
-#  end
 
   defp new_chapter_record(title) do
     slug = Incunabula.Slug.to_slug(title)

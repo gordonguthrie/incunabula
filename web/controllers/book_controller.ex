@@ -12,13 +12,15 @@ defmodule Incunabula.BookController do
       changeset: changeset
   end
 
-  def show(conn, %{"slug"  => slug}, _user) do
+  def show(conn, %{"slug"  => slug}, user) do
     booktitle      = Incunabula.Git.get_book_title(slug)
     has_chapters?  = Incunabula.Git.has_chapters?(slug)
     has_reviewers? = Incunabula.Git.has_reviewers?(slug)
+    role           = Incunabula.Git.get_role(slug, user)
     render conn, "show.html",
       slug:                slug,
       title:               booktitle,
+      role:                role,
       chapterchangeset:    Incunabula.Chapter.changeset(),
       imagechangeset:      Incunabula.Image.changeset(),
       newchaffchangeset:   Incunabula.Chaff.newchangeset(),

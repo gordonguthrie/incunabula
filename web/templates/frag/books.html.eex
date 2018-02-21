@@ -1,9 +1,12 @@
 <table class="ui striped table">
 <%= if @books != [] do %>
-  <%= for {title, slug} <- @books do %>
+  <%= for {title, author, slug} <- @books do %>
     <tr>
       <td>
         <a href="<%= "/books/" <> slug %>" alt="<%= title %>"><%= title %></a>
+      </td>
+      <td>
+        <%= author %>
       </td>
     </tr>
     <% end %>

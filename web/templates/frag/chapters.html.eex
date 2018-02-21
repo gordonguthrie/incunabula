@@ -15,7 +15,11 @@
             </button>
         </td>
         <% else %>
+        <%= if @role == "author" do %>
         <td><div><a href="/books/<%= @slug %>/chapters/<%= c.chapter_slug %>"><%= c.chapter_title %></a></div></td>
+        <% else %>
+        <td><div><a href="/books/<%= @slug %>/chapters/<%= c.chapter_slug %>/preview"><%= c.chapter_title %></a>&nbsp;<small>(preview)</small></div></td>
+        <% end %>
         <td></td>
         <% end %>
       </tr>

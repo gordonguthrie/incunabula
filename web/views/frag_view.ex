@@ -1,7 +1,7 @@
 defmodule Incunabula.FragView do
   use Incunabula.Web, :view
 
-  def make_review_control("in review") do
+  def make_review_control("in review", _role) do
     """
     <button class='ui labeled icon basic right floated fluid mini button' data-next='in reconciliation'>
     <i class='arrow right icon'></i>
@@ -10,7 +10,7 @@ defmodule Incunabula.FragView do
     """
   end
 
-  def make_review_control("in reconciliation") do
+  def make_review_control("in reconciliation", _role) do
     """
     <button class='ui labeled icon basic right floated fluid  mini button' data-next='reconcile'>
     <i class='arrow right icon'></i>
@@ -19,7 +19,7 @@ defmodule Incunabula.FragView do
     """
   end
 
-  def make_review_control("closed") do
+  def make_review_control("closed", _role) do
     """
     <button class='circular ui disabled basic right floated mini icon button'>
     <i class='lock icon'></i>

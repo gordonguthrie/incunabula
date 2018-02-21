@@ -2,9 +2,11 @@
           class="incunabula-topic"
           data-fieldsource="book-get_book_title"
           topic="book:get_book_title:<%= @slug %>"><%= @title %></span>&nbsp;
+  <%= if @role == "author" do %>
   <i class="incunabula-show incunabula-bound edit icon"
      data-fieldbinding="book-get_book_title"
      modal="incunabula-edit_title"></i>
+  <% end %>
 </h2>
 <p>
   <small>
@@ -20,23 +22,27 @@
 </div>
 
 <div class="ui bottom attached active tab segment" data-tab="chapters">
-  <div id="book-get_chapters" class="incunabula-topic" topic="book:get_chapters:<%= @slug %>"></div>
+  <div id="book-get_chapters" class="incunabula-topic" topic="book:get_chapters:<%= @slug %>:<%= @role %>"></div>
   <div class="content">
-    <button class="incunabula-show ui primary button" modal="incunabula-new-chapter" >New chapter</button>
+    <% if @role == "author" do %>
+    <button class="incunabula-show ui primary button" modal="incunabula-new-chapter" >New Chapter</button>
+    <% end %>
     <!-- this button is only made visible if there is more than one chapter -->
+    <%= if @role == "author" do %>
     <button class="incunabula-show incunabula-show-order-button ui primary button" modal="incunabula-chapter-order" data-book="<%= @slug %>" style="display:none;">Reorder chapters</button>
+    <% end %>
   </div>
 </div>
 
 <div class="ui bottom attached tab segment" data-tab="images">
-<div id="book-get_images" class="incunabula-topic" topic="book:get_images:<%= @slug %>"></div>
+<div id="book-get_images" class="incunabula-topic" topic="book:get_images:<%= @slug %>:<%= @role %>"></div>
 <div class="content">
   <button class="incunabula-show ui primary button" modal="incunabula-new-image">Upload image</button>
 </div>
 </div>
 
 <div class="ui bottom attached tab segment" data-tab="chaff">
-  <div id="book-get_chaffs" class="incunabula-topic" topic="book:get_chaffs:<%= @slug %>">
+  <div id="book-get_chaffs" class="incunabula-topic" topic="book:get_chaffs:<%= @slug %>:<%= @role %>">
   </div>
   <div class="content">
     <button class="incunabula-show ui primary button" modal="incunabula-new-chaff">Create New Chaff</button>
@@ -50,11 +56,13 @@
   <h3>Reviewers</h3>
   <div id="book-get_reviewers" class="incunabula-topic" topic="book:get_reviewers:<%= @slug %>">
   </div>
+  <% if @role == "author" do %>
   <button class="incunabula-show ui primary button" modal="incunabula-new-reviewer">Add A Reviewer</button>
+  <% end %>
   <h3>Reviews</h3>
-  <div id="book-get_reviews" class="incunabula-topic" topic="book:get_reviews:<%= @slug %>">
+  <div id="book-get_reviews" class="incunabula-topic" topic="book:get_reviews:<%= @slug %>:<%= @role %>">
   </div>
-  <%= if @has_chapters and @has_reviewers do %>
+  <%= if @has_chapters and @has_reviewers and @role == "author" do %>
   <button class="incunabula-show ui primary button" modal="incunabula-new-review">Release A Chapter For Review</button>
   <% end %>
 </div>

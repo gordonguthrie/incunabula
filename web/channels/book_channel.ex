@@ -28,8 +28,9 @@ defmodule Incunabula.BookChannel do
     _html = Incunabula.FragController.get_users_dropdown(possiblereviewers)
   end
 
-  def get_reply(:get_reviewers, %{slug: slug}) do
-    _reviewers = Incunabula.Git.get_reviewers(slug)
+  def get_reply(:get_reviewers, %{slug: slug,
+                                 role: role}) do
+    _reviewers = Incunabula.Git.get_reviewers(slug, role)
   end
 
   def get_reply(:get_chapters_dropdown, %{slug: slug}) do
@@ -50,20 +51,24 @@ defmodule Incunabula.BookChannel do
     _title = Incunabula.Git.get_book_title(slug)
   end
 
-  def get_reply(:get_reviews, %{slug: slug}) do
-    _reviews = Incunabula.Git.get_reviews(slug)
+  def get_reply(:get_reviews, %{slug: slug,
+                                role: role}) do
+    _reviews = Incunabula.Git.get_reviews(slug, role)
   end
 
-  def get_reply(:get_chaffs, %{slug: slug}) do
-    _chaff = Incunabula.Git.get_chaffs(slug)
+  def get_reply(:get_chaffs, %{slug: slug,
+                               role: role}) do
+    _chaff = Incunabula.Git.get_chaffs(slug, role)
   end
 
-  def get_reply(:get_chapters, %{slug: slug}) do
-    _chapters = Incunabula.Git.get_chapters(slug)
+  def get_reply(:get_chapters, %{slug: slug,
+                                 role: role}) do
+    _chapters = Incunabula.Git.get_chapters(slug, role)
   end
 
-  def get_reply(:get_images, %{slug: slug}) do
-    _images = Incunabula.Git.get_images(slug)
+  def get_reply(:get_images, %{slug: slug,
+                               role: role}) do
+    _images = Incunabula.Git.get_images(slug, role)
   end
 
   def get_reply(:update_chaff_title, %{slug:       _slug,
@@ -170,12 +175,13 @@ defmodule Incunabula.BookChannel do
     {:get_possible_reviewers_dropdown, %{slug: slug}}
   end
 
-  defp parse_route(["get_reviewers", slug]) do
-    {:get_reviewers, %{slug: slug}}
+  defp parse_route(["get_reviewers", slug, role]) do
+    {:get_reviewers, %{slug: slug,
+                       role: role}}
   end
 
   defp parse_route(["get_chapters_dropdown", slug]) do
-    {:get_chapters_dropdown, %{slug: slug}}
+    {:get_chapters_dropdown, %{slug: slug,}}
   end
 
   defp parse_route(["get_chaff_title", slug, "chaff", chaff_slug]) do
@@ -192,20 +198,24 @@ defmodule Incunabula.BookChannel do
     {:get_book_title, %{slug: slug}}
   end
 
-  defp parse_route(["get_chapters", slug]) do
-    {:get_chapters, %{slug: slug}}
+  defp parse_route(["get_chapters", slug, role]) do
+    {:get_chapters, %{slug: slug,
+                      role: role}}
   end
 
-  defp parse_route(["get_chaffs", slug]) do
-    {:get_chaffs, %{slug: slug}}
+  defp parse_route(["get_chaffs", slug, role]) do
+    {:get_chaffs, %{slug: slug,
+                    role: role}}
   end
 
-  defp parse_route(["get_reviews", slug]) do
-    {:get_reviews, %{slug: slug}}
+  defp parse_route(["get_reviews", slug, role]) do
+    {:get_reviews, %{slug: slug,
+                     role: role}}
   end
 
-  defp parse_route(["get_images", slug]) do
-    {:get_images, %{slug: slug}}
+  defp parse_route(["get_images", slug, role]) do
+    {:get_images, %{slug: slug,
+                    role: role}}
   end
 
   defp parse_route(["update_chaff_title", slug, "chaff", chaff_slug]) do
