@@ -23,6 +23,24 @@ import {socket, socket_push, socket_init} from "./socket"
 
 var incunabula = {};
 
+incunabula.bind_review_buttons = function () {
+    $(".incunabula-review-button").on("click", function () {
+        var url = $(this).attr("data-url");
+        var nextstatus = $(this).attr("data-next");
+        // gotta steal a csrf token ma man
+        var inputs = $("input[name='_csrf_token']");
+        var csrf_token = $(inputs[0]).val();
+        var json = {"newstatus":   nextstatus,
+                    "_csrf_token": csrf_token};
+    $.post(url,
+           json,
+           function (resp) {
+               // console.log("got response");
+               // console.log(resp);
+           });
+    })
+};
+
 incunabula.setup_modals = function() {
     // for each bound modal form we need to bind the submit button
     var modals = $(".incunabula-show");

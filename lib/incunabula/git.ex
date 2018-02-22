@@ -2,6 +2,8 @@ defmodule Incunabula.Git do
 
   use GenServer
 
+  alias IncunabulaUtilities.DB
+
   @moduledoc """
   This gen server serves two seperate roles:
   * it is a point of serialisation which ensures that (subject to force majeur)
@@ -50,6 +52,10 @@ defmodule Incunabula.Git do
 
   def init([]) do
     {:ok, []}
+  end
+
+  def update_review_status(slug, reviewslug, newstatus, user) do
+    GenServer.call(__MODULE__, {:update_review_status, {slug, reviewslug, newstatus, user}}, @timeout)
   end
 
   def add_reviewer(slug, username, user) do
@@ -292,6 +298,9 @@ defmodule Incunabula.Git do
               {:get_history, slug} ->
                 do_get_history(slug)
 
+              {:update_review_status, {slug, reviewslug, newstatus, user}} ->
+                do_update_review_status(slug, reviewslug, newstatus, user)
+
               {:add_reviewer,  {slug, username, user}} ->
                 do_add_reviewer(slug, username, user)
 
@@ -423,6 +432,21 @@ defmodule Incunabula.Git do
     author
   end
 
+  defp do_update_review_status(slug, reviewslug, newstatus, user) do
+    bookdir = get_book_dir(slug)
+    reviewtitle =  do_get_review_title(slug, reviewslug)
+    msg = "setting status to: " <> newstatus
+    tag = make_tag("update review status", reviewtitle, reviewslug, user, msg)
+    bookdir
+    |> DB.update_value(@reviewsDB, :review_slug, reviewslug, :review_status, newstatus)
+    |> add_to_git(:all)
+    |> commit_to_git(tag)
+    |> bump_tag(tag, "major", user)
+    |> push_to_github(slug)
+    |> push_to_roles_in_channels(slug, slug, "book:get_reviews:")
+    :ok
+  end
+
   defp do_get_history(slug) do
     bookdir = get_book_dir(slug)
     args = [
@@ -462,14 +486,14 @@ defmodule Incunabula.Git do
 
   defp do_add_reviewer(slug, username, user) do
     bookdir = get_book_dir(slug)
-    # only add the user if they are not allready a reviewer
-    case IncunabulaUtilities.DB.lookup_value(bookdir, @reviewersDB, :reviewer, username, :reviewer) do
+    # only add the user if they are not already a reviewer
+    case DB.lookup_value(bookdir, @reviewersDB, :reviewer, username, :reviewer) do
       {:error, :no_match_of_key} ->
         newrecord = new_reviewers_record(username)
         {:ok, title}  = read_file(get_book_dir(slug), @title)
         tag = make_tag("add reviewer", title, slug, user, "adding " <> username)
         bookdir
-        |> IncunabulaUtilities.DB.appendDB(@reviewersDB, newrecord)
+        |> DB.appendDB(@reviewersDB, newrecord)
         |> add_to_git(:all)
         |> commit_to_git(tag)
         |> bump_tag(tag, "major", user)
@@ -483,12 +507,12 @@ defmodule Incunabula.Git do
 
   defp do_remove_reviewer(slug, username, user) do
     bookdir = get_book_dir(slug)
-    case IncunabulaUtilities.DB.lookup_value(bookdir, @reviewersDB, :reviewer, username, :reviewer) do
+    case DB.lookup_value(bookdir, @reviewersDB, :reviewer, username, :reviewer) do
       {:ok, _username} ->
         {:ok, title}  = read_file(get_book_dir(slug), @title)
         tag = make_tag("remove reviewer", title, slug, user, "removing " <> username)
         bookdir
-        |> IncunabulaUtilities.DB.delete_records(@reviewersDB, :reviewer, username)
+        |> DB.delete_records(@reviewersDB, :reviewer, username)
         |> add_to_git(:all)
         |> commit_to_git(tag)
         |> bump_tag(tag, "major", user)
@@ -509,8 +533,7 @@ defmodule Incunabula.Git do
     shortimageslug = Incunabula.Slug.to_slug(image_title)
     imageslug = shortimageslug <> ext
     bookdir = get_book_dir(slug)
-    commitmsg = "upload new image: " <> imagename <>
-      " - " <> imageslug <> " by " <> user
+    tag = make_tag("upload new image:", imagename, imageslug, user)
     # we might upload 'something.png' with the title of 'bobby dazzler'
     # and then later upload 'anotherthing.jpg' also with the title
     # of 'bobby dazzler' - this would result in files called
@@ -527,10 +550,10 @@ defmodule Incunabula.Git do
                      extension:     ext}
         bookdir
         |> copy_image(imageslug, tmp_image_path)
-        |> IncunabulaUtilities.DB.appendDB(@imagesDB, newimage)
+        |> DB.appendDB(@imagesDB, newimage)
         |> add_to_git(:all)
-        |> commit_to_git(commitmsg)
-        |> bump_tag("new image loaded " <> imageslug, "major", user)
+        |> commit_to_git(tag)
+        |> bump_tag(tag, "major", user)
         |> push_to_github(slug)
         |> push_to_roles_in_channels(slug, slug, "book:get_images:")
         :ok
@@ -553,7 +576,7 @@ defmodule Incunabula.Git do
     commit_msg = "reorder chapters"
     tag = make_tag(commit_msg, title, slug, user, "")
     bookdir
-    |> IncunabulaUtilities.DB.replaceDB(@chaptersDB, new_chapters)
+    |> DB.replaceDB(@chaptersDB, new_chapters)
     |> add_to_git(:all)
     |> commit_to_git(commit_msg)
     |> bump_tag(tag, "major", user)
@@ -594,7 +617,7 @@ defmodule Incunabula.Git do
         <> new_title <> "(" <> ch_slug  <> ")"
         tag = make_tag(prefix, new_title, slug, user, msg)
         bookdir
-        |> IncunabulaUtilities.DB.update_value(db, keyfield, ch_slug,
+        |> DB.update_value(db, keyfield, ch_slug,
         updatefield, new_title)
         |> add_to_git(:all)
         |> commit_to_git(commitmsg)
@@ -610,7 +633,7 @@ defmodule Incunabula.Git do
     {:ok, oldtitle} = read_file(get_book_dir(slug), @title)
     commitmsg = "old title was " <> oldtitle <> "new title is "
     <> new_title <> "(" <> slug <> ")"
-    tag = make_tag("edit book title", new_title, slug, user, "new book title ")
+    tag = make_tag("edit book title", new_title, slug, user, "new book title")
     bookdir
     |> write_to_file(@title, new_title)
     |> add_to_git(:all)
@@ -626,8 +649,7 @@ defmodule Incunabula.Git do
     data, tag_bump, user) do
     bookdir  = get_book_dir(slug)
     review_title =  do_get_review_title(slug, review_slug)
-    tag = make_tag("update review", review_title, review_slug,
-      user, commit_title)
+    tag = make_tag("update review", review_title, review_slug, user, commit_title)
     review = review_slug <> ".eider"
     route  = make_route([slug, "review", review_slug])
     # the user may have pressed save without making any changes
@@ -732,9 +754,9 @@ defmodule Incunabula.Git do
         bookdir
         |> add_to_git(:all)
         |> push_to_github(slug)
-        |> bump_tag(msg, "major", user)
+        |> bump_tag(tag, "major", user)
         |> make_html(:review, review_title, review_slug, user)
-        |> IncunabulaUtilities.DB.appendDB(@reviewsDB, newrecord)
+        |> DB.appendDB(@reviewsDB, newrecord)
         |> push_to_github(slug)
         |> push_to_roles_in_channels(slug, slug, "book:get_reviews:")
         :ok
@@ -758,7 +780,7 @@ defmodule Incunabula.Git do
         msg = prefix <> " at " <> currenttag
         newrecord = new_chaff_record(chaff_title, msg)
         bookdir
-        |> IncunabulaUtilities.DB.appendDB(@chaffDB, newrecord)
+        |> DB.appendDB(@chaffDB, newrecord)
         |> add_to_git(:all)
         |> make_html(:chaff, chaff_title, chaff_slug, user)
         |> commit_to_git(tag)
@@ -805,7 +827,7 @@ defmodule Incunabula.Git do
                               {@chaffDB, newr}
                           end
         bookdir
-        |> IncunabulaUtilities.DB.appendDB(db, newrecord)
+        |> DB.appendDB(db, newrecord)
         |> add_to_git(:all)
         |> make_html(type, title, title_slug, user)
         |> commit_to_git(tag)
@@ -846,11 +868,11 @@ defmodule Incunabula.Git do
         |> write_to_file(@title,       book_title)
         |> write_to_file(@author,      author)
         |> write_to_file(".gitignore", standard_gitignore())
-        |> IncunabulaUtilities.DB.createDB(@chaptersDB)
-        |> IncunabulaUtilities.DB.createDB(@imagesDB)
-        |> IncunabulaUtilities.DB.createDB(@chaffDB)
-        |> IncunabulaUtilities.DB.createDB(@reviewsDB)
-        |> IncunabulaUtilities.DB.createDB(@reviewersDB)
+        |> DB.createDB(@chaptersDB)
+        |> DB.createDB(@imagesDB)
+        |> DB.createDB(@chaffDB)
+        |> DB.createDB(@reviewsDB)
+        |> DB.createDB(@reviewersDB)
         |> add_to_git(:all)
         |> commit_to_git("basic setup of directory")
         |> tag_git(0, 0, 1, 1, "initial creation of " <> slug, author)
@@ -883,18 +905,18 @@ defmodule Incunabula.Git do
   end
 
   defp do_get_chapters_dropdown(slug) do
-    chapters  = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @chaptersDB)
+    chapters  = DB.getDB(get_book_dir(slug), @chaptersDB)
     _dropdown = Incunabula.FragController.get_chapters_dropdown(slug, chapters)
   end
 
   defp do_get_reviewer(slug, reviewslug) do
-    {:ok, reviewer} = IncunabulaUtilities.DB.lookup_value(get_book_dir(slug),
+    {:ok, reviewer} = DB.lookup_value(get_book_dir(slug),
       @reviewsDB, :review_slug, reviewslug, :reviewer)
     reviewer
   end
 
   defp do_get_reviewers(format, slug, role) do
-    reviewers = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @reviewersDB)
+    reviewers = DB.getDB(get_book_dir(slug), @reviewersDB)
     case format do
       :html ->
         _html = Incunabula.FragController.get_reviewers(reviewers, slug, role)
@@ -917,48 +939,48 @@ defmodule Incunabula.Git do
 
   defp do_get_review_title(slug, reviewslug) do
     dir = get_book_dir(slug)
-    {:ok, title} = IncunabulaUtilities.DB.lookup_value(dir, @reviewsDB,
+    {:ok, title} = DB.lookup_value(dir, @reviewsDB,
       :review_slug, reviewslug, :review_title)
     title
   end
 
   defp do_get_chaff_title(slug, chaffslug) do
     dir = get_book_dir(slug)
-    {:ok, title} = IncunabulaUtilities.DB.lookup_value(dir, @chaffDB,
+    {:ok, title} = DB.lookup_value(dir, @chaffDB,
       :chaff_slug, chaffslug, :chaff_title)
     title
   end
 
   defp do_get_chapter_title(slug, chapterslug) do
     dir = get_book_dir(slug)
-    {:ok, title} = IncunabulaUtilities.DB.lookup_value(dir, @chaptersDB,
+    {:ok, title} = DB.lookup_value(dir, @chaptersDB,
       :chapter_slug, chapterslug, :chapter_title)
     title
   end
 
   defp do_get_chapters_json(slug) do
-    _chapters = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @chaptersDB)
+    _chapters = DB.getDB(get_book_dir(slug), @chaptersDB)
   end
 
   defp do_get(:reviews, slug, role)
   when role == "author"
   or   role == "reviewer" do
-    reviews = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @reviewsDB)
+    reviews = DB.getDB(get_book_dir(slug), @reviewsDB)
     _html   = Incunabula.FragController.get_reviews(slug, reviews, role)
   end
 
   defp do_get(:chaffs, slug, role)
   when role == "author"
   or   role == "reviewer" do
-    chaffs = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @chaffDB)
+    chaffs = DB.getDB(get_book_dir(slug), @chaffDB)
     _html  = Incunabula.FragController.get_chaffs(slug, chaffs, role)
   end
 
   defp do_get(:chapters, slug, role)
   when role == "author"
   or   role == "reviewer" do
-    chapters = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @chaptersDB)
-    reviews  = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @reviewsDB)
+    chapters = DB.getDB(get_book_dir(slug), @chaptersDB)
+    reviews  = DB.getDB(get_book_dir(slug), @reviewsDB)
     marked   = mark_review_status(chapters, reviews, [])
     _html    = Incunabula.FragController.get_chapters(slug, marked, role)
   end
@@ -966,7 +988,7 @@ defmodule Incunabula.Git do
   defp do_get(:images, slug, role)
   when role == "author"
   or   role == "reviewer" do
-    images = IncunabulaUtilities.DB.getDB(get_book_dir(slug), @imagesDB)
+    images = DB.getDB(get_book_dir(slug), @imagesDB)
       _html  = Incunabula.FragController.get_images(slug, images)
   end
 
@@ -1376,7 +1398,7 @@ defmodule Incunabula.Git do
   end
 
   defp has(db, slug) do
-    records = IncunabulaUtilities.DB.getDB(get_book_dir(slug), db)
+    records = DB.getDB(get_book_dir(slug), db)
     _reply  = case records do
                 [] -> false
                 _  -> true

@@ -10,6 +10,7 @@ defmodule Incunabula.ReviewController do
 
   plug :authenticate_author_or_reviewer when action in [
     :index,
+    :change_status
   ]
 
   plug :authenticate_reviewer when action in [
@@ -57,5 +58,15 @@ defmodule Incunabula.ReviewController do
   def index(conn, _params, _user) do
     render conn, "index.html"
   end
+
+  def change_status(conn, params, user) do
+    %{"newstatus"  => newstatus,
+      "slug"       => slug,
+      "reviewslug" => reviewslug} = params
+    :ok = Incunabula.Git.update_review_status(slug, reviewslug, newstatus, user)
+    conn
+    |> put_resp_header("content-type", "text/html; charset=utf-8")
+    |> send_resp(200, "ok")
+    end
 
 end

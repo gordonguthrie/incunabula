@@ -24,6 +24,13 @@ var topic_router = []
 //
 function sanitize(html){return $("div/>").text(html).html()}
 
+function draw_reviews(id, msg) {
+    // need to setup up the reviews
+    // draw them first, then bind functions
+    draw(id, msg)
+    incunabula.bind_review_buttons()
+}
+
 function draw_reviewers(id, msg) {
     // need to set up modals
     // draw them first, then bind functions
@@ -110,7 +117,7 @@ router.set("admin:get_users_dropdown",
 // router for a particular book
 router.set("book:get_reviews",
            {id:      "book-get_reviews",
-            draw_fn: function(id, msg) {draw(id, msg)}})
+            draw_fn: function(id, msg) {draw_reviews(id, msg)}})
 router.set("book:get_reviewers",
            {id:      "book-get_reviewers",
             draw_fn: function(id, msg) {draw_reviewers(id, msg)}})

@@ -30,6 +30,7 @@ defmodule Incunabula.Router do
     post "/books/:slug/removereviewer/:reviewer",           ReviewerController, :removereviewer
     post "/books/:slug/review/copy",                        ReviewController,   :copy
     get  "/books/:slug/reviews/:reviewslug",                ReviewController,   :show
+    post "/books/:slug/reviews/:reviewslug/changestatus",   ReviewController,   :change_status
     get  "/books/:slug/chapters/:chapterslug",              ChapterController,  :show
     get  "/books/:slug/chaffs/:chaffslug/preview",          PreviewController,  :show
     get  "/books/:slug/reviews/:reviewslug/preview",        PreviewController,  :show

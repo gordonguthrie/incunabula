@@ -4,7 +4,7 @@ defmodule Incunabula.FragController do
   def get_users_dropdown(users) do
     conn = make_fresh_conn()
     make_html conn, "users_dropdown.html",
-      users:     users
+      users: users
   end
 
   def get_reviewers(reviewers, bookslug, role) do
@@ -12,7 +12,7 @@ defmodule Incunabula.FragController do
     make_html conn, "reviewers.html",
       reviewers: reviewers,
       bookslug:  bookslug,
-      role: role
+      role:      role
   end
 
   def get_users(users) do
@@ -40,8 +40,8 @@ defmodule Incunabula.FragController do
   def get_chapters_dropdown(slug, chapters) do
     conn = make_fresh_conn()
     make_html conn, "chapters_dropdown.html",
-      slug:               slug,
-      chapters:           chapters
+      slug:     slug,
+      chapters: chapters
   end
 
   def get_chapters(slug, chapters, role) do
