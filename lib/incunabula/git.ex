@@ -761,7 +761,6 @@ defmodule Incunabula.Git do
         |> push_to_roles_in_channels(slug, slug, "book:get_reviews:")
         :ok
       true ->
-        # gotta switch back to master anyhoo
         {:error, review_slug <> " already exists"}
     end
   end
