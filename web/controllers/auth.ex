@@ -15,7 +15,6 @@ defmodule Incunabula.Auth do
       "reviewslug" => reviewslug} = conn.params
     reviewer = Incunabula.Git.get_reviewer(slug, reviewslug)
     user = conn.assigns.current_user
-    is_valid? = true
     case user do
       ^reviewer ->
         conn
@@ -46,7 +45,7 @@ defmodule Incunabula.Auth do
     end
   end
 
-  def authenticate_author(conn, opts) do
+  def authenticate_author(conn, _opts) do
     %{"slug" => slug} = conn.params
     author = Incunabula.Git.get_author(slug)
     cond do
