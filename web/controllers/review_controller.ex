@@ -17,9 +17,17 @@ defmodule Incunabula.ReviewController do
     :show,
   ]
 
-  def reconcile(conn, _params, _user) do    conn
-    |> put_flash(:error, "reconciliation is not built yet")
-    |> redirect(to: "/")
+  def reconcile(conn, params, _user) do
+    %{"reviewslug" => reviewslug,
+      "slug"       => slug} = params
+    {reviewtag,   reviewtext}   = Incunabula.Git.get_review(slug, reviewslug)
+    {originaltag, originaltext} = Incunabula.Git.get_original_from_review(slug,
+      reviewslug)
+    reconciliation = Incunabula.Reconcile.reconcile(slug, originaltext,
+      reviewtext)
+    render conn, "reconcile.html",
+    reconciliation: reconciliation
+
   end
 
   def copy(conn, %{"copy"         => review,

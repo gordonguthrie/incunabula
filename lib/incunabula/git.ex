@@ -38,6 +38,8 @@ defmodule Incunabula.Git do
   @title  "title.txt"
   @author "author.txt"
 
+  @optional_tagsDB "optional_tags.DB"
+
   @timeout 10_000
 
   require Logger
@@ -52,6 +54,14 @@ defmodule Incunabula.Git do
 
   def init([]) do
     {:ok, []}
+  end
+
+  #
+  # Now the functional API
+  #
+
+  def get_book_dir(slug) do
+    Path.join(get_books_dir(), slug)
   end
 
   def update_review_status(slug, reviewslug, newstatus, user) do
@@ -219,6 +229,10 @@ defmodule Incunabula.Git do
     GenServer.call(__MODULE__, {:get_reviewer, slug, reviewslug}, @timeout)
   end
 
+  def get_original_from_review(slug, reviewslug) do
+    GenServer.call(__MODULE__, {:get_original_from_review, {slug, reviewslug}}, @timeout)
+  end
+
   def get_review(slug, reviewslug) do
     GenServer.call(__MODULE__, {:get_review, {slug, reviewslug}}, @timeout)
   end
@@ -361,6 +375,9 @@ defmodule Incunabula.Git do
 
               {:get_reviewers, format, slug, role} ->
                 do_get_reviewers(format, slug, role)
+
+              {:get_original_from_review, {slug, reviewslug}} ->
+                do_get_original_from_review(slug, reviewslug)
 
               {:get_review, {slug, reviewslug}} ->
                 do_get_text(slug, :review, reviewslug)
@@ -864,9 +881,10 @@ defmodule Incunabula.Git do
         bookdir
         |> make_dir
         |> do_git_init
-        |> write_to_file(@title,       book_title)
-        |> write_to_file(@author,      author)
-        |> write_to_file(".gitignore", standard_gitignore())
+        |> write_to_file(@title,           book_title)
+        |> write_to_file(@author,          author)
+        |> write_to_file(".gitignore",     standard_gitignore())
+        |> write_to_file(@optional_tagsDB, standard_optional_tags())
         |> DB.createDB(@chaptersDB)
         |> DB.createDB(@imagesDB)
         |> DB.createDB(@chaffDB)
@@ -922,6 +940,42 @@ defmodule Incunabula.Git do
       :raw ->
         for %{reviewer: r} <- reviewers, do: r
     end
+  end
+
+  defp do_get_original_from_review(slug, reviewslug) do
+    bookdir             = get_book_dir(slug)
+    {:ok, tag}          = DB.lookup_value(bookdir, @reviewsDB, :review_slug, reviewslug, :tag)
+    {:ok, chapter_slug} = DB.lookup_value(bookdir, @reviewsDB, :review_slug, reviewslug, :chapter_slug)
+
+    # switch to the branch
+    bookdir
+    |> checkout_tag(tag)
+
+    # read the text
+    text = do_get_text(slug, :chapter, chapter_slug)
+
+    # switch back
+    bookdir
+    |> checkout_master()
+
+    # return
+    text
+  end
+
+  defp checkout_master(dir) do
+    args = [
+      "checkout",
+      "master"
+    ]
+    {"", 0} = System.cmd("git", args, [cd: dir])
+  end
+
+  defp checkout_tag(dir, tag) do
+    args = [
+      "checkout",
+      "tags/" <> to_string(tag)
+    ]
+    {"", 0} = System.cmd("git", args, [cd: dir])
   end
 
   defp do_get_text(slug, type, textslug) do
@@ -1277,8 +1331,19 @@ defmodule Incunabula.Git do
     "lock.file"
   end
 
-  defp get_book_dir(slug) do
-    Path.join(get_books_dir(), slug)
+  defp standard_optional_tags() do
+    tags = [
+          %{tag:        "todo",
+            classnames: "eiderdown-todo",
+            scope:      :review},
+          %{tag:        "comment",
+            classnames: "eiderdown-comment",
+            scope:      :review},
+          %{tag:        "quote",
+            classnames: "eiderdown-quote",
+            scope:      :html}
+        ]
+    List.flatten(for t <- tags, do: :io_lib.format("~p.~n", [t]))
   end
 
   defp log(dir, msg) do

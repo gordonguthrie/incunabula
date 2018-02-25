@@ -1,0 +1,16 @@
+<style>
+.deleted {
+  text-decoration: line-through;
+  color:           red;
+}
+.inserted {
+  color: purple;
+}
+.modified {
+  color: blue;
+}
+.moved {
+  color: orange;
+}
+</style>
+<%= raw(@reconciliation) %>
