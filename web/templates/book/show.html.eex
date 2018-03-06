@@ -24,7 +24,7 @@
 <div class="ui bottom attached active tab segment" data-tab="chapters">
   <div id="book-get_chapters" class="incunabula-topic" topic="book:get_chapters:<%= @slug %>:<%= @role %>"></div>
   <div class="content">
-    <% if @role == "author" do %>
+    <%= if @role == "author" do %>
     <button class="incunabula-show ui primary button" modal="incunabula-new-chapter" >New Chapter</button>
     <% end %>
     <!-- this button is only made visible if there is more than one chapter -->
