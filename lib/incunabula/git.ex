@@ -849,11 +849,11 @@ defmodule Incunabula.Git do
         |> commit_to_git(tag)
         |> bump_tag(tag, "major", user)
         |> push_to_github(slug)
-        |> push_to_channel(slug, slug, channel)
+        |> push_to_roles_in_channels(slug, slug, channel)
         case type == :chapter do
           true ->
             bookdir
-            |> push_to_roles_in_channels(slug, slug, type)
+            |> push_to_roles_in_channels(slug, slug, channel)
             |> push_to_channel(slug, slug, "book:get_chapters_dropdown:")
             :ok
           false ->
@@ -1088,7 +1088,6 @@ defmodule Incunabula.Git do
     {:ok, a} = File.read(Path.join([rootdir, s, @author])) do
         {t, a, s}
     end
-    IO.inspect books
     Incunabula.FragController.get_books(Enum.sort(books))
   end
 
@@ -1110,7 +1109,7 @@ defmodule Incunabula.Git do
     ]
     # Bit shit check of return values
     # Rly should be an http request but hey
-    #{_, 0} = System.cmd("curl", args)
+    {_, 0} = System.cmd("curl", args)
     :ok
   end
 
@@ -1206,7 +1205,9 @@ defmodule Incunabula.Git do
                  "--repo=" <> url,
                ]
            end
-    # {"", return} = System.cmd(cmd, args, [cd: dir])
+    {"", return} = System.cmd(cmd, args, [cd: dir])
+    IO.inspect "Pushing to github"
+    IO.inspect return
     dir
   end
 
@@ -1333,14 +1334,14 @@ defmodule Incunabula.Git do
 
   defp standard_optional_tags() do
     tags = [
-          %{tag:        "todo",
-            classnames: "eiderdown-todo",
+          %{tag:        'todo',
+            classnames: 'eiderdown-todo',
             scope:      :review},
-          %{tag:        "comment",
-            classnames: "eiderdown-comment",
+          %{tag:        'comment',
+            classnames: 'eiderdown-comment',
             scope:      :review},
-          %{tag:        "quote",
-            classnames: "eiderdown-quote",
+          %{tag:        'quote',
+            classnames: 'eiderdown-quote',
             scope:      :html}
         ]
     List.flatten(for t <- tags, do: :io_lib.format("~p.~n", [t]))
@@ -1399,6 +1400,9 @@ defmodule Incunabula.Git do
     eiderdownfile = Path.join([dir, sourcedir, slug <> ".eider"])
     {:ok, eiderdown} = File.read(eiderdownfile)
 
+    # got to read the optional tags
+    opts = get_optional_tags(dir)
+
     htmldir     = Path.join([dir, outputdir])
     webpage     = slug <> ".html"
     summarypage = slug <> ".summary.html"
@@ -1406,12 +1410,13 @@ defmodule Incunabula.Git do
     eiderdown_charlist = to_charlist(eiderdown)
 
     # first we make the preview
-    body = to_string(:eiderdown.to_html_from_utf8(eiderdown_charlist))
+    bin  = :eiderdown.to_html_from_utf8(eiderdown_charlist, opts, :review)
+    body = to_string(bin)
     html = Incunabula.HTMLController.make_preview(title, user, body)
     ^htmldir = write_to_file(htmldir, webpage, html)
 
     # now we make the summary
-    sum = to_string(:eiderdown.to_summary_from_utf8(eiderdown_charlist))
+    sum = to_string(:eiderdown.to_summary_from_utf8(eiderdown_charlist, opts))
     s_html = Incunabula.HTMLController.make_preview(title, user, sum)
     ^htmldir = write_to_file(htmldir, summarypage, s_html)
 
@@ -1419,12 +1424,16 @@ defmodule Incunabula.Git do
   end
 
   defp make_html(dir, :chaff, chaff_title, chaff_slug, user) do
-    eiderdownfile = Path.join([dir, @chaffDir,      chaff_slug <> ".eider"])
+    eiderdownfile = Path.join([dir, @chaffDir, chaff_slug <> ".eider"])
     {:ok, eiderdown} = File.read(eiderdownfile)
+
+    # got to read the optional tags
+    opts = get_optional_tags(dir)
 
     htmldir = Path.join([dir, @chaff_htmlDir])
     webpage = chaff_slug <> ".html"
-    body = to_string(:eiderdown.to_html_from_utf8(to_charlist(eiderdown)))
+    bin = :eiderdown.to_html_from_utf8(to_charlist(eiderdown), opts, :review)
+    body = to_string(bin)
     html = Incunabula.ChaffHTMLController.make_preview(chaff_title, user, body)
     ^htmldir = write_to_file(htmldir, webpage, html)
     dir
@@ -1467,6 +1476,11 @@ defmodule Incunabula.Git do
                 [] -> false
                 _  -> true
               end
+  end
+
+  defp get_optional_tags(dir) do
+    opts   = DB.getDB(dir, @optional_tagsDB)
+    _opts2 = for o <- opts, do: :eiderdown_utils.map_to_optional_tag(o)
   end
 
 end
