@@ -274,4 +274,25 @@ label.margin-toggle:not(.sidenote-number) { display: none; }
                             label { cursor: pointer; }
                             div.table-wrapper, table { width: 85%; }
                             img { width: 100%; } }
+.eiderdown-todo {
+   color: darkred;
+}
+
+.eiderdown-todo:before {
+   content: "TODO: ";
+}
+
+.eiderdown-comment {
+   color: darkblue;
+}
+
+.eiderdown-comment:before {
+   content: "COMMENT: ";
+}
+
+.eiderdown-quote {
+   text-indent: 20px;
+   text-size: 1.3em;
+}
+
 </style>
