@@ -3,13 +3,15 @@ defmodule Incunabula.ChaffController do
 
   use Incunabula.Controller
 
+  import Incunabula.Git
+
   plug :authenticate_user when action in [:index, :new, :copy, :show]
 
   def new(conn, %{"chaff" => chaff,
                   "slug"  => slug}, user) do
     %{"chaff_title" => chaff_title,
       "copy?"       => "false"} = chaff
-    case Incunabula.Git.create_chaff(slug, chaff_title, user) do
+    case Git.create_chaff(slug, chaff_title, user) do
       :ok ->
         conn
         |> redirect(to: Path.join(["/books", slug, "#chaff"]))
@@ -26,7 +28,7 @@ defmodule Incunabula.ChaffController do
     %{"chapter_slug" => chapter_slug} = copy
     %{"chaff_title"  => chaff_title,
       "copy?"        => "true"} = chaff
-    case Incunabula.Git.copy_chapter_to_chaff(slug, chapter_slug, chaff_title, user) do
+    case Git.copy_chapter_to_chaff(slug, chapter_slug, chaff_title, user) do
       :ok ->
         conn
         |> redirect(to: Path.join(["/books", slug, "#chaff"]))
@@ -39,11 +41,11 @@ defmodule Incunabula.ChaffController do
 
   def show(conn, %{"chaffslug" => chaffslug,
                    "slug"      => slug}, _user) do
-    booktitle  = Incunabula.Git.get_book_title(slug)
-    chafftitle = Incunabula.Git.get_chaff_title(slug, chaffslug)
+    booktitle  = Git.get_book_title(slug)
+    chafftitle = Git.get_chaff_title(slug, chaffslug)
     changeset  = Incunabula.SaveEdit.changeset()
     savepath   = Path.join(["/books", slug, "chaff", chaffslug, "save"])
-    {_tag, contents} = Incunabula.Git.get_chaff(slug, chaffslug)
+    {_tag, contents} = Git.get_chaff(slug, chaffslug)
     render conn, "show.html",
       changeset:  changeset,
       title:      booktitle,
