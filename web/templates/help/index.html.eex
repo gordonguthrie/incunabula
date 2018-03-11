@@ -1,0 +1,215 @@
+<style>
+.eiderdown-todo {
+   color: darkred;
+}
+
+.eiderdown-todo:before {
+   content: "TODO: ";
+}
+
+.eiderdown-comment {
+   color: darkblue;
+}
+
+.eiderdown-comment:before {
+   content: "COMMENT: ";
+}
+
+.eiderdown-quote {
+   text-indent: 20px;
+   text-size: 1.3em;
+}
+</style>
+
+<h2>Help</h2>
+
+<p>Eiderdown is a simple markup language. You type in raw text and it converts it into marked up html.</p>
+
+<h3>Normal markup</h3>
+
+<table class="ui celled table">
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Result</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <code># Very large header</code>
+      </td>
+      <td>
+        <h1>Very large header</h1>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <code>## Large header</code>
+      </td>
+      <td>
+        <h2>Large header</h2>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <code>### Header</code>
+      </td>
+      <td>
+        <h3>Header</h3>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <code>#### Small header</code>
+      </td>
+      <td>
+        <h4>Small header</h4>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <code>##### Very small header</code>
+      </td>
+      <td>
+        <h5>Very small header</h5>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <code>###### Tiny header</code>
+      </td>
+      <td>
+        <h6>Tiny header</h6>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>something *italic* here</p>
+      </td>
+      <td>
+        <p>something <em>italic</em> here</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>something **bold** here</p>
+      </td>
+      <td>
+        <p>something <strong>bold</strong> here</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>something ***bold italic*** here</p>
+      </td>
+      <td>
+        <p>something <strong><em>bold italic</em></strong> here</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Inserting imapges</h3>
+
+You can insert images using the html code on the images tab for your book.
+
+<h3>Creating link code</h3>
+
+Links can be made here:
+<form class="ui big form">
+  <div class="field">
+    <label>Text for the link</label>
+    <input type="text" />
+  </div>
+  <div class="field">
+    <label>Link</label>
+    <input type="text" />
+  </div>
+  <button class="ui button">Make link</button>
+  <div class="field">
+    <label>Copy and paste this code into your text</label>
+    <div>
+      <code class="incunabula-make-link"></code>
+    </div>
+  </div>
+</form>
+
+<h3>Special paragraphs</h3>
+
+There are some special paragraphs that you can add by adding a keyword at the start of a paragraph. These special paragraphs can be extended by your site developer to add new ones. Please read the user manual.
+
+<table class="ui celled table">
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Result</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <code>:todo some test</code>
+      </td>
+      <td>
+        <p class="eiderdown-todo">some text</p>
+      </td>
+      <td>
+        <small>will be filtered out from the final book</small>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <code>:comment some test</code>
+      </td>
+      <td>
+        <p class="eiderdown-comment">some text</p>
+      </td>
+      <td>
+        <small>will be filtered out from the final book</small>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <code>:quote some test</code>
+      </td>
+      <td>
+        <p class="eiderdown-quote">some text</p>
+      </td>
+      <td>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Designer codes</h3>
+
+Your site developer can add extra features using special html codes. Please consult the user manual for more details.
+
+<table class="ui celled table">
+  <thead>
+    <tr>
+      <th>Codes</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <code>&lt;div class="your special classes"&gt; and &lt;/div&gt;</code>
+      </td>
+      <td>
+        <small>must be placed on their own lines</small>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <code>&lt;span class="your special classes"&gt; and &lt;/span&gt;</code>
+      </td>
+      <td>
+        <small>can be inlined in a paragraph</small>
+      </td>
+    </tr>
+  </tbody>
+</table>

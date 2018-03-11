@@ -43,6 +43,7 @@ defmodule Incunabula.Router do
     get  "/books/:slug/reviews",                            ReviewController,   :index
     get  "/books/:slug/chapter_order",                      OrderController,    :read
     post "/books/:slug/chapter_order",                      OrderController,    :write
+    get  "/help",                                           HelpController,     :index
     get  "/admin",                                          AdminController,    :index
     post "/admin/adduser",                                  AdminController,    :adduser
     post "/admin/changepassword",                           AdminController,    :changepassword
