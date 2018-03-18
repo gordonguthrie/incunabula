@@ -345,7 +345,7 @@ $(".incunabula-link-maker").on("click", function (event) {
     event.preventDefault();
     var url = $(".incunabula-link-url").val();
     var text = $(".incunabula-link-text").val();
-    var link = "&lt;a scr='" + url + "'&gt;" + text + "&lt;/a&gt;"
+    var link = "&lt;a href='" + url + "'&gt;" + text + "&lt;/a&gt;"
     $(".incunabula-show-link").html(link);
     $(".incunabula-hidden").css("display", "inline");
 });
