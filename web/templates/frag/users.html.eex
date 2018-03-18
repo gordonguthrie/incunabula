@@ -1,6 +1,12 @@
 <table class="ui striped unstackable table">
+    <thead>
+      <tr>
+        <th>User</th>
+        <th></th>
+      </tr>
+    </thead>
 <%= for u <- @users do %>
-   <tr>
+    <tr>
      <td><%= u %></td>
      <td class="right aligned">
        <%= if u != "admin" do %>
