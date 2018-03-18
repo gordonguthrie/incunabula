@@ -25,7 +25,9 @@
 
 <p>Eiderdown is a simple markup language. You type in raw text and it converts it into marked up html.</p>
 
-<h3>Normal markup</h3>
+<div class="ui divider"></div>
+
+<h2>Normal markup</h2>
 
 <table class="ui celled table">
   <thead>
@@ -110,32 +112,39 @@
   </tbody>
 </table>
 
-<h3>Inserting imapges</h3>
+<div class="ui divider"></div>
+
+<h2>Inserting imapges</h2>
 
 You can insert images using the html code on the images tab for your book.
 
-<h3>Creating link code</h3>
+<div class="ui divider"></div>
 
-Links can be made here:
+<h2>Creating link code</h2>
+
 <form class="ui big form">
   <div class="field">
     <label>Text for the link</label>
-    <input type="text" />
+    <input class="incunabula-link-url" type="text" />
   </div>
   <div class="field">
     <label>Link</label>
-    <input type="text" />
+    <input class="incunabula-link-text" type="text" />
   </div>
-  <button class="ui button">Make link</button>
   <div class="field">
-    <label>Copy and paste this code into your text</label>
+  <button class="incunabula-link-maker ui button">Make link</button>
+  </div>
+  <div class="field">
+    <label class="incunabula-hidden" style="display:none">Copy and paste this code into your text</label>
     <div>
-      <code class="incunabula-make-link"></code>
+      <code class="incunabula-show-link"></code>
     </div>
   </div>
 </form>
 
-<h3>Special paragraphs</h3>
+<div class="ui divider"></div>
+
+<h2>Special paragraphs</h2>
 
 There are some special paragraphs that you can add by adding a keyword at the start of a paragraph. These special paragraphs can be extended by your site developer to add new ones. Please read the user manual.
 
@@ -183,7 +192,9 @@ There are some special paragraphs that you can add by adding a keyword at the st
   </tbody>
 </table>
 
-<h3>Designer codes</h3>
+<div class="ui divider"></div>
+
+<h2>Designer codes</h2>
 
 Your site developer can add extra features using special html codes. Please consult the user manual for more details.
 
