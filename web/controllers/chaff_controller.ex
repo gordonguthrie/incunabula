@@ -3,7 +3,7 @@ defmodule Incunabula.ChaffController do
 
   use Incunabula.Controller
 
-  import Incunabula.Git
+  alias Incunabula.Git
 
   plug :authenticate_user when action in [:index, :new, :copy, :show]
 
