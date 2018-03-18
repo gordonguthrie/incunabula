@@ -343,13 +343,9 @@ socket_init(incunabula);
 
 $(".incunabula-link-maker").on("click", function (event) {
     event.preventDefault();
-    console.log("link maker clicked");
     var url = $(".incunabula-link-url").val();
     var text = $(".incunabula-link-text").val();
     var link = "&lt;a scr='" + url + "'&gt;" + text + "&lt;/a&gt;"
-    console.log(url);
-    console.log(text);
-    console.log(link);
     $(".incunabula-show-link").html(link);
     $(".incunabula-hidden").css("display", "inline");
 });
