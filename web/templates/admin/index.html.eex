@@ -1,11 +1,15 @@
 <h2>Users</h2>
-  <div id="admin-get_users" class="incunabula-topic" topic="admin:get_users"></div>
+<div class="ui form">
+  <div class="field">
+    <div id="admin-get_users" class="incunabula-topic" topic="admin:get_users"></div>
+  </div>
   <button class="incunabula-show ui primary button" modal="incunabula-add-user">
     Add A User
   </button>
   <button class="incunabula-show ui primary button" modal="incunabula-change-password">
     Change A Users Password
   </button>
+</div>
 
 <div class="incunabula-add-user ui small modal">
   <div class="content">

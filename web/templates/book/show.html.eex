@@ -22,8 +22,11 @@
 </div>
 
 <div class="ui bottom attached active tab segment" data-tab="chapters">
-  <div id="book-get_chapters" class="incunabula-topic" topic="book:get_chapters:<%= @slug %>:<%= @role %>"></div>
-  <div class="content">
+  <div class="ui form">
+    <div class="field">
+      <div id="book-get_chapters" class="incunabula-topic" topic="book:get_chapters:<%= @slug %>:<%= @role %>">
+      </div>
+    </div>
     <%= if @role == "author" do %>
     <button class="incunabula-show ui primary button" modal="incunabula-new-chapter" >New Chapter</button>
     <% end %>
@@ -35,36 +38,51 @@
 </div>
 
 <div class="ui bottom attached tab segment" data-tab="images">
-<div id="book-get_images" class="incunabula-topic" topic="book:get_images:<%= @slug %>:<%= @role %>"></div>
-<div class="content">
-  <button class="incunabula-show ui primary button" modal="incunabula-new-image">Upload image</button>
-</div>
-</div>
-
-<div class="ui bottom attached tab segment" data-tab="chaff">
-  <div id="book-get_chaffs" class="incunabula-topic" topic="book:get_chaffs:<%= @slug %>:<%= @role %>">
+  <div class="ui form">
+    <div class="field">
+      <div id="book-get_images" class="incunabula-topic" topic="book:get_images:<%= @slug %>:<%= @role %>"></div>
+    </div>
+    <div class="content">
+      <button class="incunabula-show ui primary button" modal="incunabula-new-image">Upload image</button>
+    </div>
   </div>
-  <div class="content">
-    <button class="incunabula-show ui primary button" modal="incunabula-new-chaff">Create New Chaff</button>
-  <%= if @has_chapters do %>
-  <button class="incunabula-show ui primary button" modal="incunabula-copy-chaff">Copy A Chapter</button>
-  <% end %>
+</div>
+  <div class="ui bottom attached tab segment" data-tab="chaff">
+    <div class="ui form">
+      <div class="field">
+        <div id="book-get_chaffs" class="incunabula-topic" topic="book:get_chaffs:<%= @slug %>:<%= @role %>">
+        </div>
+      </div>
+      <div class="content">
+        <button class="incunabula-show ui primary button" modal="incunabula-new-chaff">Create New Chaff</button>
+        <%= if @has_chapters do %>
+        <button class="incunabula-show ui primary button" modal="incunabula-copy-chaff">Copy A Chapter</button>
+        <% end %>
+      </div>
   </div>
 </div>
 
 <div class="ui bottom attached tab segment" data-tab="reviewing">
   <h3>Reviewers</h3>
-  <div id="book-get_reviewers" class="incunabula-topic" topic="book:get_reviewers:<%= @slug %>:<%= @role %>">
-  </div>
-  <% if @role == "author" do %>
-  <button class="incunabula-show ui primary button" modal="incunabula-new-reviewer">Add A Reviewer</button>
-  <% end %>
-  <h3>Reviews</h3>
-  <div id="book-get_reviews" class="incunabula-topic" topic="book:get_reviews:<%= @slug %>:<%= @role %>">
-  </div>
-  <%= if @has_chapters and @has_reviewers and @role == "author" do %>
-  <button class="incunabula-show ui primary button" modal="incunabula-new-review">Release A Chapter For Review</button>
-  <% end %>
+  <div class="ui form">
+    <div class="field">
+      <div id="book-get_reviewers" class="incunabula-topic" topic="book:get_reviewers:<%= @slug %>:<%= @role %>">
+      </div>
+    </div>
+    <%= if @role == "author" do %>
+    <button class="incunabula-show ui primary button" modal="incunabula-new-reviewer">Add A Reviewer</button>
+    <% end %>
+    </div>
+    <h3>Reviews</h3>
+    <div class="ui form">
+      <div class="field">
+        <div id="book-get_reviews" class="incunabula-topic" topic="book:get_reviews:<%= @slug %>:<%= @role %>">
+        </div>
+      </div>
+      <%= if @has_chapters and @has_reviewers and @role == "author" do %>
+      <button class="incunabula-show ui primary button" modal="incunabula-new-review">Release A Chapter For Review</button>
+      <% end %>
+    </div>
 </div>
 
 <%= render Incunabula.FieldModalView, "field.html",

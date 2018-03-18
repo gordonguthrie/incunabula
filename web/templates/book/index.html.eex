@@ -1,9 +1,12 @@
 <h2>Books</h2>
 
-<div id="books-list" class="incunabula-topic" topic="books:list"></div>
-
-<div class="content">
-  <button class="incunabula-show ui primary button" modal="incunabula-new-book">New Book</button>
+<div class="ui form">
+  <div class="field">
+    <div id="books-list" class="incunabula-topic" topic="books:list"></div>
+  </div>
+  <div class="content">
+    <button class="incunabula-show ui primary button" modal="incunabula-new-book">New Book</button>
+  </div>
 </div>
 
 <div class="incunabula-new-book ui small modal">
