@@ -8,7 +8,11 @@
   a review of a chapter for the book <a href="/books/<%= @slug %>"><%= @title %></a>
 </p>
 <p>
-  <small><a href='<%= Path.join(["/books", @slug, "reviews", @reviewslug, "preview"]) %>' target='blank'>Preview this review</a></small>
+  <small>
+    <a href='<%= Path.join(["/books", @slug, "reviews", @reviewslug, "preview"]) %>' target='blank'>Preview this review</a>
+    -
+    <a href='/help' target='_blank'>Help</a>
+  </small>
 </p>
 <%= render Incunabula.EditorView, "editor.html",
     changeset:     @changeset,

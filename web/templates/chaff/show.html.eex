@@ -19,7 +19,11 @@
  chaff for the book  <a href="/books/<%= @slug %>"><%= @title %></a>
 </p>
 <p>
-<small><a href='<%= Path.join(["/books", @slug, "chaffs", @chaffslug, "preview"]) %>' target='blank'>Preview this chaff</a></small>
+  <small>
+    <a href='<%= Path.join(["/books", @slug, "chaffs", @chaffslug, "preview"]) %>' target='blank'>Preview this chaff</a>
+    -
+    <a href='/help' target='_blank'>Help</a>
+  </small>
 </p>
 <%= render Incunabula.EditorView, "editor.html",
     changeset:     @changeset,

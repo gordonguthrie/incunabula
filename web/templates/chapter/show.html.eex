@@ -21,6 +21,8 @@
     <a href='<%= Path.join(["/books", @slug, "chapters", @chapterslug, "preview"]) %>' target='blank'>Preview this chapter</a>
     -
     <a href='<%= Path.join(["/books", @slug, "chapters", @chapterslug, "summary"]) %>' target='blank'>See summary of this chapter</a>
+    -
+    <a href='/help' target='_blank'>Help</a>
   </small>
 </p>
 
