@@ -4,6 +4,13 @@
     <td>There are no reviews to show</td>
   </tr>
   <% else %>
+  <thead>
+    <tr>
+      <th>Review</th>
+      <th>Reviewer</th>
+      <th>Change Status</th>
+    </tr>
+  </thead>
   <%= for r <- @reviews do %>
       <tr>
         <td>

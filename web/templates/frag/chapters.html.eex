@@ -5,6 +5,12 @@
     </td>
   </tr>
   <% else %>
+  <thead>
+    <tr>
+      <th>Chapter</th>
+      <th class="right aligned">Status</th>
+    </tr>
+  </thead>
   <%= for c <- @chapters do %>
       <tr>
         <%= if c.status == :locked do %>

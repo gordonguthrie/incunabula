@@ -4,8 +4,17 @@
     <td>There are no chaffs to show</td>
   </tr>
   <% else %>
+  <thead>
+    <tr>
+      <th>Chaff Name</th>
+      <th>Creation Details</th>
+    </tr>
+  </thead>
   <%= for c <- @chaffs do %>
-      <tr><td><div><a href="/books/<%= @slug %>/chaffs/<%= c.chaff_slug %>"><%= c.chaff_title %></a></div></td><td><small class="incunabula-grey"><%= c.creation %></small></td></tr>
+      <tr>
+        <td><div><a href="/books/<%= @slug %>/chaffs/<%= c.chaff_slug %>"><%= c.chaff_title %></a></div></td>
+        <td><small class="incunabula-grey"><%= c.creation %></small></td>
+      </tr>
       <% end %>
    <% end %>
 </table>
