@@ -23,6 +23,23 @@ defmodule Incunabula.PreviewController do
     do_show(conn, slug, chapter_slug, :chapter)
   end
 
+  def show_tag(conn, %{"chapterslug" => chapter_slug,
+                       "slug"        => slug,
+                       "tag"         => tag}, _user) do
+    booksdir = Incunabula.Git.get_books_dir()
+    file = Path.join([
+      booksdir,
+      slug,
+      "preview_html",
+      "tags",
+      tag
+    ])
+    {:ok, binary} = File.read(file)
+    conn
+    |> put_resp_header("content-type", "image/png;")
+    |> send_resp(200, binary)
+  end
+
   defp do_show(conn, slug, frag_slug, type) do
     booksdir = Incunabula.Git.get_books_dir()
     preview_dir = case type do

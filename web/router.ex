@@ -36,6 +36,7 @@ defmodule Incunabula.Router do
     get  "/books/:slug/reviews/:reviewslug/preview",        PreviewController,  :show
     get  "/books/:slug/reviews/:reviewslug/reconciliation", ReviewController,   :reconcile
     get  "/books/:slug/chapters/:chapterslug/preview",      PreviewController,  :show
+    get  "/books/:slug/chapters/:chapterslug/tag/:tag",     PreviewController,  :show_tag
     get  "/books/:slug/chapters/:chapterslug/summary",      PreviewController,  :summary
     post "/books/:slug/image/new",                          ImageController,    :create
     get  "/books/:slug/images/:imageslug",                  ImageController,    :show

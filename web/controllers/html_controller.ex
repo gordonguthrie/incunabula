@@ -3,10 +3,15 @@ defmodule Incunabula.HTMLController do
 
   # there is no authentication because this is called from Incunabula.Git only
   def make_preview(title, author, body) do
+    make_preview(title, author, body, "")
+  end
+
+  def make_preview(title, author, body, image) do
     conn = make_fresh_conn()
     args = %{title:  title,
              author: author,
-             body:   body}
+             body:   body,
+             image:  image}
     make_html conn, "preview.html", args
   end
 

@@ -1,18 +1,24 @@
-  <!DOCTYPE html>
-  <html lang='en'>
+<!DOCTYPE html>
+<html lang='en'>
   <head>
-  <meta charset='utf-8'>
-  <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-  <meta name="viewport" content='width=device-width, initial-scale=1'>
-  <meta name="description" content=''>
-  <meta name="author" content='<%= @author %>'>
-  <title><%= @title %></title>
-  <%= raw(render(Incunabula.HTMLView, "incunabula.css",
-      %{conn: @conn})) %>
-  <%= raw(render(Incunabula.HTMLView, "incunabula.js",
-      %{conn: @conn})) %>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name="viewport" content='width=device-width, initial-scale=1'>
+    <meta name="description" content=''>
+    <meta name="author" content='<%= @author %>'>
+    <title><%= @title %></title>
+    <style>
+      body {
+      background-image:  url("./tag/<%= @image %>");
+      background-repeat: repeat-y;
+      }
+    </style>
+    <%= raw(render(Incunabula.HTMLView, "incunabula.css",
+        %{conn: @conn})) %>
+    <%= raw(render(Incunabula.HTMLView, "incunabula.js",
+        %{conn: @conn})) %>
   </head>
   <body>
     <%= raw(@body) %>
   </body>
-  </html>
+</html>
