@@ -103,7 +103,7 @@ if ($("#incunabula-eiderdown").length) {
         // (this is the media query width)
         if (window.innerWidth > 700) {
             var offset = $("#incunabula-eiderdown").offset();
-            var available = window.innerHeight - offset.top - 50;
+            var available = window.innerHeight - offset.top - 70;
             var height = String(available) + "px";
             $("#incunabula-eiderdown").css("height", height);
         } else {
