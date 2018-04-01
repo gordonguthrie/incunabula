@@ -35,8 +35,9 @@ defmodule Incunabula.Git do
   @chaff_htmlDir   "chaff_html"
   @reviews_htmlDir "review_html"
 
-  @title  "title.txt"
-  @author "author.txt"
+  @title   "title.txt"
+  @author  "author.txt"
+  @version "version.txt"
 
   @optional_tagsDB "optional_tags.DB"
 
@@ -172,6 +173,21 @@ defmodule Incunabula.Git do
     GenServer.call(__MODULE__, {:update_chaff, {slug, chaff_slug,
                                                 commit_title, commit_msg,
                                                 data, tag_bump, user}},
+      @timeout)
+  end
+
+  def delete_review(slug, review_slug, user) do
+    GenServer.call(__MODULE__, {:delete, {:review, slug, review_slug, user}},
+      @timeout)
+  end
+
+  def delete_chaff(slug, chaff_slug, user) do
+    GenServer.call(__MODULE__, {:delete, {:chaff, slug, chaff_slug, user}},
+      @timeout)
+  end
+
+  def delete_chapter(slug, chapter_slug, user) do
+    GenServer.call(__MODULE__, {:delete, {:chapter, slug, chapter_slug, user}},
       @timeout)
   end
 
@@ -348,16 +364,25 @@ defmodule Incunabula.Git do
               {:update_book_title,  {slug, new_title, user}} ->
                 do_update_book_title(slug, new_title, user)
 
-              {:update_review,  {slug, review_slug, commit_title, commit_msg, data, tag_bump, user}} ->
-                do_update_review(slug, review_slug, commit_title, commit_msg, data, tag_bump, user)
+                {:update_review, {slug, review_slug, commit_title, commit_msg,
+                                    data, tag_bump, user}} ->
+                do_update_review(slug, review_slug, commit_title, commit_msg,
+                  data, tag_bump, user)
 
-              {:update_chaff,  {slug, chaff_slug, commit_title, commit_msg, data, tag_bump, user}} ->
-                do_update_chaff(slug, chaff_slug, commit_title, commit_msg, data, tag_bump, user)
+                {:update_chaff, {slug, chaff_slug, commit_title, commit_msg,
+                                   data, tag_bump, user}} ->
+                do_update_chaff(slug, chaff_slug, commit_title, commit_msg,
+                  data, tag_bump, user)
 
-              {:update_chapter,  {slug, chapter_slug, commit_title, commit_msg, data, tag_bump, user}} ->
-                do_update_chapter(slug, chapter_slug, commit_title, commit_msg, data, tag_bump, user)
+                {:update_chapter, {slug, chapter_slug, commit_title, commit_msg,
+                                     data, tag_bump, user}} ->
+                do_update_chapter(slug, chapter_slug, commit_title, commit_msg,
+                  data, tag_bump, user)
 
-              {:create_book,  {book_title, author}} ->
+                {:delete, {type, slug, contentslug, user}} ->
+                do_delete(type, slug, contentslug, user)
+
+                {:create_book,  {book_title, author}} ->
                 do_create_book(book_title, author)
 
               {:get_tag_msg, slug} ->
@@ -459,6 +484,7 @@ defmodule Incunabula.Git do
     |> DB.update_value(@reviewsDB, :review_slug, reviewslug,
     :review_status, newstatus)
     |> add_to_git(:all)
+    |> write_version(version)
     |> commit_to_git(tag)
     |> tag_git(version, tag, user)
     |> push_to_github(slug)
@@ -514,6 +540,7 @@ defmodule Incunabula.Git do
         version = make_new_vsn(bookdir, "major")
         bookdir
         |> DB.appendDB(@reviewersDB, newrecord)
+        |> write_version(version)
         |> add_to_git(:all)
         |> commit_to_git(tag)
         |> tag_git(version, tag, user)
@@ -535,6 +562,7 @@ defmodule Incunabula.Git do
         version = make_new_vsn(bookdir, "major")
         bookdir
         |> DB.delete_records(@reviewersDB, :reviewer, username)
+        |> write_version(version)
         |> add_to_git(:all)
         |> commit_to_git(tag)
         |> tag_git(version, tag, user)
@@ -574,6 +602,7 @@ defmodule Incunabula.Git do
         bookdir
         |> copy_image(imageslug, tmp_image_path)
         |> DB.appendDB(@imagesDB, newimage)
+        |> write_version(version)
         |> add_to_git(:all)
         |> commit_to_git(tag)
         |> tag_git(version, tag, user)
@@ -601,6 +630,7 @@ defmodule Incunabula.Git do
     version = make_new_vsn(bookdir, "major")
     bookdir
     |> DB.replaceDB(@chaptersDB, new_chapters)
+    |> write_version(version)
     |> add_to_git(:all)
     |> commit_to_git(commit_msg)
     |> tag_git(version, tag, user)
@@ -642,8 +672,8 @@ defmodule Incunabula.Git do
         tag = make_tag(prefix, new_title, slug, user, msg)
         version = make_new_vsn(bookdir, "major")
         bookdir
-        |> DB.update_value(db, keyfield, ch_slug,
-        updatefield, new_title)
+        |> DB.update_value(db, keyfield, ch_slug, updatefield, new_title)
+        |> write_version(version)
         |> add_to_git(:all)
         |> commit_to_git(commitmsg)
         |> tag_git(version, tag, user)
@@ -662,6 +692,7 @@ defmodule Incunabula.Git do
     version = make_new_vsn(bookdir, "major")
     bookdir
     |> write_to_file(@title, new_title)
+    |> write_version(version)
     |> add_to_git(:all)
     |> commit_to_git(commitmsg)
     |> tag_git(version, tag, user)
@@ -693,6 +724,7 @@ defmodule Incunabula.Git do
       false ->
         version = make_new_vsn(bookdir, tag_bump)
         bookdir
+        |> write_version(version)
         |> add_to_git(:all)
         |> make_html(:review, review_title, review_slug, version, user)
         |> commit_to_git(commit_msg)
@@ -724,6 +756,7 @@ defmodule Incunabula.Git do
         version = make_new_vsn(bookdir, tag_bump)
         bookdir
         |> make_html(:chaff, ch_title, ch_slug, version, user)
+        |> write_version(version)
         |> add_to_git(:all)
         |> commit_to_git(commit_msg)
         |> tag_git(version, tag, user)
@@ -754,12 +787,61 @@ defmodule Incunabula.Git do
         version = make_new_vsn(bookdir, tag_bump)
         bookdir
         |> make_html(:chapter, ch_title, ch_slug, version, user)
+        |> write_version(version)
         |> add_to_git(:all)
         |> commit_to_git(commit_msg)
         |> tag_git(version, tag, user)
         |> push_to_github(slug)
         |> push_to_channel(slug, route, "book:save_chapter_edits:")
         |> do_get_tag_msg()
+    end
+  end
+
+  defp do_delete(type, slug, contentslug, user) do
+    bookdir = get_book_dir(slug)
+    version = make_new_vsn(bookdir, "major")
+    title = case type do
+              :chapter -> do_get_chapter_title(slug, contentslug)
+              :chaff   -> do_get_chaff_title(slug, contentslug)
+              :review  -> do_get_review_title(slug, contentslug)
+            end
+    subdir = case type do
+               :chapter -> "chapters"
+               :chaff   -> "chaff"
+               :review  -> "reviews"
+             end
+    channel = case type do
+                :chapter -> "book:get_chapters:"
+                :chaff   -> "book:get_chaffs:"
+                :review  -> "book:get_reviews:"
+              end
+    prefix = "deleted"
+    db = case type do
+           :chapter -> @chaptersDB
+           :chaff   -> @chaffDB
+           :review  -> @reviewsDB
+         end
+    key = case type do
+            :chapter -> :chapter_slug
+            :chaff   -> :chaff_slug
+            :review  -> :review_slug
+          end
+    tag = make_tag(prefix, title, contentslug, user)
+    bookdir
+    |> write_version(version)
+    |> delete_file(subdir, contentslug <> ".eider")
+    |> DB.delete_records(db, key, contentslug)
+    |> add_to_git(:all)
+    |> tag_git(version, tag, user)
+    |> push_to_github(slug)
+    |> push_to_roles_in_channels(slug, slug, channel)
+    case type == :chapter do
+      true ->
+        bookdir
+        |> push_to_channel(slug, slug, "book:get_chapters_dropdown:")
+        :ok
+      false ->
+        :ok
     end
   end
 
@@ -779,10 +861,11 @@ defmodule Incunabula.Git do
         {:ok, _} = File.copy(from, to)
         prefix = review_slug <> " copied from " <> chapter_slug
         newrecord = new_review_record(review_title, reviewer, chapter_slug, currenttag)
-        msg = "initial creation of " <> slug <> " assgined to " <> reviewer
+        msg = "initial creation of " <> slug <> " assigned to " <> reviewer
         tag = make_tag(prefix, review_title, slug, user, msg)
         version = make_new_vsn(bookdir, "major")
         bookdir
+        |> write_version(version)
         |> add_to_git(:all)
         |> push_to_github(slug)
         |> tag_git(version, tag, user)
@@ -812,6 +895,7 @@ defmodule Incunabula.Git do
         newrecord = new_chaff_record(chaff_title, msg)
         bookdir
         |> DB.appendDB(@chaffDB, newrecord)
+        |> write_version(version)
         |> add_to_git(:all)
         |> make_html(:chaff, chaff_title, chaff_slug, version, user)
         |> commit_to_git(tag)
@@ -860,6 +944,7 @@ defmodule Incunabula.Git do
                           end
         bookdir
         |> DB.appendDB(db, newrecord)
+        |> write_version(version)
         |> add_to_git(:all)
         |> make_html(type, title, title_slug, version, user)
         |> commit_to_git(tag)
@@ -869,7 +954,6 @@ defmodule Incunabula.Git do
         case type == :chapter do
           true ->
             bookdir
-            |> push_to_roles_in_channels(slug, slug, channel)
             |> push_to_channel(slug, slug, "book:get_chapters_dropdown:")
             :ok
           false ->
@@ -891,11 +975,14 @@ defmodule Incunabula.Git do
   defp do_create_book(book_title, author) do
     slug = Incunabula.Slug.to_slug(book_title)
     bookdir = get_book_dir(slug)
+    version = "0.0.0.0"
     case File.exists?(bookdir) do
       false ->
         :ok = create_repo_on_github(slug)
         bookdir
-        |> make_dir
+        |> make_dir("")
+        |> make_dir("/preview_html/tags")
+        |> make_dir("/review_html/tags")
         |> do_git_init
         |> write_to_file(@title,           book_title)
         |> write_to_file(@author,          author)
@@ -906,9 +993,10 @@ defmodule Incunabula.Git do
         |> DB.createDB(@chaffDB)
         |> DB.createDB(@reviewsDB)
         |> DB.createDB(@reviewersDB)
+        |> write_version(version)
         |> add_to_git(:all)
         |> commit_to_git("basic setup of directory")
-        |> tag_git("0.0.1.1", "initial creation of " <> slug, author)
+        |> tag_git(version, "initial creation of " <> slug, author)
         |> push_to_github(slug, :without_tags) # don't want tags on first create
         |> push_to_channel("books:list")
         {:ok, slug}
@@ -1129,9 +1217,13 @@ defmodule Incunabula.Git do
     :ok
   end
 
-  defp make_dir(dir) do
-    :ok = File.mkdir(dir)
+  defp make_dir(dir, subpath) do
+    :ok = File.mkdir_p(Path.join([dir, subpath]))
     dir
+  end
+
+  defp write_version(dir, version) do
+    write_to_file(dir, @version, version)
   end
 
   defp add_to_git(dir, :all) do
@@ -1220,7 +1312,7 @@ defmodule Incunabula.Git do
                  "--repo=" <> url,
                ]
            end
-    {"", 0} = System.cmd(cmd, args, [cd: dir])
+    #{"", 0} = System.cmd(cmd, args, [cd: dir])
     dir
   end
 
@@ -1320,6 +1412,12 @@ defmodule Incunabula.Git do
     return = System.cmd("git", ["init"], cd: dir)
     # force a crash if this failed
     {<<"Initialised empty Git repository in">> <> _rest, _} = return
+    dir
+  end
+
+  defp delete_file(dir, subdir, file) do
+    path = Path.join([dir, subdir, file])
+    :ok = File.rm(path)
     dir
   end
 
@@ -1435,22 +1533,12 @@ defmodule Incunabula.Git do
     s_html = Incunabula.HTMLController.make_preview(title, user, sum, img)
     ^htmldir = write_to_file(htmldir, summarypage, s_html)
 
-    # create the image marker
-    args = [
-    "-size",      "600x600",
-    "xc:none",
-    "-fill",      "lightgray",
-    "-stroke",    "lightgray",
-    "-pointsize", "12",
-    "-gravity",   "center",
-    "-draw",      "rotate 270 text 0,0 '#{slug}.#{version}-'",
-    "-trim",      "+repage", "#{htmldir}/tags/#{slug}.png"
-    ]
-    {"", 0} = System.cmd("convert", args, [])
+    :ok = make_tag(slug, version, htmldir)
+
     dir
   end
 
-  defp make_html(dir, :chaff, chaff_title, chaff_slug, _version, user) do
+  defp make_html(dir, :chaff, chaff_title, chaff_slug, version, user) do
     eiderdownfile = Path.join([dir, @chaffDir, chaff_slug <> ".eider"])
     {:ok, eiderdown} = File.read(eiderdownfile)
 
@@ -1463,7 +1551,25 @@ defmodule Incunabula.Git do
     body = to_string(bin)
     html = Incunabula.ChaffHTMLController.make_preview(chaff_title, user, body)
     ^htmldir = write_to_file(htmldir, webpage, html)
+
     dir
+
+  end
+
+  defp make_tag(slug, version, htmldir) do
+    # create the image marker
+    args = [
+    "-size",      "600x600",
+    "xc:none",
+    "-fill",      "lightgray",
+    "-stroke",    "lightgray",
+    "-pointsize", "12",
+    "-gravity",   "center",
+    "-draw",      "rotate 270 text 0,0 '#{slug}.#{version}-'",
+    "-trim",      "+repage", "#{htmldir}/tags/#{slug}.png"
+    ]
+    {"", 0} = System.cmd("convert", args, [])
+    :ok
   end
 
   defp make_route(list) do

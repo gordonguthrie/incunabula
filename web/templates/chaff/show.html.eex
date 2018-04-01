@@ -33,6 +33,7 @@
     save_edits:    @save_edits,
     contents:      @contents,
     slug:          @slug,
+    deletepath:    chaff_path(@conn, :delete, @slug, @chaffslug),
     topic:         "book:save_chaff_edits:" <> @slug
     <> ":chaff:" <> @chaffslug
    %>

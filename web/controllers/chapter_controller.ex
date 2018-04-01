@@ -3,8 +3,14 @@ defmodule Incunabula.ChapterController do
 
   use Incunabula.Controller
 
-  plug :authenticate_user   when action in [:create]
-  plug :authenticate_author when action in [:show]
+  plug :authenticate_author when action in [:create, :delete, :show]
+
+  def delete(conn, %{"chapterslug" => chapterslug,
+                     "slug"        => slug}, user) do
+    :ok = Incunabula.Git.delete_chapter(slug, chapterslug, user)
+    conn
+    |> redirect(to: Path.join("/books", slug))
+  end
 
   def create(conn, %{"chapter" => chapter,
                      "slug"    => slug}, user) do

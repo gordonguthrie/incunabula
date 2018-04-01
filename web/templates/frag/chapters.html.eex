@@ -14,7 +14,11 @@
   <%= for c <- @chapters do %>
       <tr>
         <%= if c.status == :locked do %>
-        <td><div><%= c.chapter_title %></div></td>
+        <td>
+          <div>
+            <a href="/books/<%= @slug %>/chapters/<%= c.chapter_slug %>/preview"><%= c.chapter_title %></a>&nbsp;<small>(preview)</small>
+          </div>
+        </td>
         <td>
           <button class="circular ui disabled basic right floated mini icon button">
             <i class="lock icon"></i><small>under review</small>
@@ -22,11 +26,20 @@
         </td>
         <% else %>
         <%= if @role == "author" do %>
-        <td><div><a href="/books/<%= @slug %>/chapters/<%= c.chapter_slug %>"><%= c.chapter_title %></a></div></td>
+        <td>
+          <div>
+            <a href="/books/<%= @slug %>/chapters/<%= c.chapter_slug %>"><%= c.chapter_title %></a>
+          </div>
+        </td>
         <% else %>
-        <td><div><a href="/books/<%= @slug %>/chapters/<%= c.chapter_slug %>/preview"><%= c.chapter_title %></a>&nbsp;<small>(preview)</small></div></td>
+        <td>
+          <div>
+            <a href="/books/<%= @slug %>/chapters/<%= c.chapter_slug %>/preview"><%= c.chapter_title %></a>&nbsp;<small>(preview)</small>
+          </div>
+        </td>
         <% end %>
-        <td></td>
+        <td>
+        </td>
         <% end %>
       </tr>
       <% end %>

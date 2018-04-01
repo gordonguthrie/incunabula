@@ -5,6 +5,7 @@ defmodule Incunabula.PreviewController do
 
   plug :authenticate_author_or_reviewer when action in [
     :show,
+    :show_tag,
     :summary
   ]
 

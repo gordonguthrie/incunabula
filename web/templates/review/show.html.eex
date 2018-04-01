@@ -22,6 +22,7 @@
     save_edits:    @save_edits,
     contents:      @contents,
     slug:          @slug,
+    deletepath:    review_path(@conn, :delete, @slug, @reviewslug),
     topic:         "book:save_review_edits:" <> @slug
     <> ":review:" <> @reviewslug
    %>

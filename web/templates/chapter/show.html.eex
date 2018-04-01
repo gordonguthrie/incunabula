@@ -34,6 +34,7 @@
     save_edits:    @save_edits,
     contents:      @contents,
     slug:          @slug,
+    deletepath:    chapter_path(@conn, :delete, @slug, @chapterslug),
     topic:         "book:save_chapter_edits:" <> @slug
     <> ":chapter:" <> @chapterslug
    %>

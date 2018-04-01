@@ -10,12 +10,22 @@ defmodule Incunabula.ReviewController do
 
   plug :authenticate_author_or_reviewer when action in [
     :index,
-    :change_status
+    :show,
+    :show_tag,
+    :change_status,
+    :delete
   ]
 
   plug :authenticate_reviewer when action in [
     :show,
   ]
+
+  def delete(conn, %{"reviewslug" => reviewslug,
+                     "slug"       => slug}, user) do
+    :ok = Incunabula.Git.delete_review(slug, reviewslug, user)
+    conn
+    |> redirect(to: Path.join(["/books", slug, "#reviewing"]))
+  end
 
   def reconcile(conn, params, _user) do
     %{"reviewslug" => reviewslug,
@@ -61,6 +71,23 @@ defmodule Incunabula.ReviewController do
       save_edits:  savepath,
       contents:    contents,
       slug:        slug
+  end
+
+  def show_tag(conn, %{"reviewslug" => review_slug,
+                       "slug"       => slug,
+                       "tag"        => tag}, _user) do
+    booksdir = Incunabula.Git.get_books_dir()
+    file = Path.join([
+      booksdir,
+      slug,
+      "review_html",
+      "tags",
+      tag
+    ])
+    {:ok, binary} = File.read(file)
+    conn
+    |> put_resp_header("content-type", "image/png;")
+    |> send_resp(200, binary)
   end
 
   def index(conn, _params, _user) do

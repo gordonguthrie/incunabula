@@ -5,7 +5,20 @@ defmodule Incunabula.ChaffController do
 
   alias Incunabula.Git
 
-  plug :authenticate_user when action in [:index, :new, :copy, :show]
+  plug :authenticate_user when action in [
+    :index,
+    :new,
+    :copy,
+    :show,
+    :delete
+  ]
+
+  def delete(conn, %{"chaffslug" => chaffslug,
+                     "slug"      => slug}, user) do
+    :ok = Incunabula.Git.delete_chaff(slug, chaffslug, user)
+    conn
+    |> redirect(to: Path.join(["/books", slug, "#chaff"]))
+  end
 
   def new(conn, %{"chaff" => chaff,
                   "slug"  => slug}, user) do
