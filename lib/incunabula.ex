@@ -10,7 +10,8 @@ defmodule Incunabula do
     children = [
       # Start the endpoint when the application starts
       supervisor(Incunabula.Endpoint, []),
-      worker(Incunabula.Git, [])
+      worker(Incunabula.Git, []),
+      worker(Incunabula.Lock, [])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
