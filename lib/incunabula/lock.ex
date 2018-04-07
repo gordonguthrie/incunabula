@@ -27,23 +27,38 @@ defmodule Incunabula.Lock do
     {:ok, %{:salt => salt, :locks => []}}
   end
 
-  def get_lock(path) do
-    GenServer.call(__MODULE__, {:get_lock, path})
+  def acquire_lock(path) do
+    GenServer.call(__MODULE__, {:acquire_lock, path})
   end
 
-  def handle_call({:get_lock, path}, _from, state) do
+  def inspect_lock(path) do
+    GenServer.call(__MODULE__, {:inspect_lock, path})
+  end
+
+  def handle_call({:acquire_lock, path}, _from, state) do
     %{:salt  => salt,
       :locks => locks} = state
     {reply, newstate}
     = case List.keyfind(locks, path, 0) do
         nil ->
-          lock = make_hash(path, salt)
-          newlocks = locks ++ [{path, lock, :os.system_time(:seconds)}]
+          time = :os.system_time(:seconds)
+          lock = make_hash(path, salt <> to_string(time))
+          newlocks = locks ++ [{path, lock, time}]
+          # now broadcast the lock
+          topic = "book:inspect_lock:" <> path
+          Incunabula.Endpoint.broadcast topic, "books", %{books: lock}
           {{:ok, lock}, Map.put(state, :locks, newlocks)}
-        val ->
+        {_path, _lock, _timestamp} ->
           {{:error, :locked}, state}
       end
     {:reply, reply, newstate}
+  end
+
+def handle_call({:inspect_lock, path}, _from, state) do
+    %{:locks => locks} = state
+    {_path, lock, _timestamp} = List.keyfind(locks, path, 0)
+    reply = lock
+    {:reply, reply, state}
   end
 
   def handle_info(:tick, %{:locks => locks} = state) do

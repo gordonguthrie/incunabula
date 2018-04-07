@@ -6,6 +6,12 @@
 </h2>
 <p>
   a review of a chapter for the book <a href="/books/<%= @slug %>"><%= @title %></a>
+  <span class="incunabula-lock" data-lock="<%= @lock %>"></span>
+<!-- get the lock -->
+<span id="book-inspect_lock"
+      class="incunabula-topic"
+      topic="book:inspect_lock:/books/<%= @slug %>/reviews/<%= @reviewslug %>">
+  <!-- end of lock -->
 </p>
 <p>
   <small>

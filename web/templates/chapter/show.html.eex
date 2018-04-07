@@ -13,8 +13,15 @@
      modal="incunabula-edit_title">
   </i>
 </h2>
+<span class="incunabula-lock" data-lock="<%= @lock %>"></span>
+<!-- get the lock -->
+<span id="book-inspect_lock"
+      class="incunabula-topic"
+      topic="book:inspect_lock:/books/<%= @slug %>/chapters/<%= @chapterslug %>">
+  <!-- end of lock -->
+
 <p>
-  a chapter in the book <em><a href="/books/<%= @slug %>"><%= @title %></em>
+  a chapter in the book <em><a href="/books/<%= @slug %>"><%= @title %></em></a>
 </p>
 <p>
   <small>

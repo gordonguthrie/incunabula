@@ -31,16 +31,26 @@ defmodule Incunabula.ChapterController do
     booktitle    = Incunabula.Git.get_book_title(slug)
     chaptertitle = Incunabula.Git.get_chapter_title(slug, chapterslug)
     changeset    = Incunabula.SaveEdit.changeset()
+    path         = Path.join(["/books", slug, "chapters", chapterslug])
     savepath     = Path.join(["/books", slug, "chapters", chapterslug, "save"])
-    {_tag, contents} = Incunabula.Git.get_chapter(slug, chapterslug)
-    render conn, "show.html",
-      changeset:    changeset,
-      title:        booktitle,
-      chaptertitle: chaptertitle,
-      chapterslug:  chapterslug,
-      save_edits:   savepath,
-      contents:     contents,
-      slug:         slug
+    case Incunabula.Lock.acquire_lock(path) do
+      {:ok, lock} ->
+        {_tag, contents} = Incunabula.Git.get_chapter(slug, chapterslug)
+        render conn, "show.html",
+          changeset:    changeset,
+          title:        booktitle,
+          chaptertitle: chaptertitle,
+          chapterslug:  chapterslug,
+          save_edits:   savepath,
+          contents:     contents,
+          slug:         slug,
+          lock:         lock
+      {:error, :locked} ->
+        render conn, "locked.html",
+          chaptertitle: chaptertitle,
+          title:        booktitle,
+          slug:         slug
+    end
   end
 
 end

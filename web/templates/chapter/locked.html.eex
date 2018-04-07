@@ -1,0 +1,9 @@
+<h2>
+     <%= @chaptertitle %>
+</h2>
+<p>
+  a chapter in the book <em><a href="/books/<%= @slug %>"><%= @title %></em></a>
+</p>
+<p>
+  This chapter is locked for editing by you on a different device. This lock will clear in a matter of seconds.
+</p>

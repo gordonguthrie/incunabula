@@ -1,0 +1,9 @@
+<h2>
+     <%= @chafftitle %>
+</h2>
+<p>
+  some chaff for the book <em><a href="/books/<%= @slug %>"><%= @title %></em></a>
+</p>
+<p>
+  This chaff is locked for editing on a different device. This lock will clear in a matter of seconds - but it might be best if you figure out who is doing the editing first.
+</p>

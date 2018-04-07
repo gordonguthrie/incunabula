@@ -16,6 +16,10 @@ defmodule Incunabula.BookChannel do
 
   @doc "get_reply/2 is the reply on joining"
 
+  def get_reply(:inspect_lock, %{path: path}) do
+    Incunabula.Lock.inspect_lock(path)
+  end
+
   def get_reply(:get_reviewers_dropdown, %{slug: slug}) do
     reviewers = Incunabula.Git.get_raw_reviewers(slug)
     _html = Incunabula.FragController.get_users_dropdown(reviewers)
@@ -165,6 +169,10 @@ defmodule Incunabula.BookChannel do
   defp parse_topic(topic) do
     route = String.split(topic, ":")
     parse_route(route)
+  end
+
+  defp parse_route(["inspect_lock", path]) do
+    {:inspect_lock, %{path: path}}
   end
 
   defp parse_route(["get_reviewers_dropdown", slug]) do

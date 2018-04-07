@@ -46,6 +46,16 @@ function draw_users(id, msg) {
     incunabula.setup_modals()
 }
 
+function handle_lock(id, msg) {
+    // console.log("in handle lock");
+    // console.log(id);
+    // console.log(msg);
+    var lock = $(".incunabula-lock").attr("data-lock");
+    if (msg !== lock) {
+        location.reload()
+    }
+}
+
 function draw(id, msg) {
     // console.log("got new thing to draw", id, msg)
     $("#" + id).html(msg)
@@ -115,6 +125,9 @@ router.set("admin:get_users_dropdown",
             draw_fn: function(id, msg) {draw(id, msg)}})
 
 // router for a particular book
+router.set("book:inspect_lock",
+           {id:      "book-inspect_lock",
+            draw_fn: function(id, msg) {handle_lock(id, msg)}})
 router.set("book:get_reviews",
            {id:      "book-get_reviews",
             draw_fn: function(id, msg) {draw_reviews(id, msg)}})

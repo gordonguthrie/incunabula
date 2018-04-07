@@ -24,9 +24,8 @@ defmodule Incunabula.PreviewController do
     do_show(conn, slug, chapter_slug, :chapter)
   end
 
-  def show_tag(conn, %{"chapterslug" => chapter_slug,
-                       "slug"        => slug,
-                       "tag"         => tag}, _user) do
+  def show_tag(conn, %{"slug" => slug,
+                       "tag"  => tag}, _user) do
     booksdir = Incunabula.Git.get_books_dir()
     file = Path.join([
       booksdir,

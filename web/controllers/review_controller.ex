@@ -30,8 +30,8 @@ defmodule Incunabula.ReviewController do
   def reconcile(conn, params, _user) do
     %{"reviewslug" => reviewslug,
       "slug"       => slug} = params
-    {reviewtag,   reviewtext}   = Incunabula.Git.get_review(slug, reviewslug)
-    {originaltag, originaltext} = Incunabula.Git.get_original_from_review(slug,
+    {_reviewtag,   reviewtext}   = Incunabula.Git.get_review(slug, reviewslug)
+    {_originaltag, originaltext} = Incunabula.Git.get_original_from_review(slug,
       reviewslug)
     reconciliation = Incunabula.Reconcile.reconcile(slug, originaltext,
       reviewtext)
@@ -61,20 +61,29 @@ defmodule Incunabula.ReviewController do
     booktitle   = Incunabula.Git.get_book_title(slug)
     reviewtitle = Incunabula.Git.get_review_title(slug, reviewslug)
     changeset   = Incunabula.SaveEdit.changeset()
-    savepath    = Path.join(["/books", slug, "review", reviewslug, "save"])
-    {_tag, contents} = Incunabula.Git.get_review(slug, reviewslug)
-    render conn, "show.html",
-      changeset:   changeset,
-      title:       booktitle,
-      reviewtitle: reviewtitle,
-      reviewslug:  reviewslug,
-      save_edits:  savepath,
-      contents:    contents,
-      slug:        slug
+    path        = Path.join(["/books", slug, "reviews", reviewslug])
+    savepath    = Path.join(["/books", slug, "reviews", reviewslug, "save"])
+    case Incunabula.Lock.acquire_lock(path) do
+      {:ok, lock} ->
+        {_tag, contents} = Incunabula.Git.get_review(slug, reviewslug)
+        render conn, "show.html",
+          changeset:   changeset,
+          title:       booktitle,
+          reviewtitle: reviewtitle,
+          reviewslug:  reviewslug,
+          save_edits:  savepath,
+          contents:    contents,
+          slug:        slug,
+          lock:        lock
+      {:error, :locked} ->
+        render conn, "locked.html",
+          reviewtitle: reviewtitle,
+          title:       booktitle,
+          slug:        slug
+    end
   end
 
-  def show_tag(conn, %{"reviewslug" => review_slug,
-                       "slug"       => slug,
+  def show_tag(conn, %{"slug"       => slug,
                        "tag"        => tag}, _user) do
     booksdir = Incunabula.Git.get_books_dir()
     file = Path.join([

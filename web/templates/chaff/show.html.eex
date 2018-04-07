@@ -18,6 +18,12 @@
 <p>
  chaff for the book  <a href="/books/<%= @slug %>"><%= @title %></a>
 </p>
+<span class="incunabula-lock" data-lock="<%= @lock %>"></span>
+<!-- get the lock -->
+<span id="book-inspect_lock"
+      class="incunabula-topic"
+      topic="book:inspect_lock:/books/<%= @slug %>/chaff/<%= @chaffslug %>">
+  <!-- end of lock -->
 <p>
   <small>
     <a href='<%= Path.join(["/books", @slug, "chaffs", @chaffslug, "preview"]) %>' target='blank'>Preview this chaff</a>

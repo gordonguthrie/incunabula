@@ -57,16 +57,26 @@ defmodule Incunabula.ChaffController do
     booktitle  = Git.get_book_title(slug)
     chafftitle = Git.get_chaff_title(slug, chaffslug)
     changeset  = Incunabula.SaveEdit.changeset()
+    path       = Path.join(["/books", slug, "chaff", chaffslug])
     savepath   = Path.join(["/books", slug, "chaff", chaffslug, "save"])
-    {_tag, contents} = Git.get_chaff(slug, chaffslug)
-    render conn, "show.html",
-      changeset:  changeset,
-      title:      booktitle,
-      chafftitle: chafftitle,
-      chaffslug:  chaffslug,
-      save_edits: savepath,
-      contents:   contents,
-      slug:       slug
+    case Incunabula.Lock.acquire_lock(path) do
+      {:ok, lock} ->
+        {_tag, contents} = Git.get_chaff(slug, chaffslug)
+        render conn, "show.html",
+          changeset:  changeset,
+          title:      booktitle,
+          chafftitle: chafftitle,
+          chaffslug:  chaffslug,
+          save_edits: savepath,
+          contents:   contents,
+          slug:       slug,
+          lock:       lock
+      {:error, :locked} ->
+        render conn, "locked.html",
+          chafftitle: chafftitle,
+          title:      booktitle,
+          slug:       slug
+    end
   end
 
   def index(conn, _params, _user) do
