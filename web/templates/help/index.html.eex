@@ -124,12 +124,12 @@ You can insert images using the html code on the images tab for your book.
 
 <form class="ui big form">
   <div class="field">
-    <label>Text for the link</label>
-    <input class="incunabula-link-url" type="text" />
+    <label>Text that appears in your text</label>
+    <input class="incunabula-link-text" type="text" />
   </div>
   <div class="field">
-    <label>Link</label>
-    <input class="incunabula-link-text" type="text" />
+    <label>http address you want to link to</label>
+    <input class="incunabula-link-url" type="text" />
   </div>
   <div class="field">
   <button class="incunabula-link-maker ui button">Make link</button>
