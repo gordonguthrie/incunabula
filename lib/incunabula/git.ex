@@ -1312,7 +1312,7 @@ defmodule Incunabula.Git do
                  "--repo=" <> url,
                ]
            end
-    #{"", 0} = System.cmd(cmd, args, [cd: dir])
+    {"", 0} = System.cmd(cmd, args, [cd: dir])
     dir
   end
 
