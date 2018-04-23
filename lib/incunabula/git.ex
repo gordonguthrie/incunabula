@@ -983,6 +983,7 @@ defmodule Incunabula.Git do
         |> make_dir("")
         |> make_dir("/preview_html/tags")
         |> make_dir("/review_html/tags")
+        |> make_dir(@chaffDir)
         |> do_git_init
         |> write_to_file(@title,           book_title)
         |> write_to_file(@author,          author)
